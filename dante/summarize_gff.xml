@@ -1,0 +1,22 @@
+<tool id="gff_summary" name="Summarize gff3 output from DANTE" version="0.1.4" python_template_version="3.5">
+    <requirements>
+        <requirement type="package">dante=0.1.4</requirement>
+    </requirements>
+    <command detect_errors="exit_code"><![CDATA[
+        summarize_gff.R '$inputgff' '$output' '$group'
+    ]]></command>
+    <inputs>
+      <param type="data" name="inputgff" format="gff3" />
+      <param name="group" type="select" label="select categories to summarize" multiple="false" optional="false">
+            <option value="Name">protein domain name</option>
+            <option value="Final_Classification">Classification</option>
+            <option value="seqid">Sequence ID</option>
+      </param>
+    </inputs>
+    <outputs>
+        <data name="output" format="tabular" />
+    </outputs>
+    <help><![CDATA[
+        TODO: Fill in help.
+    ]]></help>
+</tool>

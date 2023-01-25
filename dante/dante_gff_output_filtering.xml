@@ -1,0 +1,90 @@
+<tool id="domains_filter" name="Protein Domains Filter" version="1.1.4">
+  <description> Tool for filtering of gff3 output from DANTE. Filtering can be performed based domain type and alignment quality. </description>
+    <requirements>
+        <requirement type="package">dante=0.1.4</requirement>
+    </requirements>
+    <stdio>
+        <regex match="Traceback" source="stderr" level="fatal" description="Unknown error" />
+        <regex match="error" source="stderr" level="fatal" description="Unknown error" />
+    <regex match="Traceback" source="stderr" level="fatal" description="Unknown error" />
+    <regex match="error" source="stderr" level="fatal" description="Unknown error" />
+  </stdio>
+<command>
+dante_gff_output_filtering.py --dom_gff ${DomGff} --domains_prot_seq ${dom_prot_seq} --domains_filtered ${dom_filtered} --selected_dom ${selected_domain} --th_identity ${th_identity} --th_similarity ${th_similarity} --th_length ${th_length} --interruptions ${interruptions} --max_len_proportion ${th_len_ratio} --element_type '${element_type}'
+		
+</command>
+<inputs>
+	<param format="gff" type="data" name="DomGff" label="Choose primary GFF3 file of all domains from Protein Domains Finder" />
+	<param name="th_identity" type="float" value="0.35" min="0" max="1" label="Minimum identity" help="Protein sequence indentity threshold between input and mapped protein from db [0-1]" />
+	<param name="th_similarity" type="float" value="0.45" min="0" max="1" label="Minimum similarity" help="Protein sequence similarity threshold between input and mapped protein from db [0-1]" />
+	<param name="th_length" type="float" value="0.8" min="0" max="1" label="Minimum alignment length" help="Proportion of the hit length without gaps to the length of the database sequence [0-1]" />
+	<param name="interruptions" type="integer" value="3" label="Interruptions [frameshifts + stop codons]" help="Tolerance threshold per every starting 100 amino acids of alignment sequence" />
+	<param name="th_len_ratio" type="float" value="1.2" label="Maximal length proportion" help="Maximal proportion of alignment length to the original length of protein domain from database (including indels)" />
+	<param name="selected_domain" type="select" label="Select protein domain type" >
+        <option value="All" selected="true">All</option>
+        <option value="GAG">GAG</option>
+        <option value="INT">INT</option>
+        <option value="PROT">PROT</option>
+        <option value="RH">RH</option>
+        <option value="RT">RT</option>
+        <option value="aRH">aRH</option>
+        <option value="CHDCR">CHDCR</option>
+        <option value="CHDII">CHDII</option>
+        <option value="TPase">TPase</option>
+        <option value="YR">YR</option>
+        <option value="HEL1">HEL1</option>
+        <option value="HEL2">HEL2</option>
+        <option value="ENDO">ENDO</option>
+   </param>
+   <param name="element_type" type="text" value="" label="Filter based on classification" help="You can use preset options or enter an  arbitrary string to filter a certain repetitive element type of any level. It must be a continuous substring in a proper format of Final_Classification attribute of GFF3 file. Classification levels are separated by | character. Filtering is case sensitive">
+     <option value="Ty1/copia">Ty1/copia</option>
+     <option value="Ty3/gypsy">Ty3/gypsy</option>
+     <option value="Class_I|">Class_I|</option>
+     <option value="Class_II|">Class_II|</option>
+	   <sanitizer>
+       <valid initial="string.ascii_letters,string.digits">
+         <add value="_" />
+         <add value="/" />
+         <add value="|" />
+       </valid>
+	   </sanitizer>
+   </param>
+</inputs>
+<outputs>
+ <data format="gff3" name="dom_filtered" label="Filtered GFF3 file of ${selected_domain} domains from dataset ${DomGff.hid}" />
+ <data format="fasta" name="dom_prot_seq" label="Protein sequences of ${selected_domain} domains from dataset ${DomGff.hid}" />
+ 
+ 
+</outputs>
+
+ <help>
+
+**WHAT IT DOES**
+
+This tool runs filtering on either primary GFF3 file of all domains, i.e. output of *Protein Domains Finder* tool or already filtered GFF3 file. Domains can be filtered based on:
+
+**Quality of alignment such as**:
+	- alignment sequence identity
+	- alignment similarity
+	- alignment proportion length
+	- number of interruptions (frameshifts or stop codons) per 100 AA
+		
+**Protein domain type**
+	This filtration is based on "Name" attribute of GFF3 file
+	
+**Repetitive element classification**
+	In the text field you can specify a classification string you wish to filter. This filtration is based on "Final_Classification" attribute of GFF file, so it must be in the proper form (classification levels are separated by "|"). You can see which classifications occurs in your data taking a look into Classification summary table output. If you leave the field blank, domains of all classifications will be reported
+	
+All the records containing ambiguous domain type (e.g. RH/INT) are filtered out automatically. They do not take place in filtered gff file neither the protein sequence is derived from these potentially chimeric domains. Optimal results (for general usage) should be reached using the default quality filtering parameters which are appropriate to find all types of protein domains. Keep in mind that the results should be critically assessed based on your input data anyhow.
+
+
+**OUTPUTS PRODUCED:**
+	1.	Filtered GFF3 file
+	2.	Translated protein sequences of the filtered domains regions of original DNA sequence in fasta format
+	
+		*Translated sequences are taken from the best alignment (Best_Hit attribute) within a domain region, however this alignment does not necessarily have to cover the whole region reported as a domain in gff file*		
+	
+
+ </help>
+</tool>
+
