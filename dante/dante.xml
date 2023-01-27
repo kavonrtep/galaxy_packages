@@ -1,7 +1,7 @@
-<tool id="dante" name="Domain based ANnotation of Transposable Elements - DANTE" version="1.1.4">
+<tool id="dante" name="Domain based ANnotation of Transposable Elements - DANTE" version="1.1.5">
   <description> Tool for annotation of transposable elements based on the similarity to conserved protein domains database. </description>
   <requirements>
-    <requirement type="package">dante=0.1.4</requirement>
+    <requirement type="package">dante=0.1.5</requirement>
   </requirements>
   <stdio>
     <regex match="Traceback" source="stderr" level="fatal" description="Unknown error" />
@@ -17,11 +17,10 @@
     #end if
     &amp;&amp;
 
-
     dante --query \${INPUT_SEQUENCES} --domain_gff ${DomGff}
 	  --database $database
       --scoring_matrix ${scoring_matrix}
-
+      --cpu \${GALAXY_SLOTS:-1}
     &amp;&amp;
     dante_gff_output_filtering.py --dom_gff ${DomGff}
     --domains_prot_seq ${Domains_filtered} --domains_filtered ${DomGff_filtered}

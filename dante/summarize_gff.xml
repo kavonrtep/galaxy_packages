@@ -1,6 +1,6 @@
-<tool id="gff_summary" name="Summarize gff3 output from DANTE" version="0.1.4" python_template_version="3.5">
+<tool id="gff_summary" name="Summarize gff3 output from DANTE" version="0.1.5" python_template_version="3.5">
     <requirements>
-        <requirement type="package">dante=0.1.4</requirement>
+        <requirement type="package">dante=0.1.5</requirement>
     </requirements>
     <command detect_errors="exit_code"><![CDATA[
         summarize_gff.R '$inputgff' '$output' '$group'
