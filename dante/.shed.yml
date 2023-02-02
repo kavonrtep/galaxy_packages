@@ -1,4 +1,5 @@
-categories: [Annotation]
+categories:
+- Genome annotation
 description: Domain based Annotation of Transposable Elements
 long_description: Domain based Annotation of Transposable Elements
 name: dante
