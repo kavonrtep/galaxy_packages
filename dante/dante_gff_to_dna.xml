@@ -5,7 +5,7 @@
   </requirements>
   <command>
     TEMP_DIR_LINEAGES=\$(mktemp -d) &amp;&amp;
-    /mnt/raid/users/petr/workspace/dante/dante_gff_to_dna.py --domains_gff ${domains_gff} --input_dna ${input_dna} --out_dir \$TEMP_DIR_LINEAGES
+    dante_gff_to_dna.py --domains_gff ${domains_gff} --input_dna ${input_dna} --out_dir \$TEMP_DIR_LINEAGES
 
     #if $extend_edges:
 	  --extended True
