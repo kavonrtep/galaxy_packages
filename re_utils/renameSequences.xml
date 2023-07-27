@@ -1,0 +1,25 @@
+<tool id="rename_sequences" name="Rename sequences" version="1.0.0">
+<description> Rename sequences using numerical counter, keep required prefix and pair information </description>
+<command interpreter="python">
+renameSequences2.py $input $paired index.tmp $prefix_length > $output
+</command>
+
+ <inputs>
+  <param format="fasta" type="data" name="input" label="Choose your FASTA file" />
+  <param name="prefix_length" type="integer" size="10" value="0" label="Prefix length" help="Enter the length of prefix to keep in sequences names" />
+  <param name="paired" type="boolean" truevalue="true" falsevalue="false" checked="False" label="Sequences are paired-end reads in interlaced format" help=""/>
+ </inputs>
+
+
+ <outputs>
+ 	<data format="fasta" name="output" label="Renamed sequences from dataset ${input.hid}" />
+ </outputs>
+
+ <help>
+**What is does**
+ 
+Use this tool to rename your sequences with numerical counter while keeping sequence name prefex as part of the name. 
+If paired-end reads are used, the last character in sequence name is used to distinguish pairs.  
+ 
+</help>
+</tool>

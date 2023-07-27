@@ -1,0 +1,184 @@
+<tool id="paired_fastq_filtering" name="Preprocessing of FASTQ paired-end reads">
+  <stdio>
+     <exit_code range="1:" level="fatal" description="Error" />
+  </stdio>
+  <description>
+    Preprocessing of paired-end reads in FASTQ format
+    including trimming, quality filtering, cutadapt filtering and interlacing. Broken
+    pairs are discarded.
+  </description>
+  <requirements>
+    <requirement type="package">blast</requirement>
+    <requirement type="package">cutadapt</requirement>
+    <requirement type="package">bioconductor-shortread</requirement>
+    <requirement type="package">r-optparse</requirement>
+  </requirements>
+  <command interpreter="bash">
+    paired_fastq_filtering_wrapper.sh -a ${A} -b ${B}  -o ${paired} -c ${cut_off} -p ${percent_above} -N ${max_n} $rename -G ${png_output}
+
+    #if $sampling.sequence_sampling :
+    -n $sampling.sample_size
+    #end if
+
+    #if $trimming.sequence_trimming :
+    -e $trimming.trim_end -s $trimming.trim_start
+    #end if
+
+    #if $cutadapt.use_custom :
+    -C "${cutadapt.custom_options}"
+    #end if
+
+    #if $similarity_filtering.include :
+    -F "${similarity_filtering.filter_database}"
+    #end if
+
+  </command>
+
+  <inputs>
+    <param format="fastq,fastq.gz" type="data" name="A" label="Left-hand reads" />
+
+    <param format="fastq,fastq.gz" type="data" name="B" label="Right-hand reads" />
+
+    <conditional name="sampling">
+      <param name="sequence_sampling" type="boolean" truevalue="true" falsevalue="false" checked="False" label="Read sampling"/>
+	    <when value="false">
+        <!-- do nothing here -->
+      </when>
+      <when value="true">
+   		  <param name="sample_size" type="integer" label="Sample size (number of pairs)" help="How many read pairs should be sampled" value="500000" min="0"/>
+      </when>
+    </conditional>
+
+    <param type="integer" name="cut_off" label="Quality cutoff" value="10" min="0" help="See below how to correctly set the quality cutoff" />
+    <param type="integer" name="percent_above" label="Percent above cutoff" value="95" min="0"
+           help="Percentage of bases in the read that must have quality equal to or higher than the cutoff value" />
+
+    <conditional name="trimming">
+      <param name="sequence_trimming" type="boolean" truevalue="true" falsevalue="false" checked="False" label="Trim reads"/>
+      <when value="false">
+        <!-- do nothing here -->
+      </when>      
+      <when value="true">
+        <param type="integer" name="trim_start" label="Start position" value="1" min="1"
+               help="Reads are trimmed at the specified start" />
+        <param type="integer" name="trim_end" label="End position" value="100" min="1"
+               help="Reads are trimmed to the specified end position, shorted sequences are discarded" />
+      </when>      
+
+    </conditional>
+   	<param name="max_n" type="integer" label="Maximum Ns" help="Maximal number of Ns allowed in reads" value="0" min="0" max="10"/>
+
+    <conditional name="cutadapt">
+      <param name="use_custom" type="boolean" truevalue="true" falsevalue="false" checked="False" label="Custom cutadapt options"/>
+	    <when value="false">
+        <!-- do nothing here -->
+      </when>
+      <when value="true">
+   		  <param name="custom_options" type="text" area="True" size="8x30"  label="Custom options" help="Consult cutadapt for usage" value="">
+          <sanitizer sanitize="False"/>
+          </param>>
+      </when>
+    </conditional>
+
+    <conditional name="similarity_filtering">
+	    <param name="include" type="boolean" truevalue="true" falsevalue="false" checked="False" label="Use similarity search filtering"/>
+	    <when value="false">
+        <!-- do nothing here -->
+      </when>
+      <when value="true">
+        
+   		  <param name="filter_database" format="fasta" type="data" label="Sequence filter database" help="Provide DNA sequences in FASTA format. Reads that have at least 90% similarity over 90% of their length to sequence in the filter database will be removed. This option is suitable for removing organellar or other contaminating sequences."/>
+      </when>
+    </conditional>
+
+    <param name="rename" type="boolean" truevalue="-R" falsevalue="" checked="True" label="Rename reads" help="By default, original read names are used. In case your reads do not follow proper naming scheme to label paired-end mates, use this option. All read pairs must be complete!"/>
+  </inputs>
+
+
+  <outputs>
+    <data format="fasta" name="paired" label="Interlaced paired reads from datasets ${A.hid} and ${B.hid} "/>
+    <data format="png" name="png_output" label="Nucleotide composition after filtering of ${A.hid} and ${B.hid} "/>"
+  </outputs>
+
+
+  <tests>
+    <test>
+      <param name="A" value="ERR215189_1_part.fastq.gz" />
+      <param name="B" value="ERR215189_2_part.fastq.gz" />
+      <param name="max_n" value="0"/>
+      <param name="cut_off" value="10" />
+      <param name="percent_above" value="95" />
+      <output name="output" value="paired_output.fasta" />
+      <output name="png_output" value="paired_output.png" />
+    </test>
+  </tests>
+
+  <help>
+**What it does**
+
+This tool is designed to make memory efficient preprocessing of two
+fastq files. Output of this file can be used as input of RepeatExplorer clustering.
+Input files can be in GNU zipped archive (.gz extension).
+Reads are filtered based on the quality, presence of N bases and
+adapters. Two input fastq files are procesed in parallel. Only complete pair
+are kept. As the input files are process in chunks, it is required that
+pair reads are complete and in the same order in both input files. All
+reads which pass the quality filter fill be writen into output files.
+If sampling is specified, only sample of sequences will be
+returned. Cutadapt us run with this options::
+
+    --anywhere='AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCT'
+    --anywhere='AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT'
+    --anywhere='GATCGGAAGAGCACACGTCTGAACTCCAGTCAC'
+    --anywhere='ATCTCGTATGCCGTCTTCTGCTTG'
+    --anywhere='CAAGCAGAAGACGGCATACGAGAT'
+    --anywhere='GTGACTGGAGTTCAGACGTGTGCTCTTCCGATC'
+    --error-rate=0.05
+    --times=1 --overlap=15 --discard
+
+
+**Order of fastq files processing**
+
+1. Trimming (optional)       
+#. Filter by quality      
+#. Discard single reads, keep complete pairs
+#. Cutadapt filtering 
+#. Discard single reads, keep complete pairs    
+#. Sampling (optional)         
+#. Interlacing two fasta files
+
+**Quality setting cutoff**
+
+To correctly set quality cutoff, you need to know how the quality is encoded in your fastq file, default
+filtering which is suitable for Sanger and Illumina 1.8 encoding is shown below::
+
+
+      Default filtering cutoff
+                |   
+                |
+                V
+      SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS.....................................................
+      ..........................XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX......................
+      ...............................IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII......................
+      .................................JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ......................
+      LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL....................................................
+      !"#$%&amp;'()*+,-./0123456789:;&lt;=&gt;?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~
+      |                         |    |        |                              |                     |
+     33                        59   64       73                            104                   126
+      0........................26...31.......40                                
+                               -5....0........9.............................40 
+                                     0........9.............................40 
+                                        3.....9.............................40 
+      0.2......................26...31........41                              
+    
+     S - Sanger        Phred+33,  raw reads typically (0, 40)
+     X - Solexa        Solexa+64, raw reads typically (-5, 40)
+     I - Illumina 1.3+ Phred+64,  raw reads typically (0, 40)
+     J - Illumina 1.5+ Phred+64,  raw reads typically (3, 40)
+         with 0=unused, 1=unused, 2=Read Segment Quality Control Indicator (bold) 
+         (Note: See discussion above).
+     L - Illumina 1.8+ Phred+33,  raw reads typically (0, 41)
+    
+  </help>    
+</tool>
+

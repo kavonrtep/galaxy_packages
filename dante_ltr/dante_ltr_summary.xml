@@ -1,9 +1,9 @@
-<tool id="dante_ltr_summary" name="Summarize DANTE_LTR output" version="0.2.2.4" python_template_version="3.5">
+<tool id="dante_ltr_summary" name="Summarize DANTE_LTR output" version="0.2.3.2" python_template_version="3.5">
     <requirements>
-        <requirement type="package" version="0.2.2.4">dante_ltr</requirement>
+        <requirement type="package" version="0.2.3.2">dante_ltr</requirement>
     </requirements>
     <command detect_errors="exit_code"><![CDATA[
-        dante_ltr_summary.R -g '$input1' -o output &&
+        dante_ltr_summary -g '$input1' -o output &&
         mv output.pdf '$output1'
     ]]></command>
     <inputs>

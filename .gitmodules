@@ -1,0 +1,3 @@
+[submodule "repeat_annotation_pipeline"]
+	path = repeat_annotation_pipeline
+	url = https://github.com/kavonrtep/repeat_annotation_pipeline.git

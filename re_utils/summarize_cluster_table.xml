@@ -1,0 +1,42 @@
+<tool id="summarize_annotation" name="Repeat proportions from CLUSTER_TABLE" version="1.0.0">
+  <description> Simple utility to summarize final annotations from RepeatExplorer CLUSTER_TABLE</description>
+  <requirements>
+    <requirement type="package">r-optparse</requirement>
+  </requirements>
+  
+    <command interpreter="Rscript" detect_errors="exit_code" >
+    $__tool_directory__/summarize_cluster_table.R
+    --cluster_table=$cluster_table
+    --output=$output
+
+    </command>
+
+    <inputs>
+      <param format="txt" type="data" name="cluster_table" label="file from RepeatExplorer2 clustering - CLUSTER_TABLE.csv" help="CLUSTER_TABLE.csv must contains completed Final_annotation column" />
+    </inputs>
+
+    <outputs>
+         	<data format="tabular" name="output" label="Summary of repeat proportions from ${cluster_table.hid}"/>
+    </outputs>
+    <help>
+      **The tool calculates genome proportions of identified repeats based on cluster annotations in CLUSTER_TABLE.csv**
+          
+	  The column "Final_annotation" must be filled in the input file CLUSTER_TABLE.csv. Contamination and organelle clusters are discarded from quantification. Table header with information about numbers of analyzed reads should remain unchanged - see example below.
+
+      Example of CLUSTER_TABLE.csv: ::
+
+          Number_of_reads_in_clusters	1185180					
+          Number_of_clusters	62148					
+          Number_of_superclusters	62031					
+          Number_of_singlets	314820					
+          Number_of_analyzed_reads	1500000					
+          Cluster	Supercluster	Size	Size_adjusted	Automatic_annotation	TAREAN_annotation	Final_annotation						
+          10	4	11967	11967	All/repeat/mobile_element/Class_I/LTR/Ty1_copia/SIRE	Other	All/repeat/mobile_element/Class_I/LTR/Ty1_copia/SIRE
+          137	5	2094	2094	All/repeat	Other	All/repeat
+          112	9	3117	3117	All/repeat/rDNA/45S_rDNA	Other	All/repeat/rDNA/45S_rDNA
+          16	11	10078	10078	All/repeat/satellite	Putative satellites (high confidence)	All/repeat/satellite
+          125	22	2630	2630	All/organelle/plastid	Other	All/organelle/plastid
+          124	40	2645	2645	All/repeat/mobile_element/Class_I/LTR/Ty1_copia/Ivana	Putative LTR elements	All/repeat/mobile_element/Class_I/LTR/Ty1_copia/Ivana
+
+    </help>
+</tool>

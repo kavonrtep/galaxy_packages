@@ -1,0 +1,21 @@
+<tool id="fasta_input" name="Fasta interactive input" version="1.0.0">
+  <description> Enter fasta file to text window </description>
+  <command>
+    echo "${fasta_text}" > ${fasta_file}  &amp;&amp;
+    sed -i 's/__gt__/>/g' ${fasta_file}  &amp;&amp;
+    sed -i 's/__cn__/\n/g' ${fasta_file}
+  </command>
+
+  <inputs>
+    <param  type="text" name="fasta_text" area="True" size="50x150" label="Paste sequences in FASTA format" />
+  </inputs>
+
+
+  <outputs>
+    <data format="fasta" name="fasta_file" label="FASTA sequence manually edited" />
+  </outputs>
+
+  <help>
+    This is helper tool to enter fasta sequences manualy
+  </help>
+</tool>

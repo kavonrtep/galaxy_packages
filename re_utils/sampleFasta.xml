@@ -1,0 +1,51 @@
+<tool id="sampler" name="Read sampling" version="1.0.1">
+  <description> Tool for randomly sampling subsets of reads from large datasets</description>
+  <requirements>
+    <requirement type="package">seqkit</requirement>
+  </requirements>
+  <stdio>
+    <exit_code range="1:" level="fatal" description="Error" />
+  </stdio>
+  <command>
+    <![CDATA[
+    #if str($paired)=="true"
+      ${__tool_directory__}/deinterlacer.py $input Afile Bfile
+      &&
+      NUMBER=\$(($(number) / 2))
+      &&
+      seqkit sample -2 --number \$NUMBER --rand-seed $seed -o Asample -w 0 Afile < /dev/null
+      &&
+      seqkit sample -2 --number \$NUMBER --rand-seed $seed -o Bsample -w 0 Bfile < /dev/null
+      &&
+      ${__tool_directory__}/fasta_interlacer.py -a Asample -b Bsample -p $output -x tmpfile
+    #else
+      seqkit sample -2 --number $number --rand-seed $seed -o $output -w 0 $input < /dev/null
+    #end if
+    ]]>
+    </command>
+
+  <inputs>
+    <param format="fasta" type="data" name="input" label="Read file (FASTA)" />
+    <param name="paired" type="boolean" truevalue="true" falsevalue="false" checked="True" label="Paired-end reads" help="If paired-end reads are sampled, left and right-hand reads must be interlaced and all pairs must be complete."/>
+    <param name="number" type="integer" size="7" value="500000" min="1" label="Number of reads"/>
+    <param name="seed" type="integer" size="10" value="10" min="0" label="Random number generator seed " />
+        
+  </inputs>
+
+
+  <outputs>
+ 	  <data format="fasta" name="output" label="Random selection from dataset ${input.hid}, sample size ${number})" />
+  </outputs>
+
+  <help>
+    **What it does**
+    
+    This tools randomly samples the specified number of reads from larger datasets.
+    Using the same random number generator seed with the same dataset results in sampling the same set of reads, while 
+    using different seeds generates different subsets of reads. 
+
+    
+  </help>
+
+  
+</tool>

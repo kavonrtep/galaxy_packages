@@ -1,0 +1,33 @@
+
+<tool id="fasta_interlacer" name="FASTA interlacer" version="1.0.0">
+<description> Join pared reads into single file </description>
+<command interpreter="python">
+fasta_interlacer.py -a $A -b $B -p $paired -x $single
+</command>
+
+ <inputs>
+  <param format="fasta" type="data" name="A" label="Left-hand mates" />
+  <param format="fasta" type="data" name="B" label="Right-hand mates" />
+ </inputs>
+
+
+ <outputs>
+    <data format="fasta" name="paired" label="Interlaced paired reads from datasets ${A.hid} and ${B.hid} "/>
+   	<data format="fasta" name="single" label="Reads without corresponding mate from datasets ${A.hid} and ${B.hid}"/>
+ </outputs>
+
+ <help>
+**What it does**
+ This tools joins paired end FASTA reads from separate files, one with the left mates and one with the right mates, into a single files.
+ Last character in identifiers is used to distinguish pairs.
+  
+**Note !!!**
+ This tools is to be used as more efficient replacement of FASTQ interlacer. Galaxy built-in FASTQ interlacer allows different ordering
+ of sequences in both files but this flexibility comes with high memory requirements when large files are used. FASTA interlacer is simple but order of magnitude 
+ faster tools which can be used on files where reads are in the same order.
+ 
+ 
+</help>
+
+ 
+</tool>

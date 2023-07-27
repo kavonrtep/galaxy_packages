@@ -1,0 +1,95 @@
+<tool id="names_affixer" name="FASTQ Read name affixer" version="1.0.0">
+<description> Tool appending suffix and prefix to sequences names </description>
+<command interpreter="python">
+${__tool_directory__}/name_affixer.py -f $input -p "$prefix" -s "$suffix" -n $nspace > $output
+</command>
+
+ <inputs>
+  <param format="fastq" type="data" name="input" label="Choose your FASTQ file" />
+  <param name="prefix" type="text" size="10" value="" label="Prefix" help="Enter prefix which will be added to all sequences names" />
+  <param name="suffix" type="text" size="10" value="" label="Suffix" help="Enter suffix which will be added to all sequences names"/>
+  <param name="nspace" type="integer" size="10" value="0" min="0" max="1000" label="Number of spaces in sequence name to ignore" help="Sequence name is a string before the first space. If you want name to include spaces in name, enter positive integer. All other characters beyond ignored spaces are omitted"/>
+ </inputs>
+
+
+ <outputs>
+ 	<data format="fastq" name="output" label="FASTQ dataset ${input.hid} with modified sequence names" />
+ </outputs>
+
+ <help>
+**What is does**
+ 
+Tool for appending prefix and suffix to sequences names in fastq formated sequences.
+
+**Example**
+
+The following Solexa-FASTQ file:
+ 
+::
+ 
+ @CSHL_4_FC042GAMMII_2_1_517_596
+ GGTCAATGATGAGTTGGCACTGTAGGCACCATCAAT
+ +CSHL_4_FC042GAMMII_2_1_517_596
+ 40 40 40 40 40 40 40 40 40 40 38 40 40 40 40 40 14 40 40 40 40 40 36 40 13 14 24 24 9 24 9 40 10 10 15 40
+ 
+is renamed to:
+
+::
+ 
+ @prefixCSHL_4_FC042GAMMII_2_1_517_596suffix
+ GGTCAATGATGAGTTGGCACTGTAGGCACCATCAAT
+ +prefixCSHL_4_FC042GAMMII_2_1_517_596suffix
+ 40 40 40 40 40 40 40 40 40 40 38 40 40 40 40 40 14 40 40 40 40 40 36 40 13 14 24 24 9 24 9 40 10 10 15 40
+
+different format:
+ 
+
+::
+ 
+ @HISEQ1:92:c0190acxx:8:1101:1252:2230 2:N:0:CGATGT
+ AGAGGAAAAAACATAGTTCTTGTCTAAAAAAATCCCTTGAAAAAGGGCAGATGTATAGAAATAGAAAATTTCAAAGAAAAACTCTCTACAAATGGAAGAGA
+ +
+ CCCFFFFFHHHHHJJJJIJJJJJJJJJJJJJJJIJJJJJIIJJJJJJGIJIJIHHHHHHHHFFFFFFDEEEEEDCDDDDDDDCCDDDEDDDDD>CCCCB@9
+
+is renamed to:
+
+::
+ 
+ @prefixHISEQ1:92:c0190acxx:8:1101:1252:2230suffix
+ AGAGGAAAAAACATAGTTCTTGTCTAAAAAAATCCCTTGAAAAAGGGCAGATGTATAGAAATAGAAAATTTCAAAGAAAAACTCTCTACAAATGGAAGAGA
+ +
+ CCCFFFFFHHHHHJJJJIJJJJJJJJJJJJJJJIJJJJJIIJJJJJJGIJIJIHHHHHHHHFFFFFFDEEEEEDCDDDDDDDCCDDDEDDDDD>CCCCB@9
+ 
+note that string after first space is omitted! 
+
+Because sequence names sometimes containg spaces which delimit the actual name. By default, anything after spaces is 
+excluded from sequences name. In example sequence:
+ 
+::
+  
+ @SRR352150.23846180 HWUSI-EAS1786:7:119:15910:19280/1
+ CTGGATTCTATACCTTTGGCAACTACTTCTTGGTTGATCAGGAAATTAACACTAGTAGTTTAGGCAATTTGGAATGGTGCCAAAGATGTATAGAACTTTC
+ +
+ IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIGIIIHIIIIIFIIIIIIHDHBBIHFIHIIBHHDDHIFHIHIIIHIHGGDFDEI@EGEGFGFEFB@ECG
+
+when **Number of spaces in name to ignore** is set to 0 (default) the output will be:
+ 
+::
+ 
+ @prefixSRR352150.23846180suffix
+ CTGGATTCTATACCTTTGGCAACTACTTCTTGGTTGATCAGGAAATTAACACTAGTAGTTTAGGCAATTTGGAATGGTGCCAAAGATGTATAGAACTTTC
+ +
+ IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIGIIIHIIIIIFIIIIIIHDHBBIHFIHIIBHHDDHIFHIHIIIHIHGGDFDEI@EGEGFGFEFB@ECG
+ 
+If you want to keep spaces the setting **Number of spaces in name to ignore** to 1 will yield 
+ 
+:: 
+ 
+ @prefixSRR352150.23846180 HWUSI-EAS1786:7:119:15910:19280/1suffix
+ CTGGATTCTATACCTTTGGCAACTACTTCTTGGTTGATCAGGAAATTAACACTAGTAGTTTAGGCAATTTGGAATGGTGCCAAAGATGTATAGAACTTTC
+ +
+ IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIGIIIHIIIIIFIIIIIIHDHBBIHFIHIIBHHDDHIFHIHIIIHIHGGDFDEI@EGEGFGFEFB@ECG
+ 
+ 
+</help>
+</tool>

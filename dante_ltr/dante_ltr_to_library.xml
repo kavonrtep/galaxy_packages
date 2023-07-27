@@ -1,0 +1,27 @@
+<tool id="dante_ltr_to_library" name="Create representative library from DANTE_LTR output " version="0.2.3.2" python_template_version="3.5">
+    <requirements>
+        <requirement type="package" version="0.2.3.2">dante_ltr</requirement>
+    </requirements>
+    <command detect_errors="exit_code"><![CDATA[
+        cp '$dante_ltr' dante_ltr.gff3 &&
+        dante_ltr_to_library --gff3 dante_ltr.gff3 --reference_sequence '$reference' --output output --cpu \${GALAXY_SLOTS:-1} --min_coverage 3
+        &&
+        ls -l output
+        &&
+        mv output/mmseqs2/mmseqs_representative_seq_clean.fasta $dante_ltr_library
+    ]]></command>
+    <inputs>
+        <param type="data" name="dante_ltr" format="gff3"
+               label="GFF3 output from DANTE_LTR retrotransposon identification pipeline"/>
+        <param type="data" name="reference" format="fasta" label="Reference sequence matching input GFF3" />
+    </inputs>
+    <outputs>
+        <data name="dante_ltr_library" format="fasta"
+              label="Representative library from DANTE_LTR $dante_ltr.hid on reference $reference.hid"/>
+    </outputs>
+    <help><![CDATA[
+        This tool extract representative sequences from LTR-RT library identified
+         by DANTE_LTR. Resulting library is suitable for RepeatMasker search.
+    ]]></help>
+</tool>
+

@@ -1,0 +1,51 @@
+
+<tool id="pairScan" name="Scan paired-end reads for overlap" version="1.0.0">
+  <description> Scan paired-end reads for overlap </description>
+  <requirements>
+    <requirement type="package">python-levenshtein</requirement>
+  </requirements>
+  <command interpreter="python">
+    pairScan.py -f $fasta_input -o $min_overlap -m $max_mismatch -p $pass -b $bad -s $offset
+  </command>
+
+  <inputs>
+    <param format="fasta" type="data" name="fasta_input" label="Reads in FASTA format" />
+    <param name="min_overlap" type="integer" size="3" value="30" min="20" max="100" label="Minimum overlap length [nt] " />
+    <param name="max_mismatch" type="select" label="Maximum number of mismatches per 100 bp">
+      <option value="0">0</option>
+      <option value="1" selected="true">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+    </param>
+    <param name="offset" type="select" label="Maximum offset">
+      <option value="0">0</option>
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5" selected="true" >5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+      <option value="9">9</option>
+      <option value="10">10</option>
+    </param>
+    
+    
+    
+  </inputs>
+
+
+  <outputs>
+    <data format="fasta" name="pass" label="Pairs with no overlap from dataset ${fasta_input.hid}"/>
+   	<data format="fasta" name="bad" label="Overlaping pairs from dataset ${fasta_input.hid}"/>
+  </outputs>
+
+  <help>
+    **Scan paired reads for overlap**
+    
+  </help>
+
+  
+</tool>
