@@ -1,81 +1,93 @@
-<tool id="fasta_affixer" name="FASTA read name affixer" version="1.0.0">
-<description> Appending suffix and prefix to the read names </description>
-<command interpreter="python3">
-fasta_affixer.py -f $input -p "$prefix" -s "$suffix" -n $nspace -o $output
-</command>
+<tool id="fasta_affixer" name="FASTA read name affixer" version="1.0.0.3">
+    <description>Appending suffix and prefix to the read names</description>
+    <required_files>
+        <include type="literal" path="fasta_affixer.py"/>
+    </required_files>
 
- <inputs>
-  <param format="fasta" type="data" name="input" label="Choose your FASTA file" />
-  <param name="prefix" type="text" size="10" value="" label="Prefix" help="Enter prefix which will be added to all read names" />
-  <param name="suffix" type="text" size="10" value="" label="Suffix" help="Enter suffix which will be added to all read names"/>
-  <param name="nspace" type="integer" size="10" value="0" min="0" max="1000" label="Number of spaces in the name to ignore" help="By default, a string before the first space is considered to be the read name, and all characters following the space are discarded. If you want to keep the information following the space(s) in the name, enter positive integer."/>
- </inputs>
+    <command>
+        python '$__tool_directory__'/fasta_affixer.py -f $input -p "$prefix" -s "$suffix"
+        -n $nspace -o $output
+    </command>
 
+    <inputs>
+        <param format="fasta" type="data" name="input" label="Choose your FASTA file"/>
+        <param name="prefix" type="text" size="10" value="" label="Prefix"
+               help="Enter prefix which will be added to all read names"/>
+        <param name="suffix" type="text" size="10" value="" label="Suffix"
+               help="Enter suffix which will be added to all read names"/>
+        <param name="nspace" type="integer" size="10" value="0" min="0" max="1000"
+               label="Number of spaces in the name to ignore"
+               help="By default, a string before the first space is considered to be the read name, and all characters following the space are discarded. If you want to keep the information following the space(s) in the name, enter positive integer."/>
+    </inputs>
 
- <outputs>
- 	<data format="fasta" name="output" label="FASTA dataset ${input.hid} with modified sequence names" />
- </outputs>
+    <outputs>
+        <data format="fasta" name="output"
+              label="FASTA dataset ${input.hid} with modified sequence names"/>
+    </outputs>
 
- <tests>
-   <test>
-     <param name="input" value="single_output.fasta" />
-     <param name="prefix" value="TEST" />
-     <param name="suffux" value="OK"/>
-     <param name="nspace" value="0" />
-     <output name="output" value="prefix_suffix.fasta" />
-   </test>
- </tests>
- <help>
-**What is does**
- 
-Tool for appending prefix and suffix to sequences names in fasta formated sequences. This tool is useful
-if you want to do comparative analysis with RepeatExplorer and need to
-append sample codes to sequence identifiers
+    <tests>
+        <test>
+            <param name="input" value="single_output.fasta"/>
+            <param name="prefix" value="TEST"/>
+            <param name="suffux" value="OK"/>
+            <param name="nspace" value="0"/>
+            <output name="output" value="prefix_suffix.fasta"/>
+        </test>
+    </tests>
+    <help>
+        **What is does**
 
-**Example**
-The following fasta file:
+        Tool for appending prefix and suffix to sequences names in fasta formated
+        sequences. This tool is useful
+        if you want to do comparative analysis with RepeatExplorer and need to
+        append sample codes to sequence identifiers
 
-::
+        **Example**
+        The following fasta file:
 
-  >123454
-  acgtactgactagccatgacg
-  >234235
-  acgtactgactagccatgacg
+        ::
 
-is renamed to:
+        >123454
+        acgtactgactagccatgacg
+        >234235
+        acgtactgactagccatgacg
 
-::
+        is renamed to:
 
-  >prefix123454suffix
-  acgtactgactagccatgacg
-  >prefix234235suffix
-  acgtactgactagccatgacg
+        ::
 
-
-By default, anything after spaces is 
-excluded from sequences name. In example sequence:
-
-::
-  
- >SRR352150.23846180 HWUSI-EAS1786:7:119:15910:19280/1
- CTGGATTCTATACCTTTGGCAACTACTTCTTGGTTGATCAGGAAATTAACACTAGTAGTTTAGGCAATTTGGAATGGTGCCAAAGATGTATAGAACTTTC
- IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIGIIIHIIIIIFIIIIIIHDHBBIHFIHIIBHHDDHIFHIHIIIHIHGGDFDEI@EGEGFGFEFB@ECG
-
-when **Number of spaces in name to ignore** is set to 0 (default) the output will be:
- 
-::
- 
- >prefixSRR352150.23846180suffix
- CTGGATTCTATACCTTTGGCAACTACTTCTTGGTTGATCAGGAAATTAACACTAGTAGTTTAGGCAATTTGGAATGGTGCCAAAGATGTATAGAACTTTC
-
- 
-If you want to keep spaces the setting **Number of spaces in name to ignore** to 1 will yield 
- 
-:: 
- 
- >prefixSRR352150.23846180 HWUSI-EAS1786:7:119:15910:19280/1suffix
- CTGGATTCTATACCTTTGGCAACTACTTCTTGGTTGATCAGGAAATTAACACTAGTAGTTTAGGCAATTTGGAATGGTGCCAAAGATGTATAGAACTTTC
+        >prefix123454suffix
+        acgtactgactagccatgacg
+        >prefix234235suffix
+        acgtactgactagccatgacg
 
 
-</help>
+        By default, anything after spaces is
+        excluded from sequences name. In example sequence:
+
+        ::
+
+        >SRR352150.23846180 HWUSI-EAS1786:7:119:15910:19280/1
+        CTGGATTCTATACCTTTGGCAACTACTTCTTGGTTGATCAGGAAATTAACACTAGTAGTTTAGGCAATTTGGAATGGTGCCAAAGATGTATAGAACTTTC
+        IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIGIIIHIIIIIFIIIIIIHDHBBIHFIHIIBHHDDHIFHIHIIIHIHGGDFDEI@EGEGFGFEFB@ECG
+
+        when **Number of spaces in name to ignore** is set to 0 (default) the output will
+        be:
+
+        ::
+
+        >prefixSRR352150.23846180suffix
+        CTGGATTCTATACCTTTGGCAACTACTTCTTGGTTGATCAGGAAATTAACACTAGTAGTTTAGGCAATTTGGAATGGTGCCAAAGATGTATAGAACTTTC
+
+
+        If you want to keep spaces the setting **Number of spaces in name to ignore** to 1
+        will yield
+
+        ::
+
+        >prefixSRR352150.23846180 HWUSI-EAS1786:7:119:15910:19280/1suffix
+        CTGGATTCTATACCTTTGGCAACTACTTCTTGGTTGATCAGGAAATTAACACTAGTAGTTTAGGCAATTTGGAATGGTGCCAAAGATGTATAGAACTTTC
+
+
+    </help>
 </tool>

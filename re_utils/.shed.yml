@@ -1,0 +1,18 @@
+categories: [Fasta Manipulation]
+description: some utilities for data preprocessing
+long_description: Utilities for data preprocessing and analysis of RepeatExplorer2 results.
+name: repeatexplorer_utilities
+owner: repeatexplorer
+exclude:
+  - shed.yml
+  - __pycache__
+  - test_data/seqs.fasta
+  - test_data/ERR215189_1.fastq.gz
+  - test_data/ERR215189_2.fastq.gz
+  - test_data/single_output.fasta
+  - tool_data/organele_ref_and_phi-X174.fasta.nhr
+  - tool_data/organele_ref_and_phi-X174.fasta.nin
+  - tool_data/organele_ref_and_phi-X174.fasta.nsq
+  - tmp/*
+  - test_data/*
+

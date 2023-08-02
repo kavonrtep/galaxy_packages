@@ -1,70 +1,86 @@
-<tool id="plot_comparative" name="Visualization of comparative clustering" version="1.0.0">
-  <description> Simple utility to create visualization of RepeatExplorer conmparative analysis</description>
-  <requirements>
-    <requirement type="package">r-optparse</requirement>
-  </requirements>
-  
-    <command interpreter="Rscript" detect_errors="exit_code" >
-    $__tool_directory__/plot_comparative_clustering_summary.R
-    --cluster_table=$cluster_table
-    --comparative_counts=$counts
-    --number_of_colors=$number_of_colors
-    --output=$outpdf
-    $nuclear_only
-
-    #if $normalization.use_genome_size:
-      --genome_size $normalization.genome_size_table
-    #end if
+<tool id="plot_comparative" name="Visualization of comparative clustering"
+      version="1.0.0.3">
+    <description>Simple utility to create visualization of RepeatExplorer conmparative
+        analysis
+    </description>
+    <requirements>
+        <requirement type="package">r-optparse</requirement>
+    </requirements>
+    <required_files>
+        <include type="literal" path="plot_comparative_clustering_summary.R"/>
+    </required_files>
+    <command detect_errors="exit_code">
+        Rscript '$__tool_directory__'/plot_comparative_clustering_summary.R
+        --cluster_table=$cluster_table
+        --comparative_counts=$counts
+        --number_of_colors=$number_of_colors
+        --output=$outpdf
+        $nuclear_only
+        #if $normalization.use_genome_size:
+        --genome_size $normalization.genome_size_table
+        #end if
     </command>
 
     <inputs>
-      <param format="txt" type="data" name="cluster_table" label="file from RepeatExplorer2 clustering - CLUSTER_TABLE.csv"/>
-      <param format="txt" type="data" name="counts" label="file from RepeatExplorer2 output - COMPARATIVE_ANALYSIS_COUNTS.csv"/>
-      <param value="10" min="2" max="20" type="integer" name="number_of_colors" label="Maximum number of color used for plottting"/>
-      <param value="false"  type="boolean" truevalue="--nuclear_only" falsevalue="" name="nuclear_only" label="Remove all non-nuclear sequences (organel and contamination)"/>
-      <conditional name="normalization">
-        <param name="use_genome_size" type="boolean" checked="False" label="Normalize to genome size" help="Note that if this option is used, non-nuclear sequences are always removed."/>
-        <when value="false">
-          <!-- pass -->
-        </when>
-        <when value="true">
-          <param name="genome_size_table" type="data" format="txt" label="table with genome sizes"/>
+        <param format="txt" type="data" name="cluster_table"
+               label="file from RepeatExplorer2 clustering - CLUSTER_TABLE.csv"/>
+        <param format="txt" type="data" name="counts"
+               label="file from RepeatExplorer2 output - COMPARATIVE_ANALYSIS_COUNTS.csv"/>
+        <param value="10" min="2" max="20" type="integer" name="number_of_colors"
+               label="Maximum number of color used for plottting"/>
+        <param value="false" type="boolean" truevalue="--nuclear_only" falsevalue=""
+               name="nuclear_only"
+               label="Remove all non-nuclear sequences (organel and contamination)"/>
+        <conditional name="normalization">
+            <param name="use_genome_size" type="boolean" checked="False"
+                   label="Normalize to genome size"
+                   help="Note that if this option is used, non-nuclear sequences are always removed."/>
+            <when value="false">
+                <!-- pass -->
+            </when>
+            <when value="true">
+                <param name="genome_size_table" type="data" format="txt"
+                       label="table with genome sizes"/>
 
-        </when>
+            </when>
 
-      </conditional>
+        </conditional>
     </inputs>
 
     <outputs>
-         	<data format="pdf" name="outpdf" label="Comparative analysis summary"/>
+        <data format="pdf" name="outpdf" label="Comparative analysis summary"/>
     </outputs>
     <help>
-      **Visualization of comparative clustering**
-      Visualization can be created two output files from RepeatExplorer pipeline.
-      
-      Input file CLUSTER_TABLE.csv contains automatic annotation, information about cluster sizes and the total number of reads used for analysis
-      Example of CLUSTER_TABLE.csv: ::
+        **Visualization of comparative clustering**
+        Visualization can be created two output files from RepeatExplorer pipeline.
 
-          "Number_of_reads_in_clusters"	3002
-          "Number_of_clusters"	895
-          "Number_of_superclusters"	895
-          "Number_of_singlets"	6998
+        Input file CLUSTER_TABLE.csv contains automatic annotation, information about
+        cluster sizes and the total number of reads used for analysis
+        Example of CLUSTER_TABLE.csv: ::
 
-          "Number_of_analyzed_reads"	10000
-          
-          "Cluster"	"Supercluster"	"Size"	"Size_adjusted"	"Automatic_annotation"	"TAREAN_classification"	"Final_annotation"
-          1	1	61	61	"All"	"Other"
-          2	2	59	59	"All/repeat/satellite"	"Putative satellites (high confidence)"
-          3	3	45	45	"All/repeat/satellite"	"Putative satellites (low confidence)"
-          4	4	38	38	"All"	"Other"
-          5	5	32	32	"All"	"Other"
-          6	6	28	28	"All"	"Other"
-          7	7	25	25	"All"	"Other"
-          8	8	24	24	"All"	"Other"
-          9	9	23	23	"All"	"Other"
-          10	10	22	22	"All/repeat/mobile_element/Class_I/LTR/Ty3_gypsy/non-chromovirus/OTA/Tat/Ogre"	"Other"
-          11	11	20	20	"All"	"Other"
-          12	12	20	20	"All"	"Other"
+        "Number_of_reads_in_clusters" 3002
+        "Number_of_clusters" 895
+        "Number_of_superclusters" 895
+        "Number_of_singlets" 6998
+
+        "Number_of_analyzed_reads" 10000
+
+        "Cluster" "Supercluster" "Size" "Size_adjusted" "Automatic_annotation"
+        "TAREAN_classification" "Final_annotation"
+        1 1 61 61 "All" "Other"
+        2 2 59 59 "All/repeat/satellite" "Putative satellites (high confidence)"
+        3 3 45 45 "All/repeat/satellite" "Putative satellites (low confidence)"
+        4 4 38 38 "All" "Other"
+        5 5 32 32 "All" "Other"
+        6 6 28 28 "All" "Other"
+        7 7 25 25 "All" "Other"
+        8 8 24 24 "All" "Other"
+        9 9 23 23 "All" "Other"
+        10 10 22 22
+        "All/repeat/mobile_element/Class_I/LTR/Ty3_gypsy/non-chromovirus/OTA/Tat/Ogre"
+        "Other"
+        11 11 20 20 "All" "Other"
+        12 12 20 20 "All" "Other"
 
 
     </help>

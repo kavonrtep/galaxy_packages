@@ -1,33 +1,46 @@
-<tool id="RMsearch2" name="RepeatMasker custom search2" version="1.0.3">
+<tool id="RMsearch2" name="RepeatMasker custom search2" version="1.0.3.3">
 
-  <description>Scan clustering results using RepeatMasker against custom database of repeats</description>
-  <requirements>
-    <requirement type="package" version="4.0.7">repeatmasker</requirement> 
-    <requirement type="package" version="3.6">python</requirement> 
-    <requirement type="package" version="2.3.2">r-r2html</requirement>
-    <requirement type="package" version="2.54.0">bioconductor-biostrings</requirement>
-  </requirements>
+    <description>Scan clustering results using RepeatMasker against custom database of
+        repeats
+    </description>
+    <requirements>
+        <requirement type="package" version="4.0.7">repeatmasker</requirement>
+        <requirement type="package" version="3.6">python</requirement>
+        <requirement type="package" version="2.3.2">r-r2html</requirement>
+        <requirement type="package" version="2.54.0">bioconductor-biostrings</requirement>
+    </requirements>
+    <required_files>
+        <include type="literal" path="RM_custom_search.py"/>
+        <include type="literal" path="parallel.py"/>
+    </required_files>
 
-  <command>
 
-    python3 ${__tool_directory__}/RM_custom_search.py -i $input_zip -d $RMdatabase -g $__root_dir__ -r $output_html;
+    <command>
 
-  </command>
+        python3 ${__tool_directory__}/RM_custom_search.py -i $input_zip -d $RMdatabase -g
+        $__root_dir__ -r $output_html;
 
-  <inputs>
-    <param format="zip" type="data" name="input_zip" label="RepeatExplorer output data archive" help="Zip archive obtained from previouse Graph-based sequence clustering"/>
-    <param name="RMdatabase" format="fasta" type="data" label="Library of repeats" help="Library of repeats as DNA sequences in fasta format. The recommended format for IDs in a custom library is : '>reapeatname#class/subclass'"/>
-  </inputs>
-  
-  <outputs>
-    <data format="html" name="output_html" label="HTML summary of custom database ${RMdatabase.hid} search on dataset ${input_zip.hid} " />
-  </outputs>
+    </command>
 
-  <help>
-    **What it does**
+    <inputs>
+        <param format="zip" type="data" name="input_zip"
+               label="RepeatExplorer output data archive"
+               help="Zip archive obtained from previouse Graph-based sequence clustering"/>
+        <param name="RMdatabase" format="fasta" type="data" label="Library of repeats"
+               help="Library of repeats as DNA sequences in fasta format. The recommended format for IDs in a custom library is : '>reapeatname#class/subclass'"/>
+    </inputs>
 
-    Use this tool if you want to scan previous clustering result with custom database of repeats using repeatmasker. 
-    
-  </help>
+    <outputs>
+        <data format="html" name="output_html"
+              label="HTML summary of custom database ${RMdatabase.hid} search on dataset ${input_zip.hid} "/>
+    </outputs>
+
+    <help>
+        **What it does**
+
+        Use this tool if you want to scan previous clustering result with custom database
+        of repeats using repeatmasker.
+
+    </help>
 </tool>
 

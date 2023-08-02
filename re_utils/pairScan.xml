@@ -1,11 +1,15 @@
 
-<tool id="pairScan" name="Scan paired-end reads for overlap" version="1.0.0">
+<tool id="pairScan" name="Scan paired-end reads for overlap" version="1.0.0.3">
   <description> Scan paired-end reads for overlap </description>
   <requirements>
     <requirement type="package">python-levenshtein</requirement>
   </requirements>
-  <command interpreter="python">
-    pairScan.py -f $fasta_input -o $min_overlap -m $max_mismatch -p $pass -b $bad -s $offset
+  <required_files>
+    <include type="literal" path="pairScan.py"/>
+  </required_files>
+
+  <command>
+    python '$__tool_directory__'/pairScan.py -f $fasta_input -o $min_overlap -m $max_mismatch -p $pass -b $bad -s $offset
   </command>
 
   <inputs>

@@ -1,6 +1,9 @@
-<tool id="cluster_table2krona_format" name="Convert RepeatExplorer2 CLUSTER_table.csv to Krona formatted input " version="1.0.0" python_template_version="3.5">
+<tool id="cluster_table2krona_format" name="Convert RepeatExplorer2 CLUSTER_table.csv to Krona formatted input " version="1.0.0.3" python_template_version="3.5">
+    <required_files>
+        <include type="literal" path="cluster_table2krona_format.py"/>
+    </required_files>
     <command detect_errors="exit_code"><![CDATA[
-        $__tool_directory__/cluster_table2krona_format.py --input ${input} --output ${output}
+        python '$__tool_directory__'/cluster_table2krona_format.py --input ${input} --output ${output}
         #if $column == "Final_annotation"
         -m
         #end if
