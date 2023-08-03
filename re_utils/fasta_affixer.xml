@@ -1,5 +1,8 @@
-<tool id="fasta_affixer" name="FASTA read name affixer" version="1.0.0.3">
+<tool id="fasta_affixer" name="FASTA read name affixer" version="1.0.0.4">
     <description>Appending suffix and prefix to the read names</description>
+    <requirements>
+        <requirement type="package" version="3">python</requirement>
+    </requirements>
     <required_files>
         <include type="literal" path="fasta_affixer.py"/>
     </required_files>

@@ -1,19 +1,21 @@
-﻿<tool id="chip_seq_ratio_1" name="ChIP-Seq Mapper" version="0.1.1.3">
-  <stdio>
-    <exit_code range="1:" level="fatal" description="Error"/>
-  </stdio>
+﻿<tool id="chip_seq_ratio_1" name="ChIP-Seq Mapper" version="1.1.1.4">
+    <stdio>
+        <exit_code range="1:" level="fatal" description="Error"/>
+    </stdio>
     <description></description>
     <requirements>
-      <requirement type="package">r-base64enc</requirement>
-      <requirement type="package">r-r2html</requirement>
-      <requirement type="package">blast</requirement>
-      <!-- <requirement type="package">chip_seq_ration</requirement> -->
+        <requirement type="package">r-base64enc</requirement>
+        <requirement type="package">r-r2html</requirement>
+        <requirement type="package">blast</requirement>
+        <requirement type="package" version="3">python</requirement>
+        <!-- <requirement type="package">chip_seq_ration</requirement> -->
     </requirements>
     <required_files>
         <include type="literal" path="ChipSeqRatioAnalysis.py"/>
         <include type="literal" path="ChipSeqRatioAnalysis.R"/>
     </required_files>
-    <command>
+    <command> <![CDATA[
+    which python && python --version &&
 	python '$__tool_directory__'/ChipSeqRatioAnalysis.py
 	--ChipSeq=${ChipFile}
 	--InputSeq=${InputFile}
@@ -21,48 +23,66 @@
 	--output=${OutputFile}
 	--html=${ReportFile}
 	--max_cl=${MaxCl}
-  --bitscore=$bitscore
-  --nproc=16
+    --bitscore=$bitscore
+    --nproc=16
+    ]]>
     </command>
 
     <inputs>
-        <param name="ChipFile" label="Chip reads" type="data" format="fasta" help="Reads in FASTA format"/> 
-	<param name="InputFile" label="Input reads" type="data" format="fasta" help="Reads in FASTA format"/>
-	<param name="ContigFile" label="Reference - contig sequences" type="data" format="fasta"
-	       help="Contigs from RepeatExplorer clustering (the file &quot;contigs.fasta&quot;)"/> 
-	<param name="MaxCl" label="Number of top clusters to be shown in graph" type="integer" value="200"/>   
-	<param name="bitscore" label="Bit score threshold" type="integer" value="50" help="Similarity hits with lower bit score will not be used for ChIP/Input ratio calculation"/>   
+        <param name="ChipFile" label="Chip reads" type="data" format="fasta"
+               help="Reads in FASTA format"/>
+        <param name="InputFile" label="Input reads" type="data" format="fasta"
+               help="Reads in FASTA format"/>
+        <param name="ContigFile" label="Reference - contig sequences" type="data"
+               format="fasta"
+               help="Contigs from RepeatExplorer clustering (the file &quot;contigs.fasta&quot;)"/>
+        <param name="MaxCl" label="Number of top clusters to be shown in graph"
+               type="integer" value="200"/>
+        <param name="bitscore" label="Bit score threshold" type="integer" value="50"
+               help="Similarity hits with lower bit score will not be used for ChIP/Input ratio calculation"/>
     </inputs>
     <outputs>
-    	<data name="OutputFile" format="tabular"
-            label="csv table from ChIP-Seq-Mapper on datasets ${InputFile.hid} (Input) ${ChipFile.hid} (ChIP) and ${ContigFile.hid} (reference)"/>
+        <data name="OutputFile" format="tabular"
+              label="csv table from ChIP-Seq-Mapper on datasets ${InputFile.hid} (Input) ${ChipFile.hid} (ChIP) and ${ContigFile.hid} (reference)"/>
 
-	    <data name="ReportFile" format="html"
-            label="HTML report from ChIP-Seq-Mapper on datasets ${InputFile.hid} (Input) ${ChipFile.hid} (ChIP) and ${ContigFile.hid} (reference)"/> 
+        <data name="ReportFile" format="html"
+              label="HTML report from ChIP-Seq-Mapper on datasets ${InputFile.hid} (Input) ${ChipFile.hid} (ChIP) and ${ContigFile.hid} (reference)"/>
     </outputs>
 
     <help>
-**What it does**
+        **What it does**
 
-The ChIP-seq Mapper evaluates the enrichment of repetitive sequences in sequencing data from chromatin 
-immunoprecipitation experiments, using repeats identified by RepeatExplorer as the reference. The tool 
-performs BLASTN similarity search of the read sequences to the reference, 
-and the reads producing hits that passed the user-specified similarity threshold are assigned to the 
-repeat clusters. The assignment is made to the cluster that produced the best similarity hit, and every 
-read is assigned to only a single cluster. Following read mapping, the numbers of reads from the 
-INPUT and ChIP samples are evaluated, and ChIP/INPUT ratios of the normalized read counts are reported 
-for individual clusters.
-ChIP and INPUT reads should be of uniform lengths of at least 40 nt. The bit score threshold value should be
-adjusted based on the length of the analyzed reads (the value equal to the read length is recommended for a start). 
-This method was first used in (`Neumann et al. 2012`__) for
-identification of repetitive sequences associated with centromeres:
+        The ChIP-seq Mapper evaluates the enrichment of repetitive sequences in sequencing
+        data from chromatin
+        immunoprecipitation experiments, using repeats identified by RepeatExplorer as the
+        reference. The tool
+        performs BLASTN similarity search of the read sequences to the reference,
+        and the reads producing hits that passed the user-specified similarity threshold
+        are assigned to the
+        repeat clusters. The assignment is made to the cluster that produced the best
+        similarity hit, and every
+        read is assigned to only a single cluster. Following read mapping, the numbers of
+        reads from the
+        INPUT and ChIP samples are evaluated, and ChIP/INPUT ratios of the normalized read
+        counts are reported
+        for individual clusters.
+        ChIP and INPUT reads should be of uniform lengths of at least 40 nt. The bit score
+        threshold value should be
+        adjusted based on the length of the analyzed reads (the value equal to the read
+        length is recommended for a start).
+        This method was first used in (`Neumann et al. 2012`__) for
+        identification of repetitive sequences associated with centromeres:
 
 
-`PLoS Genet. Epub 2012 Jun 21. Stretching the rules: monocentric chromosomes with multiple centromere domains. Neumann P, Navrátilová A, Schroeder-Reiter E, Koblížková A, Steinbauerová V, Chocholová E, Novák P, Wanner G, Macas J.`__.
+        `PLoS Genet. Epub 2012 Jun 21. Stretching the rules: monocentric chromosomes with
+        multiple centromere domains. Neumann P, Navrátilová A, Schroeder-Reiter E,
+        Koblížková A, Steinbauerová V, Chocholová E, Novák P, Wanner G, Macas J.`__.
 
-.. __: http://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1002777
-.. __: http://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1002777
-      
+        .. __:
+        http://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1002777
+        .. __:
+        http://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1002777
+
     </help>
 
 </tool>

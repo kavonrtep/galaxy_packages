@@ -2,6 +2,9 @@
     <description>Rename sequences using numerical counter, keep required prefix and pair
         information
     </description>
+    <requirements>
+        <requirement type="package" version="3">python</requirement>
+    </requirements>
     <required_files>
         <include type="literal" path="renameSequences2.py"/>
     </required_files>

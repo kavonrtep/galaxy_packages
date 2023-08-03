@@ -1,5 +1,8 @@
-<tool id="names_affixer" name="FASTQ Read name affixer" version="1.0.0">
+<tool id="names_affixer" name="FASTQ Read name affixer" version="1.0.0.4">
     <description>Tool appending suffix and prefix to sequences names</description>
+    <requirements>
+        <requirement type="package" version="3">python</requirement>
+    </requirements>
     <required_files>
         <include type="literal" path="name_affixer.py"/>
     </required_files>

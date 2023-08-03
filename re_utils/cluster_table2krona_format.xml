@@ -1,4 +1,7 @@
 <tool id="cluster_table2krona_format" name="Convert RepeatExplorer2 CLUSTER_table.csv to Krona formatted input " version="1.0.0.3" python_template_version="3.5">
+    <requirements>
+        <requirement type="package" version="3">python</requirement>
+    </requirements>
     <required_files>
         <include type="literal" path="cluster_table2krona_format.py"/>
     </required_files>

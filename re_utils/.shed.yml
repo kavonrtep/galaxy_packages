@@ -1,7 +1,7 @@
 categories: [Fasta Manipulation]
 description: some utilities for data preprocessing
 long_description: Utilities for data preprocessing and analysis of RepeatExplorer2 results.
-name: repeatexplorer_utilities
+name: re_utils
 owner: repeatexplorer
 exclude:
   - shed.yml

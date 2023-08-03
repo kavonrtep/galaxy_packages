@@ -1,9 +1,18 @@
-<tool id="extract_contigs" name="Extract contigs from RepeatExplorer2 archive">
+<tooll id="extract_contigs" name="Extract contigs from RepeatExplorer2 archive" version="1.0.0.3">
   <command detect_errors="exit_code">
-    unzip -p ${RepeatExplorer_archive} contigs.fasta  &gt; ${contigs}
-    &amp;&amp;
-    unzip -p -j ${RepeatExplorer_archive} "*.aln"  &gt; ${aln}
+     <![CDATA[
+    unzip -p ${RepeatExplorer_archive} contigs.fasta  > ${contigs}
+    &&
+    mkdir -p tempdir
+    &&
+    unzip ${RepeatExplorer_archive} "*.aln" -d tempdir
+    &&
+    find tempdir -type f -name "*.aln" -exec cat {} + > ${aln}
+    &&
+    rm -r tempdir
+    ]]>
   </command>
+
 
   <inputs>
     <param name="RepeatExplorer_archive" label="Archive with RepeatExplorer2 results" type="data" format="zip"/>
@@ -13,4 +22,4 @@
     <data name="contigs" format="fasta" label="Contigs from RepeatExplorer clustering from data ${RepeatExplorer_archive.hid}" />
     <data name="aln" format="txt" label="Contigs from RepeatExplorer clustering in aln format from data ${RepeatExplorer_archive.hid}" />
   </outputs>
-</tool>
+</tooll>

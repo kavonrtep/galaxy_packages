@@ -2,6 +2,7 @@
 <tool id="pairScan" name="Scan paired-end reads for overlap" version="1.0.0.3">
   <description> Scan paired-end reads for overlap </description>
   <requirements>
+    <container type="package" version="3">python</container>
     <requirement type="package">python-levenshtein</requirement>
   </requirements>
   <required_files>

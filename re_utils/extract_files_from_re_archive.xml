@@ -1,49 +1,77 @@
-<tool id="extract_var_files_from_re" name="Extract various files from RepeatExplorer2 archive">
-  <command detect_errors="exit_code">
+<tool id="extract_var_files_from_re"
+      name="Extract various files from RepeatExplorer2 archive" version="1.0.0.4">
+    <command detect_errors="exit_code">
+        <![CDATA[
+
+
 
     #for $sf in $file:
-
     #if $sf == "CLUSTER_TABLE.csv"
-    unzip -p -j ${RepeatExplorer_archive} ${sf}  &gt; ${cluster_table}
+    mkdir -p tempdir
+    &&
+    unzip ${RepeatExplorer_archive} ${sf} -d tempdir
+    &&
+    find tempdir -type f -name "${sf}" -exec cat {} + > ${cluster_table}
+    &&
+    rm -r tempdir
     ;
     #end if
 
     #if $sf == "COMPARATIVE_ANALYSIS_COUNTS.csv"
-    unzip -p -j ${RepeatExplorer_archive} ${sf}  &gt; ${comparative_analysis_count}
+    mkdir -p tempdir
+    &&
+    unzip ${RepeatExplorer_archive} ${sf} -d tempdir
+    &&
+    find tempdir -type f -name "${sf}" -exec cat {} + > ${comparative_analysis_count}
+    &&
+    rm -r tempdir
     ;
     #end if
 
     #if $sf == "SUPERCLUSTER_TABLE.csv"
-    unzip -p -j ${RepeatExplorer_archive} ${sf}  &gt; ${supercluster_table}
-    ;
+    mkdir -p tempdir
+    &&
+    unzip ${RepeatExplorer_archive} ${sf} -d tempdir
+    &&
+    find tempdir -type f -name "${sf}" -exec cat {} + > ${supercluster_table}
+    &&
+    rm -r tempdir
     #end if
 
     #end for
 
+]]>
 
 
-  </command>
-  
-  <inputs>
-    <param name="RepeatExplorer_archive" label="Archive with RepeatExplorer2 results" type="data" format="zip"/>
+    </command>
 
-    <param name="file" type="select" label="select files you want to extract" multiple="true" optional="false">
+    <inputs>
+        <param name="RepeatExplorer_archive" label="Archive with RepeatExplorer2 results"
+               type="data" format="zip"/>
+
+        <param name="file" type="select" label="select files you want to extract"
+               multiple="true" optional="false">
             <option value="CLUSTER_TABLE.csv">CLUSTER_TABLE.csv</option>
-            <option value="COMPARATIVE_ANALYSIS_COUNTS.csv">COMPARATIVE_ANALYSIS_COUNTS.csv</option>
+            <option value="COMPARATIVE_ANALYSIS_COUNTS.csv">
+                COMPARATIVE_ANALYSIS_COUNTS.csv
+            </option>
             <option value="SUPERCLUSTER_TABLE.csv">SUPERCLUSTER_TABLE.csv</option>
-    </param>
-  </inputs>
+        </param>
+    </inputs>
 
-  <outputs>
-    <data format="tabular" name="cluster_table" label="CLUSTER_TABLE.csv from ${RepeatExplorer_archive.hid}" >
-      <filter>"CLUSTER_TABLE.csv" in file</filter>
-    </data>
-    <data format="tabular" name="supercluster_table" label="SUPERCLUSTER_TABLE.csv from ${RepeatExplorer_archive.hid}">
-      <filter>"SUPERCLUSTER_TABLE.csv" in file</filter>
-    </data>
-    <data format="tabular" name="comparative_analysis_count" label="COMPARATIVE_ANALYSIS_COUNTS.csv from ${RepeatExplorer_archive.hid}">
-      <filter>"COMPARATIVE_ANALYSIS_COUNTS.csv" in file</filter>
-    </data>
-  </outputs>
+    <outputs>
+        <data format="tabular" name="cluster_table"
+              label="CLUSTER_TABLE.csv from ${RepeatExplorer_archive.hid}">
+            <filter>"CLUSTER_TABLE.csv" in file</filter>
+        </data>
+        <data format="tabular" name="supercluster_table"
+              label="SUPERCLUSTER_TABLE.csv from ${RepeatExplorer_archive.hid}">
+            <filter>"SUPERCLUSTER_TABLE.csv" in file</filter>
+        </data>
+        <data format="tabular" name="comparative_analysis_count"
+              label="COMPARATIVE_ANALYSIS_COUNTS.csv from ${RepeatExplorer_archive.hid}">
+            <filter>"COMPARATIVE_ANALYSIS_COUNTS.csv" in file</filter>
+        </data>
+    </outputs>
 </tool>
  
