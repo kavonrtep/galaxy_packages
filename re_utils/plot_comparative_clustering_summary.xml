@@ -10,6 +10,7 @@
         <include type="literal" path="plot_comparative_clustering_summary.R"/>
     </required_files>
     <command detect_errors="exit_code">
+        Rscript --version
         Rscript '$__tool_directory__'/plot_comparative_clustering_summary.R
         --cluster_table=$cluster_table
         --comparative_counts=$counts

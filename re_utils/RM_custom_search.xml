@@ -12,6 +12,8 @@
     <required_files>
         <include type="literal" path="RM_custom_search.py"/>
         <include type="literal" path="parallel.py"/>
+        <include type="literal" path="rmsk_summary_table_multiple.r"/>
+        <include type="literal" path="RM_html_report.R"/>
     </required_files>
 
 

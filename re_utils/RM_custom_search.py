@@ -57,10 +57,11 @@ def RepeatMasker(reads,database):
 
 def summarizeRepeatMaskerOutput(htmlout = "summary.html"):
     cmd = os.path.dirname(os.path.abspath(__file__))+"/rmsk_summary_table_multiple.r"
-    args = [ cmd, "dir_CL*/reads.fas", "dir_CL*/reads.fas.out", "RM-custom_output_table"  ]
+    args = [ "Rscript", cmd, "dir_CL*/reads.fas", "dir_CL*/reads.fas.out",
+             "RM-custom_output_table" ]
     status=subprocess.call(args)
-    cmd = cmd = os.path.dirname(os.path.abspath(__file__))+"/RM_html_report.R"
-    args = [cmd, htmlout]
+    cmd = os.path.dirname(os.path.abspath(__file__))+"/RM_html_report.R"
+    args = ["Rscript", cmd, htmlout]
     status=subprocess.call(args)
     return status
     

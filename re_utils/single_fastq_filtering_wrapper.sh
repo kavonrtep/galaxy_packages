@@ -47,10 +47,10 @@ done
 
 if [ -z "$CUTADAPT" ] # test if $CUTADAPT is empty
 then
-    ${WD}/single_fastq_filtering.R -a $FASTAA -x $OUTPUT  ${SAMPLING[@]} -c $CUT_OFF\
+    Rscript ${WD}/single_fastq_filtering.R -a $FASTAA -x $OUTPUT  ${SAMPLING[@]} -c $CUT_OFF\
          -p $PERCENT_ABOVE  ${TRIM_START[@]}  ${TRIM_END[@]} -N $MAX_N -G $PNG_OUTPUT ${FILTER_SEQ[@]}
 else
-    ${WD}/single_fastq_filtering.R -a $FASTAA -x $OUTPUT  ${SAMPLING[@]} -c $CUT_OFF -G $PNG_OUTPUT\
+    Rscript ${WD}/single_fastq_filtering.R -a $FASTAA -x $OUTPUT  ${SAMPLING[@]} -c $CUT_OFF -G $PNG_OUTPUT\
          -p $PERCENT_ABOVE  ${TRIM_START[@]}  ${TRIM_END[@]} -N $MAX_N "${CUTADAPT[@]}" ${FILTER_SEQ[@]}
 fi
 

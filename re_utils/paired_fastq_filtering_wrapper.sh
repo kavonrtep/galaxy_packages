@@ -52,14 +52,14 @@ fasta_tmp_fileY=$(mktemp)
 
 if [ -z "$CUTADAPT" ] # test if$CUTADAPT is empty
 then
-    ${WD}/paired_fastq_filtering.R -a $FASTAA -b $FASTAB -x $fasta_tmp_fileX -y $fasta_tmp_fileY  ${SAMPLING[@]} -c $CUT_OFF -G $PNG_OUTPUT\
+    Rscript ${WD}/paired_fastq_filtering.R -a $FASTAA -b $FASTAB -x $fasta_tmp_fileX -y $fasta_tmp_fileY  ${SAMPLING[@]} -c $CUT_OFF -G $PNG_OUTPUT\
          -p $PERCENT_ABOVE  ${TRIM_START[@]}  ${TRIM_END[@]} -N $MAX_N $RENAME ${FILTER_SEQ[@]}
 else
-    ${WD}/paired_fastq_filtering.R -a $FASTAA -b $FASTAB -x $fasta_tmp_fileX -y $fasta_tmp_fileY  ${SAMPLING[@]} -c $CUT_OFF -G $PNG_OUTPUT\
+    Rscript ${WD}/paired_fastq_filtering.R -a $FASTAA -b $FASTAB -x $fasta_tmp_fileX -y $fasta_tmp_fileY  ${SAMPLING[@]} -c $CUT_OFF -G $PNG_OUTPUT\
          -p $PERCENT_ABOVE  ${TRIM_START[@]}  ${TRIM_END[@]} -N $MAX_N "${CUTADAPT[@]}" $RENAME ${FILTER_SEQ[@]}
 fi
 
-${WD}/fasta_interlacer.py -a $fasta_tmp_fileX -b $fasta_tmp_fileY -p $PAIRED_OUTPUT -x fasta_tmp_single
+python ${WD}/fasta_interlacer.py -a $fasta_tmp_fileX -b $fasta_tmp_fileY -p $PAIRED_OUTPUT -x fasta_tmp_single
 
 
 rm $fasta_tmp_fileX

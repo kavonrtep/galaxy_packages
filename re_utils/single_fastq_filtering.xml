@@ -8,7 +8,7 @@
     </description>
     <requirements>
         <requirement type="package">blast</requirement>
-        <requirement type="package">cutadapt</requirement>
+        <requirement type="package" version="4.4">cutadapt</requirement>
         <requirement type="package">bioconductor-shortread</requirement>
         <requirement type="package">r-optparse</requirement>
     </requirements>
@@ -16,7 +16,7 @@
         <include type="literal" path="single_fastq_filtering_wrapper.sh"/>
         <include type="literal" path="single_fastq_filtering.R"/>
     </required_files>
-    <command interpreter="bash">
+    <command>
         bash '$__tool_directory__'/single_fastq_filtering_wrapper.sh -a ${A} -o ${output}
         -c ${cut_off} -p ${percent_above} -N ${max_n} -G ${png_output}
 

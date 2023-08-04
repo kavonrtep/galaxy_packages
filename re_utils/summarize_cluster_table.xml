@@ -9,7 +9,7 @@
     <required_files>
         <include type="literal" path="summarize_cluster_table.R"/>
     </required_files>
-    <command interpreter="Rscript" detect_errors="exit_code">
+    <command detect_errors="exit_code">
         Rscript $__tool_directory__/summarize_cluster_table.R
         --cluster_table=$cluster_table
         --output=$output

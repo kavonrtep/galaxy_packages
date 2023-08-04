@@ -143,8 +143,7 @@ if (!is.null(opt$cutadapt_options)){
 
 
 cutadapt_cmd=function(input,output,cutadapt_arguments){
-	cmds=paste("cutadapt --format=",
-			"fastq",
+	cmds=paste("cutadapt ",
 			cutadapt_arguments,
 			" ",
 			c(input),

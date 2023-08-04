@@ -7,7 +7,7 @@
         <include type="literal" path="name_affixer.py"/>
     </required_files>
     <command>
-        ${__tool_directory__}/name_affixer.py -f $input -p "$prefix" -s "$suffix" -n
+        python ${__tool_directory__}/name_affixer.py -f $input -p "$prefix" -s "$suffix" -n
         $nspace > $output
     </command>
 

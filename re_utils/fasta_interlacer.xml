@@ -1,7 +1,7 @@
 <tool id="fasta_interlacer" name="FASTA interlacer" version="1.0.0.4">
     <description>Join pared reads into single file</description>
     <requirements>
-        <container type="package" version="3">python</container>
+        <requirement type="package" version="3">python</requirement>
     </requirements>
     <required_files>
         <include type="literal" path="fasta_interlacer.py"/>
