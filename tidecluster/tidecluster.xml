@@ -1,0 +1,62 @@
+<tool id="tidecluster" name="TideCluster" version="1.0.1">
+    <description>Identify tandem repeats in genome assemblies</description>
+    <requirements>
+        <requirement type="package" version="0.0.8">tidecluster</requirement>
+    </requirements>
+    <command detect_errors="exit_code"><![CDATA[
+        mkdir -p output && cd output &&
+        TideCluster.py run_all
+        -f '$fasta'
+        -pr 'tidecluster'
+        #if $library:
+        -l '$library'
+        #end if
+        -m $min_length
+        -T ' -p $min_period -P $max_period -e $max_diverg'
+        -nd $no_dust
+        -c 10
+        -M $min_total_length
+        &&
+        mv tidecluster_tidehunter.gff3 '$gff3_tidehunter'
+        &&
+        mv tidecluster_clustering.gff3 '$gff3_clustering'
+        &&
+        mv tidecluster_tarean_report.html '$tarean_report'
+        &&
+        mkdir -p ${tarean_report.extra_files_path}
+        &&
+        mv tidecluster_tarean ${tarean_report.extra_files_path}/
+        &&
+        zip -r output.zip *
+        &&
+        mv output.zip '$output_archive'
+
+    ]]></command>
+    <inputs>
+        <param type="data" name="fasta" format="fasta" label="Reference fasta" help="Path to reference sequence in fasta format" />
+        <param type="data" name="library" format="fasta" label="Library" help="Path to library of tandem repeats" optional="true" />
+        <param type="integer" name="min_length" value="5000" label="Minimum length of tandem repeat" />
+        <param type="integer" name="min_period" value="40" label="Minimum period size of tandem repeat" min="2" />
+        <param type="integer" name="max_period" value="3000" label="Maximum period size of tandem repeat" max="20000" />
+        <param type="float" name="max_diverg" value="0.25" label="Maximum allowed divergence rate between two consecutive repeats" min="0" max="1" />
+        <param type="boolean" name="no_dust" truevalue="--no_dust" falsevalue="" checked="false" label="Do not use dust filter in blastn when clustering" />
+        <param type="integer" name="min_total_length" value="50000" label="Minimum combined length of tandem repeat arrays within a single cluster" />
+    </inputs>
+    <outputs>
+        <data name="gff3_tidehunter" format="gff3" label="${tool.name} on ${on_string}: GFF3 TideHunter Output"/>
+        <data name="gff3_clustering" format="gff3" label="${tool.name} on ${on_string}: GFF3 TideCluster Output"/>
+        <data name="gff3_annotation" format="gff3" label="${tool.name} on ${on_string}: GFF3 TideCluster Annotated Output">
+            <filter>library is not None</filter>
+        </data>
+        <data name="tarean_report" format="html" label="${tool.name} on ${on_string}: TAREAN Report"/>
+        <data name="output_archive" format="zip" label="${tool.name} on ${on_string}: Output Archive"/>
+
+
+    </outputs>
+    <help><![CDATA[
+        TideCluster is a software tool designed to identify tandem repeats in genome assemblies.
+    ]]></help>
+    <citations>
+        <!-- Add citations here -->
+    </citations>
+</tool>
