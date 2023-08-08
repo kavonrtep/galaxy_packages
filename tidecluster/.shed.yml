@@ -6,7 +6,7 @@ long_description: |
   This Galaxy tool wrapper allows for easy integration of TideCluster into Galaxy workflows.
 type: unrestricted
 categories:
-  - Genome Annotation
+  - Genome annotation
 remote_repository_url: https://github.com/kavonrtep/galaxy_packages
 homepage_url: https://github.com/kavonrtep/TideCluster
 
