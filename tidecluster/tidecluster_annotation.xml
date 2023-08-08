@@ -1,0 +1,47 @@
+<tool id="tidecluster_annotation" name="TideCluster Annotation" version="@TOOL_VERSION@">
+    <macros>
+        <import>macros.xml</import>
+    </macros>
+    <description>Annotate tandem repeats identified by TideCluster using custom library of tandem repeats</description>
+    <expand macro="requirements" />
+    <command detect_errors="exit_code"><![CDATA[
+        #set $prefix = 'tidecluster'
+        mkdir extracted &&
+        unzip '$input_archive' -d extracted && cd extracted &&
+        TideCluster.py annotation
+        -pr '$prefix'
+        -l '$library'
+        -c \${GALAXY_SLOTS:-1}
+        &&
+        cp '${prefix}_annotation.gff3' '$gff3_annotation'
+        &&
+        cp '${prefix}_annotation.tsv' '$tsv_annotation'
+    ]]></command>
+    <inputs>
+        <param type="data" name="input_archive" format="zip" label="Output archive from previous TideCluster run" help="The zip archive containing the output from a previous TideCluster run."/>
+        <param type="data" name="library" format="fasta" label="Library of tandem repeats" help="Path to library of tandem repeats."/>
+    </inputs>
+    <outputs>
+        <data name="gff3_annotation" format="gff3" label="${tool.name} on ${on_string}: GFF3 TideCluster Annotated Output"/>
+        <data name="tsv_annotation" format="tsv" label="${tool.name} on ${on_string}: TSV TideCluster Annotated Output"/>
+    </outputs>
+    <help><![CDATA[
+    **TideCluster Annotation Step**
+
+    This step of TideCluster is responsible for annotating the tandem repeats using a library of tandem repeats. The consensus sequences from TideHunter for each cluster are examined by RepeatMasker against a library of tandem repeats. The resulting annotation for each tandem repeat is used to update the information in the GFF3 file.
+
+    **Inputs:**
+
+
+    - Output archive from previous TideCluster run: The zip archive containing the output from a previous TideCluster run.
+    - Library of tandem repeats: FASTA library with tandem repeats, Library must be in RepeatMasker format
+
+    **Outputs:**
+
+    - GFF3 TideCluster Annotated Output: GFF3 file with tandem repeats annotated by RepeatMasker. Attribute Annotation is added to GFF3 file.
+    - TSV TideCluster Annotated Output: Summarized annotation for each TRC cluster in a tab-delimited format.
+    ]]></help>
+    <citations>
+        <!-- Add citations here -->
+    </citations>
+</tool>

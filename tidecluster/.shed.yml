@@ -1,0 +1,13 @@
+name: tidecluster
+owner: petr-novak
+description: Identify tandem repeats in genome assemblies
+long_description: |
+  TideCluster is a software tool designed to identify tandem repeats in genome assemblies.
+  This Galaxy tool wrapper allows for easy integration of TideCluster into Galaxy workflows.
+type: unrestricted
+categories:
+  - Genome Annotation
+remote_repository_url: https://github.com/kavonrtep/galaxy_packages
+homepage_url: https://github.com/kavonrtep/TideCluster
+
+

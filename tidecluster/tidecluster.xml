@@ -1,8 +1,9 @@
-<tool id="tidecluster" name="TideCluster" version="1.0.1">
+<tool id="tidecluster" name="TideCluster" version="@TOOL_VERSION@">
+    <macros>
+        <import>macros.xml</import>
+    </macros>
     <description>Identify tandem repeats in genome assemblies</description>
-    <requirements>
-        <requirement type="package" version="0.0.8">tidecluster</requirement>
-    </requirements>
+    <expand macro="requirements" />
     <command detect_errors="exit_code"><![CDATA[
         mkdir -p output && cd output &&
         TideCluster.py run_all
@@ -14,49 +15,92 @@
         -m $min_length
         -T ' -p $min_period -P $max_period -e $max_diverg'
         -nd $no_dust
-        -c 10
+        -c \${GALAXY_SLOTS:-1}
         -M $min_total_length
         &&
-        mv tidecluster_tidehunter.gff3 '$gff3_tidehunter'
+        cp tidecluster_tidehunter.gff3 '$gff3_tidehunter'
         &&
-        mv tidecluster_clustering.gff3 '$gff3_clustering'
+        cp tidecluster_clustering.gff3 '$gff3_clustering'
         &&
-        mv tidecluster_tarean_report.html '$tarean_report'
+        cp tidecluster_tarean_report.html '$tarean_report'
         &&
         mkdir -p ${tarean_report.extra_files_path}
         &&
-        mv tidecluster_tarean ${tarean_report.extra_files_path}/
+        cp -r tidecluster_tarean ${tarean_report.extra_files_path}/
         &&
         zip -r output.zip *
+
+
+        #if $library:
+        &&
+        cp tidecluster_annotation.gff3 '$gff3_annotation'
+        &&
+        cp tidecluster_annotation.tsv '$csv_annotation'
+        #end if
         &&
         mv output.zip '$output_archive'
 
     ]]></command>
     <inputs>
-        <param type="data" name="fasta" format="fasta" label="Reference fasta" help="Path to reference sequence in fasta format" />
-        <param type="data" name="library" format="fasta" label="Library" help="Path to library of tandem repeats" optional="true" />
-        <param type="integer" name="min_length" value="5000" label="Minimum length of tandem repeat" />
-        <param type="integer" name="min_period" value="40" label="Minimum period size of tandem repeat" min="2" />
-        <param type="integer" name="max_period" value="3000" label="Maximum period size of tandem repeat" max="20000" />
-        <param type="float" name="max_diverg" value="0.25" label="Maximum allowed divergence rate between two consecutive repeats" min="0" max="1" />
-        <param type="boolean" name="no_dust" truevalue="--no_dust" falsevalue="" checked="false" label="Do not use dust filter in blastn when clustering" />
-        <param type="integer" name="min_total_length" value="50000" label="Minimum combined length of tandem repeat arrays within a single cluster" />
+        <param type="data" name="fasta" format="fasta" label="Reference fasta"
+               help="Path to reference sequence in fasta format"/>
+        <param type="data" name="library" format="fasta" label="Library"
+               help="Path to library of tandem repeats" optional="true"/>
+        <param type="integer" name="min_length" value="5000"
+               label="Minimum length of tandem repeat"/>
+        <param type="integer" name="min_period" value="40"
+               label="Minimum period size of tandem repeat" min="2"/>
+        <param type="integer" name="max_period" value="3000"
+               label="Maximum period size of tandem repeat" max="20000"/>
+        <param type="float" name="max_diverg" value="0.25"
+               label="Maximum allowed divergence rate between two consecutive repeats"
+               min="0" max="1"/>
+        <param type="boolean" name="no_dust" truevalue="--no_dust" falsevalue=""
+               checked="false" label="Do not use dust filter in blastn when clustering"/>
+        <param type="integer" name="min_total_length" value="50000"
+               label="Minimum combined length of tandem repeat arrays within a single cluster"/>
     </inputs>
     <outputs>
-        <data name="gff3_tidehunter" format="gff3" label="${tool.name} on ${on_string}: GFF3 TideHunter Output"/>
-        <data name="gff3_clustering" format="gff3" label="${tool.name} on ${on_string}: GFF3 TideCluster Output"/>
-        <data name="gff3_annotation" format="gff3" label="${tool.name} on ${on_string}: GFF3 TideCluster Annotated Output">
+        <data name="output_archive" format="zip"
+              label="${tool.name} on ${on_string}: Archive with complete results"/>
+        <data name="gff3_tidehunter" format="gff3"
+              label="${tool.name} on ${on_string}: GFF3 TideHunter Output" hidden="true"/>
+        <data name="gff3_clustering" format="gff3"
+              label="${tool.name} on ${on_string}: GFF3 TideCluster Output"/>
+        <data name="gff3_annotation" format="gff3"
+              label="${tool.name} on ${on_string}: GFF3 TideCluster Annotated Output">
             <filter>library is not None</filter>
         </data>
-        <data name="tarean_report" format="html" label="${tool.name} on ${on_string}: TAREAN Report"/>
-        <data name="output_archive" format="zip" label="${tool.name} on ${on_string}: Output Archive"/>
+        <data name="csv_annotation" format="tsv"
+              label="${tool.name} on ${on_string}: TSV TideCluster Annotated Output">
+            <filter>library is not None</filter>
+        </data>
+        <data name="tarean_report" format="html"
+              label="${tool.name} on ${on_string}: TAREAN Report"/>
+
 
 
     </outputs>
     <help><![CDATA[
-        TideCluster is a software tool designed to identify tandem repeats in genome assemblies.
+    **TideCluster** is a software tool designed to identify tandem repeats in genome assemblies by utilizing Tidehunter to detect tandem repeats clustering these repeats based on similarity using mmseqs2 and NCBI BLAST. The software runs in four steps as outlined below:
+
+- **Tidehunter step**: In this initial step, Tidehunter is utilized to identify tandem repeats. As TideHunter's performance diminishes with larger sequences, the input fasta file is divided into smaller overlapping segments, with each segment analyzed individually. Results from individual segments are parsed and merged into a single GFF3 file. Tandem repeats detected in this step are often fragmented into multiple overlapping pieces.
+
+- **Clustering step**: Prior to clustering, all arrays that do not meet the minimum length requirement are removed from the analysis and saved in a separate GFF3 file. Arrays exceeding the minimum length requirement are clustered based on similarity. Clustering occurs in two stages. First, mmseqs2 is employed in the initial round of clustering. The second round involves an all-to-all comparison using NCBI-BLAST, followed by graph-based clustering. The GFF3 file from the Tidehunter step is updated to include cluster assignment information. Simple sequence repeats are excluded from the clustering step and are analyzed separately.
+
+- **Annotation step**: Consensus sequences from TideHunter for each cluster are examined by RepeatMasker against a library of tandem repeats. The resulting annotation for each tandem repeat is used to update the information in the GFF3 file. This step is optional.
+
+- **TAREAN step**: In this final step, the Tandem Repeat Analyzer (TAREAN) estimates consensus sequences using a k-mer-based approach on the original sequences from the reference. Consensus sequences of simple sequence repeats are evaluated separately, as TAREAN performs poorly on tandem repeats with short monomers. The results of the analysis are saved in an HTML summary.
+
+**Credits**
+
+TideCluster utilizes Tidehunter [https://github.com/Xinglab/TideHunter] for tandem repeat detection and TAREAN for reconstruction of consensus sequences of tandem repeats. If you use TideCluster please cite:
+
+- https://github.com/kavonrtep/TideCluster
+- TAREAN: a computational tool for identification and characterization of satellite DNA from unassembled short reads (https://doi.org/10.1093/nar/gkx257)
+- TideHunter: efficient and sensitive tandem repeat detection from noisy long-reads using seed-and-chain (https://doi.org/10.1093/bioinformatics/btz376)
     ]]></help>
     <citations>
-        <!-- Add citations here -->
+
     </citations>
 </tool>
