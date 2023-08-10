@@ -1,7 +1,8 @@
-<tool id="clean_dante_ltr" name="DANTE_LTR retrotransposons filtering" version="0.2.3.2" python_template_version="3.5">
-    <requirements>
-        <requirement type="package" version="0.2.3.2">dante_ltr</requirement>
-    </requirements>
+<tool id="clean_dante_ltr" name="DANTE_LTR retrotransposons filtering" version="@TOOL_VERSION@" python_template_version="3.5">
+    <macros>
+        <import>macros.xml</import>
+    </macros>
+    <expand macro="requirements" />
     <command detect_errors="exit_code"><![CDATA[
         clean_ltr.R --gff3 '$dante_ltr' --reference_sequence '$reference' --output output --cpu \${GALAXY_SLOTS:-1}
         &&

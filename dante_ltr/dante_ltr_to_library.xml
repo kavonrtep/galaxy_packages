@@ -1,7 +1,8 @@
-<tool id="dante_ltr_to_library" name="Create representative library from DANTE_LTR output " version="0.2.3.2" python_template_version="3.5">
-    <requirements>
-        <requirement type="package" version="0.2.3.2">dante_ltr</requirement>
-    </requirements>
+<tool id="dante_ltr_to_library" name="Create representative library from DANTE_LTR output " version="@TOOL_VERSION@" python_template_version="3.5">
+    <macros>
+        <import>macros.xml</import>
+    </macros>
+    <expand macro="requirements" />
     <command detect_errors="exit_code"><![CDATA[
         cp '$dante_ltr' dante_ltr.gff3 &&
         dante_ltr_to_library --gff3 dante_ltr.gff3 --reference_sequence '$reference' --output output --cpu \${GALAXY_SLOTS:-1} --min_coverage 3

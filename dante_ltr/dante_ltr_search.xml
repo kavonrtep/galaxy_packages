@@ -1,7 +1,8 @@
-<tool id="dante_ltr_search" name="DANTE_LTR retrotransposon identification" version="0.2.3.2" python_template_version="3.5">
-    <requirements>
-        <requirement type="package" version="0.2.3.2">dante_ltr</requirement>
-     </requirements>
+<tool id="dante_ltr_search" name="DANTE_LTR retrotransposon identification" version="@TOOL_VERSION@" python_template_version="3.5">
+    <macros>
+        <import>macros.xml</import>
+    </macros>
+    <expand macro="requirements" />
     <command detect_errors="exit_code"><![CDATA[
         echo \$PATH
         &&
