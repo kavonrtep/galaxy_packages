@@ -28,9 +28,9 @@
         &&
         cp -r tidecluster_tarean ${tarean_report.extra_files_path}/
         &&
+        cp tidecluster_consensus_dimer_library.fasta ${trc_library}
+        &&
         zip -r output.zip *
-
-
         #if $library:
         &&
         cp tidecluster_annotation.gff3 '$gff3_annotation'
@@ -71,10 +71,14 @@
               label="${tool.name} on ${on_string}: GFF3 TideCluster Annotated Output">
             <filter>library is not None</filter>
         </data>
+
         <data name="csv_annotation" format="tsv"
               label="${tool.name} on ${on_string}: TSV TideCluster Annotated Output">
             <filter>library is not None</filter>
         </data>
+
+        <data name="trc_library" format="fasta"
+              label="${tool.name} on ${on_string}: Library of tandem repeats"/>
         <data name="tarean_report" format="html"
               label="${tool.name} on ${on_string}: TAREAN Report"/>
 
