@@ -1,8 +1,8 @@
-<tool id="tidecluster_annotation" name="TideCluster Annotation" version="@TOOL_VERSION@">
+<tool id="tidecluster_annotation" name="TideCluster- Annotate Clusters" version="@TOOL_VERSION@">
     <macros>
         <import>macros.xml</import>
     </macros>
-    <description>Annotate tandem repeats identified by TideCluster using custom library of tandem repeats</description>
+    <description>Annotate tandem repeats clusters identified by TideCluster using custom library of tandem repeats</description>
     <expand macro="requirements" />
     <command detect_errors="exit_code"><![CDATA[
         #set $prefix = 'tidecluster'
