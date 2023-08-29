@@ -13,8 +13,8 @@
         -l '$library'
         #end if
         -m $min_length
-        -T ' -p $min_period -P $max_period -e $max_diverg'
-        -nd $no_dust
+        -T ' -p $min_period -P $max_period -e $max_diverg -c $min_copy'
+        $no_dust
         -c \${GALAXY_SLOTS:-1}
         -M $min_total_length
         &&
@@ -22,13 +22,13 @@
         &&
         cp tidecluster_clustering.gff3 '$gff3_clustering'
         &&
-        cp tidecluster_tarean_report.html '$tarean_report'
+        if [ -f tidecluster_tarean_report.html ]; then cp tidecluster_tarean_report.html '$tarean_report'; fi
         &&
         mkdir -p ${tarean_report.extra_files_path}
         &&
-        cp -r tidecluster_tarean ${tarean_report.extra_files_path}/
+        if [ -d tidecluster_tarean ]; then cp -r tidecluster_tarean ${tarean_report.extra_files_path}/; fi
         &&
-        cp tidecluster_consensus_dimer_library.fasta ${trc_library}
+        if [ -f tidecluster_consensus_dimer_library.fasta ]; then cp tidecluster_consensus_dimer_library.fasta ${trc_library}; fi
         &&
         zip -r output.zip *
         #if $library:
@@ -55,10 +55,14 @@
         <param type="float" name="max_diverg" value="0.25"
                label="Maximum allowed divergence rate between two consecutive repeats"
                min="0" max="1"/>
+        <param type="integer" name="min_copy" value="5"
+               label="minimum copy number of tandem repeat" min="2"/>
         <param type="boolean" name="no_dust" truevalue="--no_dust" falsevalue=""
                checked="false" label="Do not use dust filter in blastn when clustering"/>
         <param type="integer" name="min_total_length" value="50000"
-               label="Minimum combined length of tandem repeat arrays within a single cluster"/>
+               label="Minimum combined length of tandem repeat arrays within a single cluster"
+               help="Minimum combined length of tandem repeat arrays within a single cluster, required for inclusion in TAREAN analysis"
+        />
     </inputs>
     <outputs>
         <data name="output_archive" format="zip"
