@@ -131,16 +131,11 @@
       <param name="assembly_min_cluster_size" type="integer" label="Minimal cluster size for assembly" value="5" min="2" max="100"/>
     </when>
   </conditional>
-
-  <conditional name="queue_definition">
-      <param name="queue_select" type="select" label="Select queue">
-          <option value="basic_fast_queue">basic (max runtime 2 days, 4 GB RAM)</option>
-          <option value="long_slow_queue">long (max runtime 2 weeks, 64 GB RAM)</option>
-          <option value="extra_long_slow_queue">extra long (max runtime 4 weeks, 64 GB RAM)</option>
-      </param>
-  </conditional>
- 
-
+  <param name="queue_select" type="select" label="Select queue">
+      <option value="basic_fast_queue">basic (max runtime 2 days, 4 GB RAM)</option>
+      <option value="long_slow_queue">long (max runtime 2 weeks, 64 GB RAM)</option>
+      <option value="extra_long_slow_queue">extra long (max runtime 4 weeks, 64 GB RAM)</option>
+  </param>
 
  </inputs>
     <outputs>
