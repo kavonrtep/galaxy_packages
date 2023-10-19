@@ -1,4 +1,4 @@
-<tool id="repeatexplorer2" name="RepeatExplorer2 clustering: " version="2.3.8.1" >
+<tool id="repeatexplorer2" name="RepeatExplorer2 clustering: " version="2.3.8.2" >
     <stdio>
       <regex match="lastdb: can't open file: NEAR" source="stderr" level="fatal" description="Version of last is too old, use ver 956 or higher\n" />
       <regex match="Traceback" source="stderr" level="fatal" description="Unknown error" />
