@@ -1,4 +1,4 @@
-<tool id="tarean" name="Tandem Repeat Analyzer"  version="2.3.8.1" >
+<tool id="tarean" name="Tandem Repeat Analyzer"  version="2.3.8.2" >
     <stdio>
       <regex match="Traceback" source="stderr" level="fatal" description="Unknown error" />
       <regex match="error" source="stderr" level="fatal" description="Unknown error" />
@@ -11,6 +11,8 @@
    </requirements>
   <command detect_errors="exit_code">
     export PYTHONHASHSEED=0;
+    export TAREAN_CPU=\$GALAXY_SLOTS;
+    export TAREAN_MAX_MEM=\$GALAXY_MEMORY_MB;
     seqclust --paired --sample ${read_sampling.sample} --output_dir=tarean_output --logfile=${log} --cleanup --tarean_mode
     #if $advanced_options.advanced:
       --mincl $advanced_options.size_threshold $advanced_options.keep_names $advanced_options.automatic_filtering -M $advanced_options.merging
@@ -97,28 +99,11 @@
       </when>
     </conditional>
 
-         <conditional name="queue_definition">
-               <param name="queue_select" type="select" label="Select queue">
-                 <option value="basic_fast_queue">basic (max runtime 2 days, 4 GB RAM)</option>
-                 <option value="long_slow_queue">long (max runtime 2 weeks, 64 GB RAM)</option>
-                 <option value="extra_long_slow_queue">extra long (max runtime 4 weeks, 64 GB RAM)</option>
-               </param>
-               <when value="basic_fast_queue">
-                 <param name="queue_specification" type="text" label="Modify parameters (optional)"
-                        value="-l select=1:ncpus=10:mem=32gb:scratch_local=50gb -l walltime=48:00:00 -q elixirre@pbs.elixir-czech.cz -v TAREAN_MAX_MEM=4000000,TAREAN_CPU=4" />
-               </when>
-
-               <when value="long_slow_queue">
-                 <param name="queue_specification" type="text" label="Modify parameters (optional)"
-                        value="-l select=1:ncpus=16:mem=112gb:scratch_local=50gb -l walltime=336:00:00 -q elixirre@pbs.elixir-czech.cz -v TAREAN_MAX_MEM=64000000,TAREAN_CPU=15" />
-               </when>
-               <when value="extra_long_slow_queue">
-                 <param name="queue_specification" type="text" label="Modify parameters (optional)"
-                        value="-l select=1:ncpus=16:mem=112gb:scratch_local=50gb -l walltime=720:00:00 -q elixirre@pbs.elixir-czech.cz -v TAREAN_MAX_MEM=64000000,TAREAN_CPU=15" />
-               </when>
-     </conditional>
- 
-
+    <param name="queue_select" type="select" label="Select queue">
+      <option value="basic_fast_queue">basic (max runtime 2 days, 4 GB RAM)</option>
+      <option value="long_slow_queue">long (max runtime 2 weeks, 64 GB RAM)</option>
+      <option value="extra_long_slow_queue">extra long (max runtime 4 weeks, 64 GB RAM)</option>
+    </param>
 
   </inputs>
   <outputs>
