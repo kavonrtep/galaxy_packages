@@ -12,6 +12,12 @@
         mv output.gff3 $te_ltr_gff
         &&
         mv output_statistics.csv $statistics
+        &&
+        if [ -f output_summary.html ]; then cp output_summary.html $html_report; fi
+        &&
+        mkdir -p ${html_report.extra_files_path}
+        &&
+        if [ -d output_summary_plots ]; then cp -r output_summary_plots ${html_report.extra_files_path}/; fi
     ]]></command>
     <inputs>
         <param type="data" name="dante" format="gff3" label="GFF3 output from DANTE pipeline - full output"/>
@@ -23,6 +29,8 @@
         based on DANTE annotation $dante.hid and reference $reference.hid" />
         <data name="statistics" format="tabular" label="LTR retrotransposons detection
         summary based on $dante.hid and reference $reference.hid" />
+        <data name="html_report" format="html" label="LTR retrotransposons detection on $dante.hid and $reference.hid report" />
+
     </outputs>
     <help><![CDATA[
         This tool uses output from DANTE annotation pipeline to identify full length LTR
