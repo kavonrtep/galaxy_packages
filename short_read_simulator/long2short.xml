@@ -3,6 +3,10 @@
     <requirement type="package">biopython</requirement>
     <requirement type="package" version="3.6">python</requirement>
   </requirements>
+  <required_files>
+    <include type="literal" path="long2short.py"/>
+    <include type="literal" path="long_reads_sampling.py"/>
+  </required_files>
   <command detect_errors="exit_code"><![CDATA[
   python3 $__tool_directory__/long2short.py -i "$input1" -o "$output1" -cov ${coverage} -L ${insert_length} -l ${read_length}
   ]]></command>

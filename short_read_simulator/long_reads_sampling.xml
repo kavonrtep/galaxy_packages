@@ -5,6 +5,7 @@
   </requirements>
   <required_files>
     <include type="literal" path="long2short.py"/>
+    <include type="literal" path="long_reads_sampling.py"/>
   </required_files>
   <command detect_errors="exit_code"><![CDATA[
   python3 $__tool_directory__/long_reads_sampling.py -i "$input1" -o "$output1" -l ${total_length} -s ${seed}
