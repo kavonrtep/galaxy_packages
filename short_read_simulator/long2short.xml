@@ -1,4 +1,4 @@
-<tool id="long2short" name="Get pseudo short paired end reads from long reads" version="0.1.0">
+<tool id="long2short" name="Get pseudo short paired end reads from long reads" version="0.1.1">
   <requirements>
     <requirement type="package">biopython</requirement>
     <requirement type="package" version="3.6">python</requirement>
