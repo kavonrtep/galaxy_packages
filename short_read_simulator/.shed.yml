@@ -1,0 +1,12 @@
+name: long_reads_sampling
+owner: petr-novak
+description: |
+  Make sampling of long reads from a given set of long reads. Creating pseudo short
+  reads from long reads. This tool can be used for preparation of reads 
+  for RepeatExplorer.
+type: unrestricted
+categories:
+  - Fasta Manipulation
+remote_repository_url: https://github.com/kavonrtep/galaxy_tools
+homepage_url: https://github.com/kavonrtep/galaxy_tools
+

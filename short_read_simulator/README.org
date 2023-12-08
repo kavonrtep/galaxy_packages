@@ -1,0 +1,73 @@
+#+TITLE:  Sequence Read Simulator
+#+AUTHOR: Petr Novak
+
+Create pseudo short reads from long reads (Illumina Like). 
+
+* Requirements
+- python version > 3.4
+- biopython
+
+* Available tools
+** long_reads_sampling
+#+BEGIN_EXAMPLE
+
+usage: long_reads_sampling.py [-h] [-i INPUT] [-o OUTPUT] [-l TOTAL_LENGTH]
+                              [-s SEED]
+
+Create sample of long reads, instead of setting number of reads to be sampled,
+total length of all sampled sequences is defined
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i INPUT, --input INPUT
+                        file with long reads in fasta format (default: None)
+  -o OUTPUT, --output OUTPUT
+                        Output file name (default: None)
+  -l TOTAL_LENGTH, --total_length TOTAL_LENGTH
+                        total length of sampled output (default: None)
+  -s SEED, --seed SEED  random number generator seed (default: 123)
+#+END_EXAMPLE
+
+** long2short
+#+BEGIN_EXAMPLE
+usage: long2short.py [-h] [-i INPUT] [-o OUTPUT] [-cov COVERAGE]
+                     [-L INSERT_LENGTH] [-l READ_LENGTH]
+
+Creates pseudo short reads from long oxford nanopore reads
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i INPUT, --input INPUT
+                        file with long reads in fasta format (default: None)
+  -o OUTPUT, --output OUTPUT
+                        Output file name (default: None)
+  -cov COVERAGE, --coverage COVERAGE
+                        samplig coverage (default: 0.1)
+  -L INSERT_LENGTH, --insert_length INSERT_LENGTH
+                        length of insert, must be longer than read length
+                        (default: 600)
+  -l READ_LENGTH, --read_length READ_LENGTH
+                        read length (default: 100)
+
+#+END_EXAMPLE
+resulting reads in fasta format has names which include following information:
+ - original long read name index
+ - position of pseudo forward read in long reads
+forward a reverse reads are interlaced a reverse reads are reverse complement of original long sequence
+example outut:
+#+BEGIN_EXAMPLE
+>1_1_101_f
+TGGTACTTGCGGTTACGTATTGCTAGCTAGTCTCCATTTGTCCGTTGGTCTTAGGTGATT
+TTCCAAGCTTTGTGTGTAAATGTAAGGATCCTCATTTGTA
+>1_1_101_r
+GTTTTGTTATCGTGATCCACAGATCAGAAGATATCGCCGCTCACCTGTCAATTAATCTTA
+ACTTAATGTACACTAGGGTTTTGGTTTTAACTGCTATCTT
+>1_2001_2101_f
+CTGAGTTGGGCAACATAGCCGACAAATTTGAACAATAAGCCGGTCCAGCCTTCTTTCTCA
+GCTGATACATGAAACAAATCAAAGGAGCATTGTAAAGGCG
+>1_2001_2101_r
+TTTTGAATGATGGCACTACCGTGATCAAGGACGATGGTCTCCGTTCACTCGCTTTTGTTG
+TACGTTCTCTATGAACTTGGTTTCTTTGCATTCGGTTCTT
+>1_4001_4101_f
+GAAGTTGAAGGAACATTTGGAAAGGTGTGTGAAGACTAATTTGGTCT
+#+END_EXAMPLE

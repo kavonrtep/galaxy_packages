@@ -1,0 +1,31 @@
+<tool id="long2short" name="Get pseudo short paired end reads from long reads" version="0.1.0">
+  <requirements>
+    <requirement type="package">biopython</requirement>
+    <requirement type="package" version="3.6">python</requirement>
+  </requirements>
+  <command detect_errors="exit_code"><![CDATA[
+  python3 $__tool_directory__/long2short.py -i "$input1" -o "$output1" -cov ${coverage} -L ${insert_length} -l ${read_length}
+  ]]></command>
+  <inputs>
+    <param type="data" name="input1" format="fasta" />
+    <param type="integer" name="insert_length" value="1000" />
+    <param type="integer" name="read_length" value="300" />
+    <param type="float" name="coverage" value="0.1" min="0.0001" max="10"/>
+  </inputs>
+  <outputs>
+    <data name="output1" format="fasta" />
+  </outputs>
+  <tests>
+    <test>
+      <param name="input1" value="read_10k_ALL_oxford_nanopore_sample" />
+      <param name="cov" value="0.1" />
+      <param name="insert_length" value="600" />
+      <param name="read_length" value="100" />
+      <output name="output1" file="pseudo_paired_end.fasta"/>
+    </test>
+  </tests>
+  <help><![CDATA[ Create pseudo short paired-edn reads from long read with
+  required read length, insert length and coverage. Original position on long
+  reads is kept as part of the read name ]]></help>
+
+</tool>
