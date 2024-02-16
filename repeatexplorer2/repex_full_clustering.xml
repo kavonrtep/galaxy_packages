@@ -1,4 +1,4 @@
-<tool id="repeatexplorer2" name="RepeatExplorer2 clustering: " version="2.3.8.2" >
+<tool id="repeatexplorer2" name="RepeatExplorer2 clustering: " version="2.3.9.1" >
     <stdio>
       <regex match="lastdb: can't open file: NEAR" source="stderr" level="fatal" description="Version of last is too old, use ver 956 or higher\n" />
       <regex match="Traceback" source="stderr" level="fatal" description="Unknown error" />
@@ -8,12 +8,12 @@
     </stdio>
     <description>Improved version or repeat discovery and characterization using graph-based sequence clustering</description>
    <requirements>
-     <container type="singularity">library://repeatexplorer/default/repex_tarean:0.3.8-dbaa07f</container>
+     <container type="singularity">library://repeatexplorer/default/repex_tarean:0.3.9-579a65d</container>
    </requirements>
 <command>
       export PYTHONHASHSEED=0;
       export TAREAN_CPU=\$GALAXY_SLOTS;
-      export TAREAN_MAX_MEM=\$GALAXY_MEMORY_MB;
+      export TAREAN_MAX_MEM=\$((GALAXY_MEMORY_MB*1024));
       seqclust --sample ${read_sampling.sample} --output_dir=tarean_output --logfile=${log} --cleanup $paired --taxon $taxon
 
       #if $advanced_options.advanced:
@@ -63,7 +63,7 @@
     <param name="do_sampling" type="boolean" truevalue="true" falsevalue="false" checked="False" label="Read sampling" help="Use this option if you want to analyze only a part of the reads" />
     <when value="false">
       <!-- pass -->
-      <param name="sample" label="Sample size" hidden="True" type="integer" value="0" help="Number of analyzed reads"/>
+      <param name="sample" label="Sample size" type="hidden" value="0" help="Number of analyzed reads"/>
     </when>
     <when value="true">
       <param name="sample" label="Sample size" type="integer" value="500000" min="10000" help="Number of analyzed reads"/>
