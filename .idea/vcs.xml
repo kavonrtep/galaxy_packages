@@ -3,5 +3,6 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/repeat_annotation_pipeline" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/various_galaxy_tools" vcs="hg4idea" />
   </component>
 </project>

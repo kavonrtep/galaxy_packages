@@ -1,4 +1,4 @@
-<tool id="tarean" name="Tandem Repeat Analyzer"  version="2.3.9.1" >
+<tool id="tarean" name="Tandem Repeat Analyzer (TAREAN)"  version="2.3.9.1" >
     <stdio>
       <regex match="Traceback" source="stderr" level="fatal" description="Unknown error" />
       <regex match="error" source="stderr" level="fatal" description="Unknown error" />
