@@ -1,0 +1,7 @@
+categories:
+  - Visualization
+description: Krona visualization tool
+long_description: Krona visualization tool
+name: krona_text
+owner: petr-novak
+exclude:

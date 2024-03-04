@@ -1,4 +1,4 @@
-<tool id="tarean" name="Tandem Repeat Analyzer (TAREAN)"  version="2.3.9.1" >
+<tool id="tarean" name="Tandem Repeat Analyzer (TAREAN)"  version="2.3.10.1" >
     <stdio>
       <regex match="Traceback" source="stderr" level="fatal" description="Unknown error" />
       <regex match="error" source="stderr" level="fatal" description="Unknown error" />
@@ -7,7 +7,7 @@
     </stdio>
     <description>Identification of genomic tandem repeats from NGS data</description>
    <requirements>
-     <container type="singularity">library://repeatexplorer/default/repex_tarean:0.3.9-579a65d</container>
+     <container type="singularity">library://repeatexplorer/default/repex_tarean:0.3.10-a11bf65</container>
    </requirements>
   <command detect_errors="exit_code">
     export PYTHONHASHSEED=0;

@@ -1,4 +1,4 @@
-<tool id="repeatexplorer2" name="RepeatExplorer2 clustering: " version="2.3.9.1" >
+<tool id="repeatexplorer2" name="RepeatExplorer2 clustering: " version="2.3.10.1" >
     <stdio>
       <regex match="lastdb: can't open file: NEAR" source="stderr" level="fatal" description="Version of last is too old, use ver 956 or higher\n" />
       <regex match="Traceback" source="stderr" level="fatal" description="Unknown error" />
@@ -8,7 +8,7 @@
     </stdio>
     <description>Improved version or repeat discovery and characterization using graph-based sequence clustering</description>
    <requirements>
-     <container type="singularity">library://repeatexplorer/default/repex_tarean:0.3.9-579a65d</container>
+     <container type="singularity">library://repeatexplorer/default/repex_tarean:0.3.10-a11bf65</container>
    </requirements>
 <command>
       export PYTHONHASHSEED=0;
