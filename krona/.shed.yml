@@ -1,7 +1,8 @@
-categories:
-  - Visualization
-description: Krona visualization tool
-long_description: Krona visualization tool
 name: krona_text
 owner: petr-novak
-exclude:
+description: Krona visualization tool
+long_description: Krona visualization tool
+categories:
+  - Visualization
+remote_repository_url: https://github.com/kavonrtep/galaxy_packages
+homepage_url: https://github.com/kavonrtep/galaxy_packages

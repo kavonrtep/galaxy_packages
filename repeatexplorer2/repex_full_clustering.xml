@@ -1,4 +1,4 @@
-<tool id="repeatexplorer2" name="RepeatExplorer2 clustering: " version="2.3.10.1" >
+<tool id="repeatexplorer2" name="RepeatExplorer2 clustering: " version="2.3.10.2" >
     <stdio>
       <regex match="lastdb: can't open file: NEAR" source="stderr" level="fatal" description="Version of last is too old, use ver 956 or higher\n" />
       <regex match="Traceback" source="stderr" level="fatal" description="Unknown error" />
@@ -39,7 +39,7 @@
       cat stderr.log >> ${log} &amp;&amp;
       /opt/repex_tarean/stderr_filter.py stderr.log &amp;&amp;
       cd tarean_output &amp;&amp;
-      zip -r  ${ReportArchive}.zip * &amp;&amp;
+      zip -fz -r  ${ReportArchive}.zip * &amp;&amp;
       mv  ${ReportArchive}.zip ${ReportArchive} &amp;&amp;
       cp index.html ${ReportFile} &amp;&amp;
       mkdir -p ${ReportFile.extra_files_path} &amp;&amp;
