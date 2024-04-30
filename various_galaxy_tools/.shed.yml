@@ -1,0 +1,12 @@
+name: various_galaxy_tools
+owner: petr-novak
+description: various tools from https://github.com/galaxyproject/galaxy
+long_description: |
+  various tools from https://github.com/galaxyproject/galaxy and other sources
+  mostly 'Genomic file utilities'
+categories:
+  - Genome annotation
+remote_repository_url: https://github.com/kavonrtep/galaxy_packages
+homepage_url: https://github.com/kavonrtep/galaxy_packages
+exclude:
+  - do_not_track_info.md
