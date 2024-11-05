@@ -1,6 +1,6 @@
 <macros>
-    <token name="@TOOL_VERSION@">3.5.1.1</token>
-    <token name="@REQUIREMENT_VERSION@">0.3.5.1</token>
+    <token name="@TOOL_VERSION@">4.0.4.1</token>
+    <token name="@REQUIREMENT_VERSION@">0.4.0.4</token>
     <xml name="requirements">
         <requirements>
             <requirement type="package" version="@REQUIREMENT_VERSION@">dante_ltr</requirement>

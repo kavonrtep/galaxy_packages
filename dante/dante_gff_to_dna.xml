@@ -1,7 +1,7 @@
-<tool id="domains_extract" name="Extract Domains Nucleotide Sequences" version="1.1.8">
+<tool id="domains_extract" name="Extract Domains Nucleotide Sequences" version="2.5.1">
   <description> Tool to extract nucleotide sequences of protein domains found by DANTE </description>
   <requirements>
-    <requirement type="package">dante=0.1.8</requirement>
+    <requirement type="package">dante=0.2.5</requirement>
   </requirements>
   <command>
     TEMP_DIR_LINEAGES=\$(mktemp -d) &amp;&amp;
@@ -22,6 +22,7 @@
 	  <param format="fasta" type="data" name="input_dna" label="Input DNA" help="Choose input DNA sequence(s) to extract the domains from" />
 	  <param format="gff" type="data" name="domains_gff" label="Protein domains GFF" help="Choose filtered protein domains GFF3 (DANTE's output)" />
 	  <param name="database" type="select" label="Select REXdb database">
+        <option value="Viridiplantae_v4.0" selected="true">Viridiplantae_v4.0</option>
         <option value="Viridiplantae_v3.0" selected="true">Viridiplantae_v3.0</option>
         <option value="Metazoa_v3.1" selected="true">Metazoa_v3.1</option>
         <option value="Viridiplantae_v2.2" selected="true">Viridiplantae_v2.2</option>

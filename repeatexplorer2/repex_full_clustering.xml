@@ -1,4 +1,4 @@
-<tool id="repeatexplorer2" name="RepeatExplorer2 clustering: " version="2.3.11.1" >
+<tool id="repeatexplorer2" name="RepeatExplorer2 clustering: " version="2.3.12.1" >
     <stdio>
       <regex match="lastdb: can't open file: NEAR" source="stderr" level="fatal" description="Version of last is too old, use ver 956 or higher\n" />
       <regex match="Traceback" source="stderr" level="fatal" description="Unknown error" />
@@ -8,7 +8,7 @@
     </stdio>
     <description>Improved version or repeat discovery and characterization using graph-based sequence clustering</description>
    <requirements>
-     <container type="singularity">library://repeatexplorer/default/repex_tarean:0.3.11-579a65d</container>
+     <container type="singularity">library://repeatexplorer/default/repex_tarean:0.3.12-7a7dc9e</container>
    </requirements>
 <command>
       export PYTHONHASHSEED=0;
@@ -72,8 +72,9 @@
 
 
   <param name="taxon" label="Select taxon and protein domain database version (REXdb)" type="select" help="Reference database of transposable element protein domains - REXdb - is used for annotation of repeats">
-    <option value="VIRIDIPLANTAE3.0" selected="true">Viridiplantae version 3.0 </option>
-    <option value="VIRIDIPLANTAE2.2" selected="true">Viridiplantae version 2.2</option>
+    <option value="VIRIDIPLANTAE4.0" selected="true">Viridiplantae version 4.0 </option>
+    <option value="VIRIDIPLANTAE3.0" >Viridiplantae version 3.0 </option>
+    <option value="VIRIDIPLANTAE2.2" >Viridiplantae version 2.2</option>
     <option value="METAZOA3.0" >Metazoa version 3.0</option>
     <option value="METAZOA2.0" >Metazoa version 2.0</option>
     <!-- Modify setting in config.py accordingly -->
