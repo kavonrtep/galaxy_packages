@@ -1,4 +1,4 @@
-<tool id="repeatexplorer2" name="RepeatExplorer2 clustering: " version="2.3.11.1" >
+<tool id="repeatexplorer2" name="RepeatExplorer2 clustering: " version="2.3.8.2" >
     <stdio>
       <regex match="lastdb: can't open file: NEAR" source="stderr" level="fatal" description="Version of last is too old, use ver 956 or higher\n" />
       <regex match="Traceback" source="stderr" level="fatal" description="Unknown error" />
@@ -8,13 +8,36 @@
     </stdio>
     <description>Improved version or repeat discovery and characterization using graph-based sequence clustering</description>
    <requirements>
-     <container type="singularity">library://repeatexplorer/default/repex_tarean:0.3.11-579a65d</container>
+     <requirement type="package">last</requirement>
+     <requirement type="package">imagemagick</requirement>
+     <requirement type="package">mafft</requirement>
+     <requirement type="package">blast</requirement>
+     <requirement type="package" version="0.9.29" >diamond</requirement>
+     <requirement type="package">blast-legacy</requirement>
+     <requirement type="package">r-igraph</requirement>
+     <requirement type="package">r-data.tree</requirement>
+     <requirement type="package">r-stringr</requirement>
+     <requirement type="package">r-r2html</requirement>
+     <requirement type="package">r-hwriter</requirement>
+     <requirement type="package">r-dt</requirement>
+     <requirement type="package">r-scales</requirement>
+     <requirement type="package">r-plotrix</requirement>
+     <requirement type="package">r-png</requirement>
+     <requirement type="package">r-plyr</requirement>
+     <requirement type="package">r-dplyr</requirement>
+     <requirement type="package">r-optparse</requirement>
+     <requirement type="package">r-dbi</requirement>
+     <requirement type="package">r-rsqlite</requirement>
+     <requirement type="package">r-rserve</requirement>
+     <requirement type="package">bioconductor-biostrings</requirement>
+     <requirement type="package" version="2.3.8.1">repex_tarean</requirement>
+     <requirement type="set_environment">REPEX</requirement>
+     <requirement type="set_environment">REPEX_VERSION</requirement>
+     <requirement type="package" version="0.9.1" >pyrserve</requirement>
    </requirements>
-<command>
+    <command >
       export PYTHONHASHSEED=0;
-      export TAREAN_CPU=\$GALAXY_SLOTS;
-      export TAREAN_MAX_MEM=\$((GALAXY_MEMORY_MB*1024));
-      seqclust --sample ${read_sampling.sample} --output_dir=tarean_output --logfile=${log} --cleanup $paired --taxon $taxon
+      \${REPEX}/seqclust --sample ${read_sampling.sample} --output_dir=tarean_output --logfile=${log} --cleanup $paired --taxon $taxon
 
       #if $advanced_options.advanced:
       --mincl $advanced_options.size_threshold $advanced_options.keep_names $advanced_options.automatic_filtering  -D $advanced_options.blastx.options_blastx
@@ -37,21 +60,21 @@
       cat stdout.log >> ${log} ;
       echo "STDERR CONTENT:" >> ${log};
       cat stderr.log >> ${log} &amp;&amp;
-      /opt/repex_tarean/stderr_filter.py stderr.log &amp;&amp;
+      \${REPEX}/stderr_filter.py stderr.log &amp;&amp;
       cd tarean_output &amp;&amp;
       zip -fz -r  ${ReportArchive}.zip * &amp;&amp;
-      mv  ${ReportArchive}.zip ${ReportArchive} &amp;&amp;
+      mv ${ReportArchive}.zip ${ReportArchive} &amp;&amp;
       cp index.html ${ReportFile} &amp;&amp;
-      mkdir -p ${ReportFile.extra_files_path} &amp;&amp;
-      cp -r --parents libdir ${ReportFile.extra_files_path} &amp;&amp;
-      cp -r --parents seqclust/clustering/superclusters ${ReportFile.extra_files_path} &amp;&amp;
-      cp -r --parents seqclust/clustering/clusters ${ReportFile.extra_files_path} &amp;&amp;
-      cp seqclust/clustering/hitsort.cls ${ReportFile.extra_files_path}/seqclust/clustering/hitsort.cls &amp;&amp;
-      cp *.png ${ReportFile.extra_files_path}/ &amp;&amp;
-      cp *.csv ${ReportFile.extra_files_path}/ &amp;&amp;
-      cp *.html ${ReportFile.extra_files_path}/  &amp;&amp;
-      cp *.css ${ReportFile.extra_files_path}/  &amp;&amp;
-      cp *.fasta ${ReportFile.extra_files_path}/ 2>>$log  &amp;&amp; rm -r ../tarean_output || :
+      mkdir ${ReportFile.files_path} &amp;&amp;
+      cp -r --parents libdir ${ReportFile.files_path} &amp;&amp;
+      cp -r --parents seqclust/clustering/superclusters ${ReportFile.files_path} &amp;&amp;
+      cp -r --parents seqclust/clustering/clusters ${ReportFile.files_path} &amp;&amp;
+      cp seqclust/clustering/hitsort.cls ${ReportFile.files_path}/seqclust/clustering/hitsort.cls &amp;&amp;
+      cp *.png ${ReportFile.files_path}/ &amp;&amp;
+      cp *.csv ${ReportFile.files_path}/ &amp;&amp;
+      cp *.html ${ReportFile.files_path}/  &amp;&amp;
+      cp *.css ${ReportFile.files_path}/  &amp;&amp;
+      cp *.fasta ${ReportFile.files_path}/ 2>>$log  &amp;&amp; rm -r ../tarean_output || :
 
     </command>
  <inputs>
@@ -63,7 +86,7 @@
     <param name="do_sampling" type="boolean" truevalue="true" falsevalue="false" checked="False" label="Read sampling" help="Use this option if you want to analyze only a part of the reads" />
     <when value="false">
       <!-- pass -->
-      <param name="sample" label="Sample size" type="hidden" value="0" help="Number of analyzed reads"/>
+      <param name="sample" label="Sample size" hidden="True" type="integer" value="0" help="Number of analyzed reads"/>
     </when>
     <when value="true">
       <param name="sample" label="Sample size" type="integer" value="500000" min="10000" help="Number of analyzed reads"/>
@@ -131,11 +154,29 @@
       <param name="assembly_min_cluster_size" type="integer" label="Minimal cluster size for assembly" value="5" min="2" max="100"/>
     </when>
   </conditional>
-  <param name="queue_select" type="select" label="Select queue">
-      <option value="basic_fast_queue">basic (max runtime 2 days, 4 GB RAM)</option>
-      <option value="long_slow_queue">long (max runtime 2 weeks, 64 GB RAM)</option>
-      <option value="extra_long_slow_queue">extra long (max runtime 4 weeks, 64 GB RAM)</option>
-  </param>
+
+       <conditional name="queue_definition">
+               <param name="queue_select" type="select" label="Select queue">
+                 <option value="basic_fast_queue">basic (max runtime 2 days, 4 GB RAM)</option>
+                 <option value="long_slow_queue">long (max runtime 2 weeks, 64 GB RAM)</option>
+                 <option value="extra_long_slow_queue">extra long (max runtime 4 weeks, 64 GB RAM)</option>
+               </param>
+               <when value="basic_fast_queue">
+                 <param name="queue_specification" type="text" label="Modify parameters (optional)"
+                        value="-l select=1:ncpus=10:mem=32gb:scratch_local=50gb -l walltime=48:00:00 -q elixirre@pbs.elixir-czech.cz -v TAREAN_MAX_MEM=4000000,TAREAN_CPU=4" />
+               </when>
+
+               <when value="long_slow_queue">
+                 <param name="queue_specification" type="text" label="Modify parameters (optional)"
+                        value="-l select=1:ncpus=16:mem=112gb:scratch_local=50gb -l walltime=336:00:00 -q elixirre@pbs.elixir-czech.cz -v TAREAN_MAX_MEM=64000000,TAREAN_CPU=15" />
+               </when>
+               <when value="extra_long_slow_queue">
+                 <param name="queue_specification" type="text" label="Modify parameters (optional)"
+                        value="-l select=1:ncpus=16:mem=112gb:scratch_local=50gb -l walltime=720:00:00 -q elixirre@pbs.elixir-czech.cz -v TAREAN_MAX_MEM=64000000,TAREAN_CPU=15" />
+               </when>
+     </conditional>
+ 
+
 
  </inputs>
     <outputs>

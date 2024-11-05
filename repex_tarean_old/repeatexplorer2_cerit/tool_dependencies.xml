@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<tool_dependency>
+    <package name="repex_tarean" version="2.3.8.1">
+        <repository name="package_repex_tarean_2_3_8_1" owner="petr-novak" prior_installation_required="True" toolshed="https://toolshed.g2.bx.psu.edu" changeset_revision="b876ecefd6d8"/>
+        <readme>
+      prepare repex database and scripts
+    </readme>
+    </package>
+</tool_dependency>

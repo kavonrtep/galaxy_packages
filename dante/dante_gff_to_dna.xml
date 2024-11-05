@@ -25,7 +25,7 @@
         <option value="Viridiplantae_v3.0" selected="true">Viridiplantae_v3.0</option>
         <option value="Metazoa_v3.1" selected="true">Metazoa_v3.1</option>
         <option value="Viridiplantae_v2.2" selected="true">Viridiplantae_v2.2</option>
-        <option value="Metazoa_v3.0" selected="true">Metazoa_v3.1</option>
+        <option value="Metazoa_v3.0" selected="true">Metazoa_v3.0</option>
       </param>
 
 	  <param name="extend_edges" type="boolean" truevalue="True" falsevalue="False" checked="True" label="Extend sequence edges" help="Extend extracted sequence edges to the full length of database domains sequences"/>

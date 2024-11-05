@@ -86,7 +86,7 @@
         <option value="Viridiplantae_v3.0" selected="true">Viridiplantae_v3.0</option>
         <option value="Metazoa_v3.1" selected="true">Metazoa_v3.1</option>
         <option value="Viridiplantae_v2.2" selected="true">Viridiplantae_v2.2</option>
-        <option value="Metazoa_v3.0" selected="true">Metazoa_v3.1</option>
+        <option value="Metazoa_v3.0" selected="true">Metazoa_v3.0</option>
     </param>
     <param name="scoring_matrix" type="select" label="Select scoring matrix">
       <option value="BL80" selected="true" >BLOSUM80</option>
