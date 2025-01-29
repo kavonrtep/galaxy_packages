@@ -1,6 +1,6 @@
-<tool id="gff_to_tabular" name="Convert dante gff3 to tab delimited file" version="2.5.1" python_template_version="3.5">
+<tool id="gff_to_tabular" name="Convert dante gff3 to tab delimited file" version="2.6.1" python_template_version="3.5">
     <requirements>
-        <requirement type="package">dante=0.2.5</requirement>
+        <requirement type="package">dante=0.2.6</requirement>
     </requirements>
     <command detect_errors="exit_code"><![CDATA[
         summarize_gff.R '$inputgff' '$output'

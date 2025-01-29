@@ -33,9 +33,12 @@
         if [ -f tidecluster_kite_report.html ]; then cp  tidecluster_kite_report.html ${tarean_report.extra_files_path}/; fi
         &&
         if [ -f tidecluster_tarean_report.html ]; then cp  tidecluster_tarean_report.html ${tarean_report.extra_files_path}/; fi
-
         &&
         if [ -f tidecluster_consensus_dimer_library.fasta ]; then cp tidecluster_consensus_dimer_library.fasta ${trc_library}; fi
+        &&
+        if [ -f tidecluster_trc_superfamilies.html ]; then cp tidecluster_trc_superfamilies.html ${tarean_report.extra_files_path}/; fi
+        &&
+        if [ -d dotplots ]; then cp -r dotplots ${tarean_report.extra_files_path}/; fi
         &&
         zip -r output.zip *
         #if $library:

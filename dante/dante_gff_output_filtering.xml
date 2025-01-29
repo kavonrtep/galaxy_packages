@@ -1,7 +1,7 @@
-<tool id="domains_filter" name="Protein Domains Filter" version="2.5.1">
+<tool id="domains_filter" name="Protein Domains Filter" version="2.6.1">
   <description> Tool for filtering of gff3 output from DANTE. Filtering can be performed based domain type and alignment quality. </description>
     <requirements>
-        <requirement type="package">dante=0.2.5</requirement>
+        <requirement type="package">dante=0.2.6</requirement>
     </requirements>
     <stdio>
         <regex match="Traceback" source="stderr" level="fatal" description="Unknown error" />
