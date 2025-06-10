@@ -1,0 +1,74 @@
+#+TITLE: Building galaxy tools
+* Long reads sampling
+#+BEGIN_SRC sh
+# require planemo
+if [ -e "long_reads_sampling.xml" ]
+then
+   echo "backing up original file"
+   cp long_reads_sampling.xml long_reads_sampling.xml.backup
+fi
+planemo tool_init --force  --id 'long_reads_sampling' \
+--name 'Create sample of long reads' \
+--requirement biopython \
+--example_command 'long_reads_sampling.py -i input_seq.fasta -o output_seq.fasta -l total_length -s seed' \
+--example_input 'input_seq.fasta' \
+--example_output 'output_seq.fasta'
+
+#+END_SRC
+
+#+RESULTS:
+| backing         | up      | original | file                         |
+| [32m[1mTool | written | to       | long_reads_sampling.xml[0m |
+
+
+
+
+* Short read simulator
+#+BEGIN_SRC sh
+# require planemo
+if [ -e "long2short.xml" ]
+then
+   echo "backing up original file"
+   cp long2short.xml long2short.xml.backup
+fi
+/home/petr/anaconda3/bin/planemo tool_init --force  --id 'long2short' \
+--name 'Get pseudo short paired end reads from long reads' \
+--requirement biopython \
+--requirement python@3.6 \
+--example_command 'long2short.py -i input_seq.fasta -o output_seq.fasta -cov coverage -L insert_length -l read_length' \
+--example_input 'input_seq.fasta' \
+--example_output 'output_seq.fasta'
+
+#+END_SRC
+
+#+RESULTS:
+: Tool written to long2short.xml
+
+file must be manually edited
+
+
+* create planemo repo with all tools
+# create toolshed configuration
+#+BEGIN_SRC bash
+/home/petr/anaconda3/bin/planemo shed_init --name=long_reads_sampling \
+                    --owner=repeatexplorer \
+                    --description=long_reads_sampling \
+                    --long_description="Create sample of long reads" \
+                    --category="Fasta Manipulation"
+/home/petr/anaconda3/bin/planemo shed_lint --tools
+#+END_SRC
+
+#+RESULTS:
+
+# creating repository - once
+
+#+BEGIN_SRC bash
+# it requires planemo server running!
+planemo shed_create --shed_target local
+#+END_SRC
+
+# create tarball which can be uploaded to repository manualy
+
+#+BEGIN_SRC sh
+planemo shed_build .
+#+END_SRC

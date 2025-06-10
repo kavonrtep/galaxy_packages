@@ -22,13 +22,23 @@
         &&
         cp tidecluster_clustering.gff3 '$gff3_clustering'
         &&
-        if [ -f tidecluster_tarean_report.html ]; then cp tidecluster_tarean_report.html '$tarean_report'; fi
+        if [ -f tidecluster_index.html ]; then cp tidecluster_index.html '$tarean_report'; fi
         &&
         mkdir -p ${tarean_report.extra_files_path}
         &&
         if [ -d tidecluster_tarean ]; then cp -r tidecluster_tarean ${tarean_report.extra_files_path}/; fi
         &&
+        if [ -d tidecluster_kite ]; then cp -r tidecluster_kite ${tarean_report.extra_files_path}/; fi
+        &&
+        if [ -f tidecluster_kite_report.html ]; then cp  tidecluster_kite_report.html ${tarean_report.extra_files_path}/; fi
+        &&
+        if [ -f tidecluster_tarean_report.html ]; then cp  tidecluster_tarean_report.html ${tarean_report.extra_files_path}/; fi
+        &&
         if [ -f tidecluster_consensus_dimer_library.fasta ]; then cp tidecluster_consensus_dimer_library.fasta ${trc_library}; fi
+        &&
+        if [ -f tidecluster_trc_superfamilies.html ]; then cp tidecluster_trc_superfamilies.html ${tarean_report.extra_files_path}/; fi
+        &&
+        if [ -d dotplots ]; then cp -r dotplots ${tarean_report.extra_files_path}/; fi
         &&
         zip -r output.zip *
         #if $library:

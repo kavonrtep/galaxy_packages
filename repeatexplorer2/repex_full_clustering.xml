@@ -1,4 +1,4 @@
-<tool id="repeatexplorer2" name="RepeatExplorer2 clustering: " version="2.3.8.1" >
+<tool id="repeatexplorer2" name="RepeatExplorer2 clustering: " version="2.3.12.1" >
     <stdio>
       <regex match="lastdb: can't open file: NEAR" source="stderr" level="fatal" description="Version of last is too old, use ver 956 or higher\n" />
       <regex match="Traceback" source="stderr" level="fatal" description="Unknown error" />
@@ -8,10 +8,12 @@
     </stdio>
     <description>Improved version or repeat discovery and characterization using graph-based sequence clustering</description>
    <requirements>
-     <container type="singularity">library://repeatexplorer/default/repex_tarean:0.3.8-dbaa07f</container>
+     <container type="singularity">library://repeatexplorer/default/repex_tarean:0.3.12-7a7dc9e</container>
    </requirements>
 <command>
       export PYTHONHASHSEED=0;
+      export TAREAN_CPU=\$GALAXY_SLOTS;
+      export TAREAN_MAX_MEM=\$((GALAXY_MEMORY_MB*1024));
       seqclust --sample ${read_sampling.sample} --output_dir=tarean_output --logfile=${log} --cleanup $paired --taxon $taxon
 
       #if $advanced_options.advanced:
@@ -37,7 +39,7 @@
       cat stderr.log >> ${log} &amp;&amp;
       /opt/repex_tarean/stderr_filter.py stderr.log &amp;&amp;
       cd tarean_output &amp;&amp;
-      zip -r  ${ReportArchive}.zip * &amp;&amp;
+      zip -fz -r  ${ReportArchive}.zip * &amp;&amp;
       mv  ${ReportArchive}.zip ${ReportArchive} &amp;&amp;
       cp index.html ${ReportFile} &amp;&amp;
       mkdir -p ${ReportFile.extra_files_path} &amp;&amp;
@@ -61,7 +63,7 @@
     <param name="do_sampling" type="boolean" truevalue="true" falsevalue="false" checked="False" label="Read sampling" help="Use this option if you want to analyze only a part of the reads" />
     <when value="false">
       <!-- pass -->
-      <param name="sample" label="Sample size" hidden="True" type="integer" value="0" help="Number of analyzed reads"/>
+      <param name="sample" label="Sample size" type="hidden" value="0" help="Number of analyzed reads"/>
     </when>
     <when value="true">
       <param name="sample" label="Sample size" type="integer" value="500000" min="10000" help="Number of analyzed reads"/>
@@ -70,8 +72,9 @@
 
 
   <param name="taxon" label="Select taxon and protein domain database version (REXdb)" type="select" help="Reference database of transposable element protein domains - REXdb - is used for annotation of repeats">
-    <option value="VIRIDIPLANTAE3.0" selected="true">Viridiplantae version 3.0 </option>
-    <option value="VIRIDIPLANTAE2.2" selected="true">Viridiplantae version 2.2</option>
+    <option value="VIRIDIPLANTAE4.0" selected="true">Viridiplantae version 4.0 </option>
+    <option value="VIRIDIPLANTAE3.0" >Viridiplantae version 3.0 </option>
+    <option value="VIRIDIPLANTAE2.2" >Viridiplantae version 2.2</option>
     <option value="METAZOA3.0" >Metazoa version 3.0</option>
     <option value="METAZOA2.0" >Metazoa version 2.0</option>
     <!-- Modify setting in config.py accordingly -->
@@ -129,29 +132,11 @@
       <param name="assembly_min_cluster_size" type="integer" label="Minimal cluster size for assembly" value="5" min="2" max="100"/>
     </when>
   </conditional>
-
-       <conditional name="queue_definition">
-               <param name="queue_select" type="select" label="Select queue">
-                 <option value="basic_fast_queue">basic (max runtime 2 days, 4 GB RAM)</option>
-                 <option value="long_slow_queue">long (max runtime 2 weeks, 64 GB RAM)</option>
-                 <option value="extra_long_slow_queue">extra long (max runtime 4 weeks, 64 GB RAM)</option>
-               </param>
-               <when value="basic_fast_queue">
-                 <param name="queue_specification" type="text" label="Modify parameters (optional)"
-                        value="-l select=1:ncpus=10:mem=32gb:scratch_local=50gb -l walltime=48:00:00 -q elixirre@pbs.elixir-czech.cz -v TAREAN_MAX_MEM=4000000,TAREAN_CPU=4" />
-               </when>
-
-               <when value="long_slow_queue">
-                 <param name="queue_specification" type="text" label="Modify parameters (optional)"
-                        value="-l select=1:ncpus=16:mem=112gb:scratch_local=50gb -l walltime=336:00:00 -q elixirre@pbs.elixir-czech.cz -v TAREAN_MAX_MEM=64000000,TAREAN_CPU=15" />
-               </when>
-               <when value="extra_long_slow_queue">
-                 <param name="queue_specification" type="text" label="Modify parameters (optional)"
-                        value="-l select=1:ncpus=16:mem=112gb:scratch_local=50gb -l walltime=720:00:00 -q elixirre@pbs.elixir-czech.cz -v TAREAN_MAX_MEM=64000000,TAREAN_CPU=15" />
-               </when>
-     </conditional>
- 
-
+  <param name="queue_select" type="select" label="Select queue">
+      <option value="basic_fast_queue">basic (max runtime 2 days, 4 GB RAM)</option>
+      <option value="long_slow_queue">long (max runtime 2 weeks, 64 GB RAM)</option>
+      <option value="extra_long_slow_queue">extra long (max runtime 4 weeks, 64 GB RAM)</option>
+  </param>
 
  </inputs>
     <outputs>

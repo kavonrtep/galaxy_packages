@@ -1,0 +1,32 @@
+<tool id="calculate_density" name="Calculate Density" version="1.0.0">
+    <description>Calculate coverage density from BED/GFF files</description>
+    <requirements>
+        <requirement type="package" version="1.7.3">r-optparse</requirement>
+        <requirement type="package" version="1.54.0">bioconductor-rtracklayer</requirement>
+    </requirements>
+    <required_files>
+        <include type="literal" path="calculate_density.R"/>
+    </required_files>
+    <command detect_errors="exit_code"><![CDATA[
+        Rscript '$__tool_directory__/calculate_density.R'
+        --bed '$input_bed'
+        --window '$window_size'
+        --output '$output_bigwig'
+        --format '$input_bed.ext'
+        #if $merge:
+          --merge
+        #end if
+    ]]></command>
+    <inputs>
+        <param type="data" format="bed,gff" name="input_bed" label="Input BED/GFF file" help="BED or GFF file containing genomic regions" />
+        <param type="integer" name="window_size" label="Window size" value="1000000" min="1" help="Size of the window for density calculation" />
+        <param type="boolean" name="merge" label="Merge overlapping regions" truevalue="true" falsevalue="false" checked="true" help="Merge overlapping regions before calculating density" />
+    </inputs>
+    <outputs>
+        <data format="bigwig" name="output_bigwig" label="${tool.name} on ${on_string}: BigWig output"/>
+    </outputs>
+    <help><![CDATA[
+        This tool calculates the coverage density from a provided BED or GFF file over specified window sizes and outputs the results in BigWig format.
+    ]]></help>
+
+</tool>

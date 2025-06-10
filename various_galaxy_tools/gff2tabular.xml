@@ -1,0 +1,22 @@
+<tool id="gff2tabular" name="GFF to Tabular" version="0.1.0">
+    <description>converter</description>
+    <requirements>
+        <requirement type="package">R</requirement>
+        <requirement type="package">bioconductor-rtracklayer</requirement>
+    </requirements>
+    <required_files>
+        <include type="literal" path="gff2tabular.R"/>
+    </required_files>
+    <command detect_errors="exit_code"><![CDATA[
+        Rscript ${__tool_directory__}/gff2tabular.R '$inputgff' '$output'
+    ]]></command>
+    <inputs>
+      <param type="data" name="inputgff" format="gff" />
+    </inputs>
+    <outputs>
+        <data name="output" format="tabular" />
+    </outputs>
+    <help><![CDATA[
+        Convert gff2/gff3 to tab delimited file
+    ]]></help>
+</tool>

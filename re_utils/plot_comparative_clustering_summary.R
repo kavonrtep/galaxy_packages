@@ -128,7 +128,7 @@ plot_rect_map = function(read_counts,cluster_annotation, output_file,GS, RL, Xco
   }
 
   ## set size of pdf output
-  wdth = (3 + N*0.03 ) * Xcoef
+  wdth = (3 + N*0.06 ) * Xcoef
   hgt = (2.2 + ncol(counts)*0.20) * Ycoef
   if (!any(is.na(GS))){
     hgt = hgt + ncol(counts)*0.20 * Ycoef
