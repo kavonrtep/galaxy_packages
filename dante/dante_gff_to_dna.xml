@@ -1,7 +1,7 @@
 <tool id="domains_extract" name="Extract Domains Nucleotide Sequences" version="2.6.1">
   <description> Tool to extract nucleotide sequences of protein domains found by DANTE </description>
   <requirements>
-    <requirement type="package">dante=0.2.6</requirement>
+    <requirement type="package" version="0.2.9">dante</requirement>
   </requirements>
   <command>
     TEMP_DIR_LINEAGES=\$(mktemp -d) &amp;&amp;

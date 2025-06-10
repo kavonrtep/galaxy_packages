@@ -1,7 +1,7 @@
 <tool id="dante" name="Domain based ANnotation of Transposable Elements - DANTE" version="2.6.2">
   <description> Tool for annotation of transposable elements based on the similarity to conserved protein domains database. </description>
   <requirements>
-    <requirement type="package">dante=0.2.6</requirement>
+    <requirement type="package" version="0.2.9">dante</requirement>
   </requirements>
   <stdio>
     <regex match="Traceback" source="stderr" level="fatal" description="Unknown error" />
