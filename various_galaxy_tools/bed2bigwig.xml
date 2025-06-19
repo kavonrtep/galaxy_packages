@@ -28,5 +28,4 @@
     <help><![CDATA[
         This tool calculates the coverage density from a provided BED or GFF file over specified window sizes and outputs the results in BigWig format.
     ]]></help>
-
 </tool>

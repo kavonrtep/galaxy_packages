@@ -1,4 +1,4 @@
-<tool id="gff_summary" name="Summarize gff3 output from DANTE" version="2.6.1" python_template_version="3.5">
+<tool id="gff_summary" name="Summarize gff3 output from DANTE" version="2.9.1" python_template_version="3.5">
     <requirements>
         <requirement type="package" version="0.2.9">dante</requirement>
     </requirements>
@@ -20,3 +20,4 @@
         TODO: Fill in help.
     ]]></help>
 </tool>
+z
