@@ -1,0 +1,15 @@
+categories:
+- Genome annotation
+description: DANTE_TIR - TIR transposon identification
+long_description: |
+  DANTE_TIR identifies DNA transposons with Terminal Inverted Repeats (TIRs) 
+  based on pre-existing annotations of conserved transposase domains from DANTE. 
+  The tool analyzes genomic context around transposase domains to identify 
+  complete TIR elements including terminal inverted repeats and target site duplications.
+name: dante_tir
+owner: petr-novak
+exclude:
+  - shed.yml
+  - __pycache__
+  - tmp
+  - test-data/

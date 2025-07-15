@@ -1,0 +1,105 @@
+<tool id="dante_tir" name="DANTE_TIR - TIR transposon identification" version="@TOOL_VERSION@" python_template_version="3.5">
+    <description>Identifies DNA transposons with Terminal Inverted Repeats (TIRs) based on DANTE domain annotations</description>
+    <macros>
+        <import>macros.xml</import>
+    </macros>
+    <expand macro="requirements" />
+    <stdio>
+        <regex match="Traceback" source="stderr" level="fatal" description="Python error" />
+        <regex match="error" source="stderr" level="fatal" description="Unknown error" />
+        <exit_code range="1:" />
+    </stdio>
+    <command detect_errors="exit_code"><![CDATA[
+        mkdir -p output_dir
+        &&
+        dante_tir.py --gff3 '$dante_gff' --fasta '$reference_fasta'  --output_dir output_dir --cpu \${GALAXY_SLOTS:-1}
+        &&
+        mv output_dir/DANTE_TIR_final.gff3 '$tir_gff'
+        &&
+        mv output_dir/DANTE_TIR_final.fasta '$tir_fasta'
+        &&
+        mv output_dir/TIR_classification_summary.txt '$classification_summary'
+
+    ]]></command>
+    <inputs>
+        <param name="dante_gff" type="data" format="gff3" label="DANTE annotation GFF3 file"
+               help="GFF3 file with conserved transposase domain annotations from DANTE" />
+        <param name="reference_fasta" type="data" format="fasta" label="Reference genome FASTA file"
+               help="Genome assembly FASTA file corresponding to the DANTE annotations" />
+    </inputs>
+    <outputs>
+        <data name="tir_gff" format="gff3" label="TIR transposons annotation (GFF3) on ${dante_gff.hid} and ${reference_fasta.hid}"
+              help="Complete TIR transposon annotations with TIR sequences, target site duplications, and classifications" />
+        <data name="tir_fasta" format="fasta" label="TIR transposons sequences (FASTA) on ${dante_gff.hid} and ${reference_fasta.hid}"
+              help="Complete TIR transposon element sequences in FASTA format" />
+        <data name="classification_summary" format="tabular" label="TIR classification summary on ${dante_gff.hid} and ${reference_fasta.hid}"
+              help="Summary table of detected TIR transposon counts per superfamily" />
+    </outputs>
+    <tests>
+        <test>
+            <param name="dante_gff" value="test_dante.gff3" />
+            <param name="reference_fasta" value="test_genome.fasta" />
+            <output name="tir_gff" file="test_tir_output.gff3" />
+            <output name="tir_fasta" file="test_tir_output.fasta" />
+            <output name="classification_summary" file="test_summary.txt" />
+        </test>
+    </tests>
+    <help><![CDATA[
+**What it does**
+
+DANTE_TIR identifies DNA transposons with Terminal Inverted Repeats (TIRs) based on pre-existing annotations of conserved transposase domains from DANTE. The tool analyzes the genomic context around transposase domains to identify complete TIR elements including their terminal inverted repeats and target site duplications.
+
+**Inputs**
+
+1. **DANTE annotation GFF3 file**: Output from DANTE containing conserved transposase domain annotations
+2. **Reference genome FASTA file**: The genome assembly corresponding to the DANTE annotations
+
+**Outputs**
+
+1. **TIR transposons annotation (GFF3)**: Complete annotations of identified TIR elements with attributes:
+   - tir_seq5, tir_seq3: 5' and 3' terminal inverted repeat sequences
+   - tsd: Target site duplication sequence
+   - Classification: Superfamily classification of the element
+   - ID: Unique element identifier
+
+2. **TIR transposons sequences (FASTA)**: Complete sequences of all identified TIR transposon elements
+
+3. **TIR classification summary**: Summary table showing counts of detected TIR elements per superfamily
+
+4. **Superfamily-specific FASTA files**: Individual FASTA files containing elements from each detected superfamily
+
+**Method**
+
+DANTE_TIR uses the following approach:
+
+1. Analyzes DANTE transposase domain annotations
+2. Extends sequences around domains to identify complete elements
+3. Searches for terminal inverted repeats at element boundaries
+4. Identifies target site duplications flanking elements
+5. Classifies elements into TIR superfamilies based on domain content
+6. Outputs comprehensive annotations and sequences
+
+**Requirements**
+
+- Input GFF3 file must contain DANTE domain annotations
+- Reference FASTA file must match the coordinate system used in the GFF3 file
+- Elements are identified based on proximity and orientation of transposase domains
+
+**References**
+
+For more information about DANTE_TIR methodology and implementation, see:
+https://github.com/kavonrtep/dante_tir
+
+DANTE_TIR is part of the RepeatExplorer suite of tools for repeat element analysis.
+    ]]></help>
+    <citations>
+        <citation type="bibtex">
+@misc{dante_tir,
+    title={DANTE_TIR: Tool for identification of TIR transposons},
+    author={Novák, Petr and Neumann, Pavel and Macas, Jiří},
+    url={https://github.com/kavonrtep/dante_tir},
+    year={2024}
+}
+        </citation>
+    </citations>
+</tool>
