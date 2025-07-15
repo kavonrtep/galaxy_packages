@@ -1,0 +1,106 @@
+<tool id="dante_tir_summary" name="Summarize DANTE_TIR output" version="@TOOL_VERSION@" python_template_version="3.5">
+    <macros>
+        <import>macros.xml</import>
+    </macros>
+    <expand macro="requirements" />
+    <command detect_errors="exit_code"><![CDATA[
+        mkdir -p output_dir &&
+        dante_tir_summary.R -g '$tir_gff' -f '$reference_fasta' -o output_dir &&
+        if [ -f output_dir/report.html ]; then
+            cp output_dir/report.html '$html_report';
+        fi &&
+        mkdir -p ${html_report.extra_files_path} &&
+        if [ -d output_dir ]; then
+            cp -r output_dir/* ${html_report.extra_files_path}/;
+        fi &&
+        cd output_dir &&
+        zip -r summary_results.zip * &&
+        mv summary_results.zip '$output_archive'
+    ]]></command>
+    <inputs>
+        <param name="tir_gff" type="data" format="gff3" label="DANTE_TIR GFF3 file"
+               help="GFF3 file with DANTE_TIR final annotations" />
+        <param name="reference_fasta" type="data" format="fasta" label="Reference genome FASTA file"
+               help="Genome assembly FASTA file corresponding to the TIR annotations" />
+    </inputs>
+    <outputs>
+        <data name="html_report" format="html" 
+              label="DANTE_TIR summary report on ${tir_gff.hid} and ${reference_fasta.hid}"
+              help="HTML report summarizing TIR transposon annotations and clustering results" />
+        <data name="output_archive" format="zip"
+              label="DANTE_TIR complete summary results on ${tir_gff.hid} and ${reference_fasta.hid}"
+              help="ZIP archive containing all summary outputs including representative elements and clustering results" />
+    </outputs>
+    <tests>
+        <test>
+            <param name="tir_gff" value="test_tir_final.gff3" />
+            <param name="reference_fasta" value="test_genome.fasta" />
+            <output name="html_report" file="test_summary_report.html" />
+            <output name="output_archive" file="test_summary_results.zip" />
+        </test>
+    </tests>
+    <help><![CDATA[
+**What it does**
+
+This tool generates a comprehensive summary of DANTE_TIR results, including clustering analysis and representative element identification. It processes the GFF3 output from DANTE_TIR along with the reference genome to create detailed reports and representative sequence libraries.
+
+**Inputs**
+
+1. **DANTE_TIR GFF3 file**: Final annotations from DANTE_TIR containing identified TIR transposon elements
+2. **Reference genome FASTA file**: The genome assembly used for the original DANTE_TIR analysis
+
+**Outputs**
+
+1. **HTML Report**: Interactive summary report containing:
+   - Overview of identified TIR transposon superfamilies
+   - Clustering analysis results
+   - Statistical summaries and visualizations
+   - Representative element information
+
+2. **Complete Results Archive (ZIP)**: Contains all output files including:
+   - `report.html`: The main HTML summary report
+   - `{superfamily}_representative_elements.csv`: Tables with representative elements and cluster sizes for each superfamily
+   - `{superfamily}_representative_elements_all.fasta`: FASTA files with all representative elements per superfamily
+   - `{superfamily}_representative_elements_multiplicity3plus.fasta`: FASTA files with representative elements having multiplicity ≥3
+   - Additional clustering and analysis files
+
+**Method**
+
+The tool performs the following analysis steps:
+
+1. **Sequence Clustering**: Uses mmseqs2 to cluster DNA transposon sequences within each superfamily
+2. **Representative Selection**: Identifies representative sequences for each cluster
+3. **Statistical Analysis**: Calculates cluster sizes, multiplicities, and distribution statistics
+4. **Report Generation**: Creates comprehensive HTML reports with visualizations
+5. **Library Creation**: Generates FASTA libraries of representative elements for downstream analysis
+
+**Requirements**
+
+- Input GFF3 file must be from DANTE_TIR analysis
+- Reference FASTA file must match the coordinate system used in the GFF3 file
+- Sufficient computational resources for clustering analysis of large transposon datasets
+
+**Output Files Description**
+
+- **CSV files**: Contain detailed information about representative elements including cluster sizes and sequence statistics
+- **FASTA files**: Provide sequences for representative elements, useful for building custom repeat libraries
+- **HTML report**: Offers interactive visualization and summary of the analysis results
+
+**References**
+
+For more information about DANTE_TIR and its summary functionality, see:
+https://github.com/kavonrtep/dante_tir
+
+This tool is part of the RepeatExplorer suite for comprehensive repeat element analysis.
+    ]]></help>
+    <citations>
+        <citation type="bibtex">
+@misc{dante_tir,
+    title={DANTE_TIR: Tool for identification of TIR transposons},
+    author={Novák, Petr and Neumann, Pavel and Macas, Jiří},
+    url={https://github.com/kavonrtep/dante_tir},
+    year={2024}
+}
+        </citation>
+    </citations>
+</tool>
