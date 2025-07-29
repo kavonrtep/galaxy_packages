@@ -30,6 +30,15 @@
         <data name="output_archive" format="zip"
               label="DANTE_TIR complete summary results on ${tir_gff.hid} and ${reference_fasta.hid}"
               help="ZIP archive containing all summary outputs including representative elements and clustering results" />
+        <collection name="all_representative_elements" type="list" label="All representative elements FASTA files on ${tir_gff.hid} and ${reference_fasta.hid}">
+            <discover_datasets pattern="(?P&lt;designation&gt;.+)_all\.fasta" directory="output_dir" format="fasta" />
+        </collection>
+        <collection name="multiplicity3plus_elements" type="list" label="Multiplicity 3+ representative elements FASTA files on ${tir_gff.hid} and ${reference_fasta.hid}">
+            <discover_datasets pattern="(?P&lt;designation&gt;.+)multiplicity3plus\.fasta" directory="output_dir" format="fasta" />
+        </collection>
+        <collection name="representative_elements_csv" type="list" label="Representative elements CSV files on ${tir_gff.hid} and ${reference_fasta.hid}">
+            <discover_datasets pattern="(?P&lt;designation&gt;.+)\.csv" directory="output_dir" format="tabular" />
+        </collection>
     </outputs>
     <tests>
         <test>
@@ -57,12 +66,13 @@ This tool generates a comprehensive summary of DANTE_TIR results, including clus
    - Statistical summaries and visualizations
    - Representative element information
 
-2. **Complete Results Archive (ZIP)**: Contains all output files including:
-   - `report.html`: The main HTML summary report
-   - `{superfamily}_representative_elements.csv`: Tables with representative elements and cluster sizes for each superfamily
-   - `{superfamily}_representative_elements_all.fasta`: FASTA files with all representative elements per superfamily
-   - `{superfamily}_representative_elements_multiplicity3plus.fasta`: FASTA files with representative elements having multiplicity ≥3
-   - Additional clustering and analysis files
+2. **Complete Results Archive (ZIP)**: Contains all output files for download
+
+3. **All Representative Elements Collection**: FASTA files containing all representative elements for each superfamily (`*_all.fasta`)
+
+4. **Multiplicity 3+ Elements Collection**: FASTA files containing representative elements with multiplicity ≥3 for each superfamily (`*multiplicity3plus.fasta`)
+
+5. **Representative Elements CSV Collection**: CSV files with detailed information about representative elements and cluster sizes for each superfamily (`*_representative_elements.csv`)
 
 **Method**
 
