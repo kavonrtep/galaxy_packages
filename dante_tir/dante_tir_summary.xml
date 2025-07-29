@@ -39,21 +39,21 @@
                help="Genome assembly FASTA file corresponding to the TIR annotations" />
     </inputs>
     <outputs>
-        <data name="html_report" format="html" 
-              label="DANTE_TIR summary report on ${tir_gff.hid} and ${reference_fasta.hid}"
-              help="HTML report summarizing TIR transposon annotations and clustering results" />
         <data name="output_archive" format="zip"
-              label="DANTE_TIR complete summary results on ${tir_gff.hid} and ${reference_fasta.hid}"
+              label="DANTE_TIR - archive with complete summary on ${tir_gff.hid} and ${reference_fasta.hid}"
               help="ZIP archive containing all summary outputs including representative elements and clustering results" />
-        <data name="all_representative_elements" format="fasta" 
-              label="All representative elements (concatenated) on ${tir_gff.hid} and ${reference_fasta.hid}"
+        <data name="all_representative_elements" format="fasta"
+              label="DANTE_TIR - All representative elements on ${tir_gff.hid} and ${reference_fasta.hid}"
               help="Concatenated FASTA file containing all representative elements from all superfamilies" />
-        <data name="multiplicity3plus_elements" format="fasta" 
-              label="Multiplicity 3+ representative elements (concatenated) on ${tir_gff.hid} and ${reference_fasta.hid}"
+        <data name="multiplicity3plus_elements" format="fasta"
+              label="DANTE_TIR - Representative elements with 3+ copies on ${tir_gff.hid} and ${reference_fasta.hid}"
               help="Concatenated FASTA file containing representative elements with multiplicity ≥3 from all superfamilies" />
-        <data name="representative_elements_csv" format="tabular" 
-              label="Representative elements CSV (concatenated) on ${tir_gff.hid} and ${reference_fasta.hid}"
+        <data name="representative_elements_csv" format="tabular"
+              label="DANTE_TIR - Representative elements CSV (concatenated) on ${tir_gff.hid} and ${reference_fasta.hid}"
               help="Concatenated CSV file with detailed information about representative elements from all superfamilies" />
+        <data name="html_report" format="html"
+              label="DANTE_TIR - summary report on ${tir_gff.hid} and ${reference_fasta.hid}"
+              help="HTML report summarizing TIR transposon annotations and clustering results" />
     </outputs>
     <tests>
         <test>

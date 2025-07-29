@@ -28,12 +28,12 @@
                help="Genome assembly FASTA file corresponding to the DANTE annotations" />
     </inputs>
     <outputs>
-        <data name="tir_gff" format="gff3" label="TIR transposons annotation (GFF3) on ${dante_gff.hid} and ${reference_fasta.hid}"
-              help="Complete TIR transposon annotations with TIR sequences, target site duplications, and classifications" />
-        <data name="tir_fasta" format="fasta" label="TIR transposons sequences (FASTA) on ${dante_gff.hid} and ${reference_fasta.hid}"
-              help="Complete TIR transposon element sequences in FASTA format" />
-        <data name="classification_summary" format="tabular" label="TIR classification summary on ${dante_gff.hid} and ${reference_fasta.hid}"
+        <data name="classification_summary" format="tabular" label="DANTE_TIR - tabular summary on ${dante_gff.hid} and ${reference_fasta.hid}"
               help="Summary table of detected TIR transposon counts per superfamily" />
+        <data name="tir_fasta" format="fasta" label="DANTE_TIR - transposons sequences (FASTA) on ${dante_gff.hid} and ${reference_fasta.hid}"
+              help="DANTE_TIR - Complete TIR transposon element sequences in FASTA format" />
+        <data name="tir_gff" format="gff3" label="DANTE_TIR - transposons annotation (GFF3) on ${dante_gff.hid} and ${reference_fasta.hid}"
+              help="Complete TIR transposon annotations with TIR sequences, target site duplications, and classifications" />
     </outputs>
     <tests>
         <test>
