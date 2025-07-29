@@ -8,9 +8,7 @@
     dante_gff_to_dna.py --domains_gff ${domains_gff} --input_dna ${input_dna} --out_dir \$TEMP_DIR_LINEAGES
 
     #if $extend_edges:
-	  --extended True
-    #else:
-	  --extended False
+	  --extended
     #end if
 	  --database ${database}
     &amp;&amp;
