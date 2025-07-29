@@ -14,6 +14,21 @@
             cp -r output_dir/* ${html_report.extra_files_path}/;
         fi &&
         cd output_dir &&
+        if ls *_all.fasta 1> /dev/null 2>&1; then
+            cat *_all.fasta > '$all_representative_elements';
+        else
+            touch '$all_representative_elements';
+        fi &&
+        if ls *multiplicity3plus.fasta 1> /dev/null 2>&1; then
+            cat *multiplicity3plus.fasta > '$multiplicity3plus_elements';
+        else
+            touch '$multiplicity3plus_elements';
+        fi &&
+        if ls *_representative_elements.csv 1> /dev/null 2>&1; then
+            cat *_representative_elements.csv > '$representative_elements_csv';
+        else
+            touch '$representative_elements_csv';
+        fi &&
         zip -r summary_results.zip * &&
         mv summary_results.zip '$output_archive'
     ]]></command>
@@ -30,15 +45,15 @@
         <data name="output_archive" format="zip"
               label="DANTE_TIR complete summary results on ${tir_gff.hid} and ${reference_fasta.hid}"
               help="ZIP archive containing all summary outputs including representative elements and clustering results" />
-        <collection name="all_representative_elements" type="list" label="All representative elements FASTA files on ${tir_gff.hid} and ${reference_fasta.hid}">
-            <discover_datasets pattern="(?P&lt;designation&gt;.+)_all\.fasta" directory="output_dir" format="fasta" />
-        </collection>
-        <collection name="multiplicity3plus_elements" type="list" label="Multiplicity 3+ representative elements FASTA files on ${tir_gff.hid} and ${reference_fasta.hid}">
-            <discover_datasets pattern="(?P&lt;designation&gt;.+)multiplicity3plus\.fasta" directory="output_dir" format="fasta" />
-        </collection>
-        <collection name="representative_elements_csv" type="list" label="Representative elements CSV files on ${tir_gff.hid} and ${reference_fasta.hid}">
-            <discover_datasets pattern="(?P&lt;designation&gt;.+)\.csv" directory="output_dir" format="tabular" />
-        </collection>
+        <data name="all_representative_elements" format="fasta" 
+              label="All representative elements (concatenated) on ${tir_gff.hid} and ${reference_fasta.hid}"
+              help="Concatenated FASTA file containing all representative elements from all superfamilies" />
+        <data name="multiplicity3plus_elements" format="fasta" 
+              label="Multiplicity 3+ representative elements (concatenated) on ${tir_gff.hid} and ${reference_fasta.hid}"
+              help="Concatenated FASTA file containing representative elements with multiplicity ≥3 from all superfamilies" />
+        <data name="representative_elements_csv" format="tabular" 
+              label="Representative elements CSV (concatenated) on ${tir_gff.hid} and ${reference_fasta.hid}"
+              help="Concatenated CSV file with detailed information about representative elements from all superfamilies" />
     </outputs>
     <tests>
         <test>
@@ -51,7 +66,8 @@
     <help><![CDATA[
 **What it does**
 
-This tool generates a comprehensive summary of DANTE_TIR results, including clustering analysis and representative element identification. It processes the GFF3 output from DANTE_TIR along with the reference genome to create detailed reports and representative sequence libraries.
+This tool generates a comprehensive summary of DANTE_TIR results, including clustering analysis and representative element identification.
+It processes the GFF3 output from DANTE_TIR along with the reference genome to create detailed reports and representative sequence libraries.
 
 **Inputs**
 
@@ -68,11 +84,11 @@ This tool generates a comprehensive summary of DANTE_TIR results, including clus
 
 2. **Complete Results Archive (ZIP)**: Contains all output files for download
 
-3. **All Representative Elements Collection**: FASTA files containing all representative elements for each superfamily (`*_all.fasta`)
+3. **All Representative Elements (concatenated)**: Single FASTA file containing all representative elements from all superfamilies (concatenated from `*_all.fasta` files)
 
-4. **Multiplicity 3+ Elements Collection**: FASTA files containing representative elements with multiplicity ≥3 for each superfamily (`*multiplicity3plus.fasta`)
+4. **Multiplicity 3+ Elements (concatenated)**: Single FASTA file containing representative elements with multiplicity ≥3 from all superfamilies (concatenated from `*multiplicity3plus.fasta` files). This is suitable for building custom repeat libraries.
 
-5. **Representative Elements CSV Collection**: CSV files with detailed information about representative elements and cluster sizes for each superfamily (`*_representative_elements.csv`)
+5. **Representative Elements CSV (concatenated)**: Single CSV file with detailed information about representative elements from all superfamilies (concatenated from `*_representative_elements.csv` files)
 
 **Method**
 
@@ -95,6 +111,7 @@ The tool performs the following analysis steps:
 - **CSV files**: Contain detailed information about representative elements including cluster sizes and sequence statistics
 - **FASTA files**: Provide sequences for representative elements, useful for building custom repeat libraries
 - **HTML report**: Offers interactive visualization and summary of the analysis results
+
 
 **References**
 

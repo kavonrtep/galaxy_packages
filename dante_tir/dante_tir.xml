@@ -57,10 +57,12 @@ DANTE_TIR identifies DNA transposons with Terminal Inverted Repeats (TIRs) based
 **Outputs**
 
 1. **TIR transposons annotation (GFF3)**: Complete annotations of identified TIR elements with attributes:
+
    - tir_seq5, tir_seq3: 5' and 3' terminal inverted repeat sequences
    - tsd: Target site duplication sequence
    - Classification: Superfamily classification of the element
    - ID: Unique element identifier
+   Output GFF3 can be summarized using "Summarize DANTE_TIR output" tool. This tools will generate graphical report and create library of representative elements suitable for RepeatMasker search.
 
 2. **TIR transposons sequences (FASTA)**: Complete sequences of all identified TIR transposon elements
 
@@ -77,7 +79,7 @@ DANTE_TIR uses the following approach:
 3. Searches for terminal inverted repeats at element boundaries
 4. Identifies target site duplications flanking elements
 5. Classifies elements into TIR superfamilies based on domain content
-6. Outputs comprehensive annotations and sequences
+6. Outputs comprehensive annotations and sequences of full lenght elements
 
 **Requirements**
 
