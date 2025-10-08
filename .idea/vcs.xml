@@ -2,6 +2,8 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../../../../../ceph/users/petr/workspace/galaxy_packages" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../../../../../ceph/users/petr/workspace/galaxy_packages/repeat_annotation_pipeline" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/repeat_annotation_pipeline" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/various_galaxy_tools" vcs="hg4idea" />
   </component>

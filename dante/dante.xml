@@ -1,7 +1,7 @@
-<tool id="dante" name="Domain based ANnotation of Transposable Elements - DANTE" version="2.9.1">
+<tool id="dante" name="Domain based ANnotation of Transposable Elements - DANTE" version="2.10.1">
   <description> Tool for annotation of transposable elements based on the similarity to conserved protein domains database. </description>
   <requirements>
-    <requirement type="package" version="0.2.9">dante</requirement>
+    <requirement type="package" version="0.2.10">dante</requirement>
   </requirements>
   <stdio>
     <regex match="Traceback" source="stderr" level="fatal" description="Unknown error" />
@@ -15,23 +15,12 @@
     #else
       INPUT_SEQUENCES=$(input_sequences)
     #end if
-    &&
-    grep -c "^>" \${INPUT_SEQUENCES}
-    &&
-    NUMBER_OF_SEQUENCES=`grep -c "^>" \${INPUT_SEQUENCES}`
-    &&
-    if [ \${NUMBER_OF_SEQUENCES} -gt 10000 ]; then
-      SHORT_READS="--short_reads";
-    else
-      SHORT_READS="";
-    fi
 
     &&
     dante --query \${INPUT_SEQUENCES} --domain_gff ${DomGff}
 	  --database $database
       --scoring_matrix ${scoring_matrix}
       --cpu \${GALAXY_SLOTS:-1}
-      \${SHORT_READS}
 
     &&
     dante_gff_output_filtering.py --dom_gff ${DomGff}

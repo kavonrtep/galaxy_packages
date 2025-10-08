@@ -5,7 +5,7 @@
     <expand macro="requirements" />
     <command detect_errors="exit_code"><![CDATA[
         mkdir -p output_dir &&
-        dante_tir_summary.R -g '$tir_gff' -f '$reference_fasta' -o output_dir &&
+        dante_tir_summary.R -g '$tir_gff' -f '$reference_fasta' -o output_dir --threads \${GALAXY_SLOTS:-1} &&
         if [ -f output_dir/report.html ]; then
             cp output_dir/report.html '$html_report';
         fi &&
@@ -104,7 +104,6 @@ The tool performs the following analysis steps:
 
 - Input GFF3 file must be from DANTE_TIR analysis
 - Reference FASTA file must match the coordinate system used in the GFF3 file
-- Sufficient computational resources for clustering analysis of large transposon datasets
 
 **Output Files Description**
 
