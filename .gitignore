@@ -4,3 +4,5 @@
 
 # large local test genome (excluded from shed tarball too)
 tidecluster/test-data/
+
+carp/test-data/

@@ -1,0 +1,15 @@
+categories:
+- Genome annotation
+name: carp
+owner: petr-novak
+description: Comprehensive Annotation of Repeats Pipeline (CARP)
+long_description: |
+  CARP integrates DANTE, DANTE_LTR, DANTE_TIR, DANTE_LINE, TideCluster and
+  RepeatMasker to identify and classify the repetitive elements of a plant
+  genome assembly and merge them into a single non-overlapping annotation.
+  The pipeline runs from a Singularity/Apptainer container image published to
+  GHCR. Developed for plant genomes only.
+homepage_url: https://github.com/kavonrtep/CARP
+remote_repository_url: https://github.com/kavonrtep/galaxy_packages
+exclude:
+  - test-data

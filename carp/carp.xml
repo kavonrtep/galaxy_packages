@@ -1,0 +1,168 @@
+<tool id="carp" name="CARP" version="@TOOL_VERSION@" profile="22.05">
+    <description>Comprehensive Annotation of Repeats Pipeline for plant genomes</description>
+    <macros>
+        <import>macros.xml</import>
+    </macros>
+    <expand macro="requirements"/>
+    <command detect_errors="exit_code"><![CDATA[
+        ## Ensure the baked-in conda tools and pipeline scripts are on PATH even
+        ## if Galaxy execs the container with a cleaned environment.
+        export PATH=/opt/conda/bin:/opt/pipeline/scripts:\$PATH &&
+
+        ## Symlink inputs to .fasta names in the (bind-mounted) job dir so the
+        ## pipeline and RepeatMasker see a real FASTA extension.
+        ln -s '$genome' input_genome.fasta &&
+        #if $custom_library
+        ln -s '$custom_library' custom_library.fasta &&
+        #end if
+        #if $tandem_repeat_library
+        ln -s '$tandem_repeat_library' tandem_repeat_library.fasta &&
+        #end if
+
+        mkdir -p output &&
+
+        ## Build config.yaml
+        printf '%s\n' "genome_fasta: input_genome.fasta" "output_dir: output" > config.yaml &&
+        #if $custom_library
+        echo "custom_library: custom_library.fasta" >> config.yaml &&
+        #end if
+        #if $tandem_repeat_library
+        echo "tandem_repeat_library: tandem_repeat_library.fasta" >> config.yaml &&
+        #end if
+        echo "repeatmasker_sensitivity: $repeatmasker_sensitivity" >> config.yaml &&
+        echo "repeatmasker_culling_limit: $repeatmasker_culling_limit" >> config.yaml &&
+        echo "tidecluster_reannotate_culling_limit: $tidecluster_reannotate_culling_limit" >> config.yaml &&
+
+        ## Run the pipeline (Snakemake wrapper, threads from Galaxy)
+        /opt/pipeline/run_pipeline.py -c config.yaml -t \${GALAXY_SLOTS:-1} &&
+
+        ## Unified annotation
+        cp output/Repeat_Annotation_Unified.gff3 '$unified_gff' &&
+
+        ## Main HTML report + its complete linked tree. repeat_annotation_report.html
+        ## deep-links run_provenance.json, plotly.min.js, DANTE_LTR/, DANTE_TIR/report.html
+        ## and TideCluster/default/ (with its report subtree), so the whole output tree
+        ## must be served alongside it. Exclude only the bulky, non-deep-linked BigWig
+        ## and BAM data (kept in the results archive).
+        cp output/repeat_annotation_report.html '$report' &&
+        mkdir -p '$report.extra_files_path' &&
+        ( cd output && tar cf - --exclude='*.bw' --exclude='*.bam' --exclude='*bigwig*' . ) | ( cd '$report.extra_files_path' && tar xf - ) &&
+
+        ## Complete results archive (everything)
+        cd output && zip -r ../carp_output.zip * && cd .. &&
+        mv carp_output.zip '$output_archive'
+    ]]></command>
+    <inputs>
+        <param name="genome" type="data" format="fasta" label="Genome assembly (FASTA)"
+               help="Plant genome assembly to annotate. Do not use on animal genomes."/>
+        <param name="custom_library" type="data" format="fasta" optional="true"
+               label="Custom repeat library (optional)"
+               help="Extra RepeatMasker-format library. FASTA headers as name#class/subclass, e.g. myCopia_1#Class_I/LTR/Ty1_copia/Ale"/>
+        <param name="tandem_repeat_library" type="data" format="fasta" optional="true"
+               label="Tandem repeat library (optional)"
+               help="Reference tandem-repeat library used by TideCluster to name families, e.g. PisTR-B#Satellite"/>
+
+        <!-- RepeatMasker settings. Defaults: rush sensitivity and culling on
+             (limit 2) in both the main and the TideCluster-reannotation search. -->
+        <param name="repeatmasker_sensitivity" type="select" label="RepeatMasker sensitivity"
+               help="rush is fastest; default and quick trade speed for sensitivity.">
+            <option value="rush" selected="true">rush (fastest)</option>
+            <option value="default">default</option>
+            <option value="quick">quick</option>
+        </param>
+        <param name="repeatmasker_culling_limit" type="integer" value="2" min="0"
+               label="RepeatMasker culling limit (main search)"
+               help="rmblastn -culling_limit for the main RepeatMasker step. 0 = off. 2 (recommended) collapses per-locus redundant hits from a de-novo library for a large speed-up with minimal masking loss."/>
+        <param name="tidecluster_reannotate_culling_limit" type="integer" value="2" min="0"
+               label="RepeatMasker culling limit (TideCluster reannotation search)"
+               help="rmblastn -culling_limit for the TideCluster reannotation step, independent of the main search. 0 = off; 2 recommended."/>
+    </inputs>
+    <outputs>
+        <data name="output_archive" format="zip"
+              label="CARP on ${genome.hid}: complete results archive"/>
+        <data name="unified_gff" format="gff3"
+              label="CARP on ${genome.hid}: unified repeat annotation (GFF3)"/>
+        <data name="report" format="html"
+              label="CARP on ${genome.hid}: repeat annotation report"/>
+    </outputs>
+    <tests>
+        <!-- Full pipeline run on a tiny genome. Heavy (pulls the container and
+             runs every step); output is not byte-deterministic, so the assertion
+             is only on the GFF3 header of the unified annotation. -->
+        <test expect_num_outputs="3">
+            <param name="genome" value="genome_micro.fasta"/>
+            <param name="repeatmasker_sensitivity" value="rush"/>
+            <param name="repeatmasker_culling_limit" value="2"/>
+            <param name="tidecluster_reannotate_culling_limit" value="2"/>
+            <output name="unified_gff">
+                <assert_contents>
+                    <has_text text="##gff-version"/>
+                </assert_contents>
+            </output>
+        </test>
+    </tests>
+    <help><![CDATA[
+**What it does**
+
+The Comprehensive Annotation of Repeats Pipeline (CARP) identifies and
+classifies the repetitive elements of a **plant** genome assembly and merges
+them into a single, non-overlapping annotation. It integrates:
+
+- **DANTE / DANTE_LTR** — intact LTR retrotransposons
+- **DANTE_TIR** — TIR DNA transposons
+- **DANTE_LINE** — LINE elements (experimental)
+- **TideCluster** — tandem repeats / satellites and rDNA arrays
+- **RepeatMasker** — genome-wide similarity masking with a CARP-built library
+
+.. class:: warningmark
+
+CARP was developed for plant genomes. Do not use it on animal genomes.
+
+**Inputs**
+
+- *Genome assembly (FASTA)* — the assembly to annotate (required).
+- *Custom repeat library* — optional extra RepeatMasker-format library
+  (headers ``name#class/subclass``).
+- *Tandem repeat library* — optional reference library for naming tandem
+  families in TideCluster.
+
+**RepeatMasker settings**
+
+Two independent RepeatMasker searches run in the pipeline. Both default to
+culling limit 2 ("culling on"), and sensitivity defaults to ``rush``:
+
+- *Sensitivity* — ``rush`` (fastest) / ``default`` / ``quick``.
+- *Culling limit (main search)* — caps redundant per-locus hits from the
+  de-novo library; 2 gives a large speed-up with minimal masking loss.
+- *Culling limit (TideCluster reannotation search)* — the same for the
+  TideCluster reannotation step.
+
+**Outputs**
+
+- *Complete results archive* (zip) — the full ``output/`` directory, including
+  per-class GFF3 files, density BigWig tracks, summary statistics and plots.
+- *Unified repeat annotation* (GFF3) — ``Repeat_Annotation_Unified.gff3``, the
+  authoritative non-overlapping annotation.
+- *Repeat annotation report* (HTML) — the main ``repeat_annotation_report.html``
+  with its complete linked tree: the DANTE_LTR, DANTE_TIR and TideCluster
+  sub-reports and the run provenance are browsable from it. (The bulky BigWig
+  and BAM tracks are not embedded in the report — get those from the archive.)
+
+**Container**
+
+The tool runs from the CARP Singularity/Apptainer image published to GHCR
+(``oras://ghcr.io/kavonrtep/carp/sif:@CONTAINER_TAG@``). The Galaxy instance
+must have Singularity/Apptainer enabled and able to pull ``oras://`` images.
+
+More information: https://github.com/kavonrtep/CARP
+    ]]></help>
+    <citations>
+        <citation type="bibtex">
+@misc{carp,
+    title={CARP: Comprehensive Annotation of Repeats Pipeline},
+    author={Novak, Petr and Macas, Jiri},
+    url={https://github.com/kavonrtep/CARP},
+}
+        </citation>
+    </citations>
+</tool>
