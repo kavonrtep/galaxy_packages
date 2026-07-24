@@ -106,8 +106,9 @@ Publishing to the Tool Shed (run from the repo root, pass the tool dir):
   `planemo shed_update --shed_target testtoolshed --shed_key $KEY_TEST --owner petrn --force_repository_creation tidecluster/`
   (`--force_repository_creation` both creates the repo and uploads on first push; `shed_create`
   errors out if the repo already exists.)
-- **main toolshed** (only after tests pass), owner `petr-novak`, `$KEY` supplied at runtime:
-  `planemo shed_update --shed_target toolshed --shed_key $KEY --owner petr-novak tidecluster/`
+- **main toolshed** (only after tests pass), owner `petr-novak`: **Petr's manual step — do not
+  run it.** He publishes from inside the tool directory with his production key:
+  `planemo shed_update --shed_target toolshed --shed_key $KEY --owner petr-novak .`
 - `.shed.yml` `exclude:` keeps `test-data/` and scratch out of the uploaded tarball; large test
   genomes are also gitignored (kept local).
 

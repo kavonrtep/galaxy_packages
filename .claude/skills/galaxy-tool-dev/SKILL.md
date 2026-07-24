@@ -66,18 +66,21 @@ planemo serve <dir>/*.xml --host 127.0.0.1 --port 9090 \
 
 ## 4. Publish
 
-testtoolshed first (sandbox, failures OK, owner `petrn`); main toolshed only
-after tests pass (owner `petr-novak`, production key passed at run time):
+Push to **testtoolshed** (sandbox, failures OK, owner `petrn`; key is in
+`~/.planemo.yml`). `--force_repository_creation` creates the repo and uploads
+on first push (`shed_create` errors if the repo already exists):
 
 ```
 planemo shed_update --shed_target testtoolshed --owner petrn \
   --force_repository_creation <dir>/
-planemo shed_update --shed_target toolshed --owner petr-novak \
-  --shed_key $KEY <dir>/
 ```
 
-`--force_repository_creation` both creates the repo and uploads on first push;
-`shed_create` errors if the repo already exists.
+The **main toolshed push is Petr's job — do NOT run it.** Only prepare and
+report the command for him to run manually from the tool directory:
+
+```
+planemo shed_update --shed_target toolshed --shed_key $KEY --owner petr-novak .
+```
 
 ## Pitfalls (all hit in practice)
 
