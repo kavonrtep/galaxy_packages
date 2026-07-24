@@ -26,19 +26,20 @@
         &&
         mkdir -p ${tarean_report.extra_files_path}
         &&
-        if [ -d tidecluster_tarean ]; then cp -r tidecluster_tarean ${tarean_report.extra_files_path}/; fi
+        ## v2 report (since TideCluster 1.9): tidecluster_index.html is the landing
+        ## page; tidecluster_report/ holds its assets, vendored images, per-TRC pages
+        ## and subpages (tarean/kite/superfamilies). tidecluster_report_legacy/ holds
+        ## the old v1 HTML that the landing page links to. Mirror the on-disk layout
+        ## into extra_files_path so every relative link resolves.
+        if [ -f tidecluster_index.html ]; then cp tidecluster_index.html ${tarean_report.extra_files_path}/; fi
         &&
-        if [ -d tidecluster_kite ]; then cp -r tidecluster_kite ${tarean_report.extra_files_path}/; fi
+        if [ -d tidecluster_report ]; then cp -r tidecluster_report ${tarean_report.extra_files_path}/; fi
         &&
-        if [ -f tidecluster_kite_report.html ]; then cp  tidecluster_kite_report.html ${tarean_report.extra_files_path}/; fi
+        if [ -d tidecluster_report_legacy ]; then cp -r tidecluster_report_legacy ${tarean_report.extra_files_path}/; fi
         &&
-        if [ -f tidecluster_tarean_report.html ]; then cp  tidecluster_tarean_report.html ${tarean_report.extra_files_path}/; fi
+        if [ -f tidecluster_clustering.gff3 ]; then cp tidecluster_clustering.gff3 ${tarean_report.extra_files_path}/; fi
         &&
         if [ -f tidecluster_consensus_dimer_library.fasta ]; then cp tidecluster_consensus_dimer_library.fasta ${trc_library}; fi
-        &&
-        if [ -f tidecluster_trc_superfamilies.html ]; then cp tidecluster_trc_superfamilies.html ${tarean_report.extra_files_path}/; fi
-        &&
-        if [ -d dotplots ]; then cp -r dotplots ${tarean_report.extra_files_path}/; fi
         &&
         zip -r output.zip *
         #if $library:
@@ -99,6 +100,33 @@
 
 
     </outputs>
+    <tests>
+        <!-- Full run_all on a 1 Mb repeat-rich carve of CEN6. Pipeline output is
+             not byte-deterministic, so assertions are on stable content markers. -->
+        <test expect_num_outputs="5">
+            <param name="fasta" value="CEN6_smoke.fasta"/>
+            <param name="min_length" value="500"/>
+            <param name="min_total_length" value="5000"/>
+            <output name="gff3_clustering">
+                <assert_contents>
+                    <has_text text="TideCluster"/>
+                    <has_text text="tandem_repeat"/>
+                    <has_text text="Name=TRC_1"/>
+                </assert_contents>
+            </output>
+            <output name="trc_library">
+                <assert_contents>
+                    <has_text text="&gt;TRC_1"/>
+                </assert_contents>
+            </output>
+            <output name="tarean_report">
+                <assert_contents>
+                    <has_text text="TideCluster"/>
+                    <has_text text="TRC_1"/>
+                </assert_contents>
+            </output>
+        </test>
+    </tests>
     <help><![CDATA[
     **TideCluster** is a software tool designed to identify tandem repeats in genome assemblies by utilizing Tidehunter to detect tandem repeats clustering these repeats based on similarity using mmseqs2 and NCBI BLAST. The software runs in four steps as outlined below:
 

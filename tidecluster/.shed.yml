@@ -11,5 +11,6 @@ remote_repository_url: https://github.com/kavonrtep/galaxy_packages
 homepage_url: https://github.com/kavonrtep/TideCluster
 exclude:
   - do_not_track_info.md
+  - test-data
 
 
