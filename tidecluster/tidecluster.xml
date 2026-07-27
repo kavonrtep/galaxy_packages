@@ -121,12 +121,23 @@
             <output name="trc_library">
                 <assert_contents>
                     <has_text text="&gt;TRC_1"/>
+                    <has_size min="1"/>
                 </assert_contents>
             </output>
             <output name="tarean_report">
                 <assert_contents>
                     <has_text text="TideCluster"/>
                     <has_text text="TRC_1"/>
+                </assert_contents>
+            </output>
+            <!-- Completeness guard: the results archive must actually contain the
+                 TAREAN consensus outputs. This catches the regression where the
+                 cluster was omitted from TAREAN (array below min_total_length) so
+                 the library was empty and its files were missing from the archive. -->
+            <output name="output_archive">
+                <assert_contents>
+                    <has_archive_member path="tidecluster_consensus_dimer_library.fasta"/>
+                    <has_archive_member path="tidecluster_tarean_report.tsv"/>
                 </assert_contents>
             </output>
         </test>
