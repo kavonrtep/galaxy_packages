@@ -51,10 +51,28 @@ planemo test <dir>/<tool>.xml \
   --galaxy_root ~/.planemo/galaxy_root
 ```
 
-Add a `<tests>` block if the tool has none. Pipeline output is not
-byte-deterministic — assert on stable content markers (`has_text`), not exact
-files. Keep large test genomes in `test-data/`, gitignored, and listed in
-`.shed.yml` `exclude:`.
+Add a `<tests>` block if the tool has none. Key rules (learned the hard way):
+
+- **Test at the tool's DEFAULT parameters.** A test that overrides parameters
+  can pass while the default path a real user hits is broken — e.g. a synthetic
+  fixture whose satellite array was below the default `min_total_length` made
+  TAREAN skip the cluster, so the library was empty at defaults while the test
+  (run with `-M 5000`) still passed. Size fixtures for the defaults.
+- **Assert output *completeness*, not just presence.** A produced-but-empty
+  dataset still counts toward `expect_num_outputs`, so a broken output passes
+  unless you assert its content: `has_text`, `has_size min="1"`, and for the
+  results archive `has_archive_member path="..."` to prove expected files are
+  actually inside it.
+- Pipeline output is not byte-deterministic — assert on stable content markers,
+  not golden files. Use a deterministic fixture (fixed-seed generator) where
+  possible.
+- **Ship the test data**: commit it under `test-data/` and do NOT `.shed.yml`
+  `exclude:` it, so the test runs from a clone and on the Tool Shed. Keep it
+  small (< 1 MB; a fixed-seed synthetic is ideal).
+- **Container tools run the whole `<command>` inside the image** — every binary
+  in the command (including collection steps) must exist there. The CARP image
+  has no `zip`, so `zip -r` failed after the pipeline; build archives with
+  `python3`/`tar` instead.
 
 Interactive inspection (click through the report in a real Galaxy):
 
@@ -94,3 +112,29 @@ planemo shed_update --shed_target toolshed --shed_key $KEY --owner petr-novak .
 - `planemo serve` leaves a detached `gunicorn` master bound to the port after
   the wrapper is killed — stop it by the PID listening on the port.
 - `planemo shed_lint` can hang for minutes — timeout or skip it.
+
+## References & IUC best practices
+
+Consult these for anything non-obvious; they are good agentic resources:
+
+- galaxy-skills tool-dev SKILL: <https://github.com/galaxyproject/galaxy-skills/blob/main/tool-dev/SKILL.md>
+- IUC standards / best practices: <https://galaxy-iuc-standards.readthedocs.io/en/latest/best_practices.html>
+
+Key conventions from them, worth applying to new/edited tools here:
+
+- **Element order** (`planemo lint` `XMLOrder`): `description` → `macros` →
+  `xrefs` → `requirements` → `stdio`/`version_command` → `command` → `inputs`
+  → `outputs` → `tests` → `help` → `citations`. Several older tools here put
+  `description` after `macros` — fix when touching them. Run `planemo format`
+  before committing.
+- `<command detect_errors="aggressive">` (fails on non-zero exit **and** on
+  `error:`/`exception:` in stderr) in preference to `<stdio>`.
+- Recent `profile=` (~1 year back), version from macro tokens. IUC uses
+  `@TOOL_VERSION@+galaxy@VERSION_SUFFIX@`; this repo's existing tools instead use
+  `<upstream>.<wrapper>` (e.g. `1.18.0.1`) — match the tool you're editing.
+- Escaping: Galaxy params `'$p'` single-quoted; shell vars `\${GALAXY_SLOTS:-1}`;
+  Cheetah zero/bool gotchas — guard with `#if str($x).strip()`, compare
+  booleans as `str($x) == "true"`.
+- `<token>` for Cheetah logic, `<xml>` for element trees — never Cheetah in an
+  `<xml>` macro. Add `<citation type="doi">` and an `<xrefs><xref type="bio.tools">`
+  where available.
