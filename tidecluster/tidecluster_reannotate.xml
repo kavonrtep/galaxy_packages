@@ -1,10 +1,10 @@
 <tool id="tc_reannotate" name="TideCluster - Annotate Genome" version="@TOOL_VERSION@">
+    <description>Annotate tandem repeats in genome assembly using similarity-based approach</description>
     <macros>
         <import>macros.xml</import>
     </macros>
-    <description>Annotate tandem repeats in genome assembly using similarity-based approach</description>
     <expand macro="requirements" />
-    <command detect_errors="exit_code"><![CDATA[
+    <command detect_errors="aggressive"><![CDATA[
         tc_reannotate.py
         -s '$ref_seq'
         -f '$fasta_file'

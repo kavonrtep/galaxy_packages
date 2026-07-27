@@ -2,7 +2,7 @@
     <requirements>
         <requirement type="package" version="0.2.9">dante</requirement>
     </requirements>
-    <command detect_errors="exit_code"><![CDATA[
+    <command detect_errors="aggressive"><![CDATA[
         summarize_gff.R '$inputgff' '$output' '$group'
     ]]></command>
     <inputs>

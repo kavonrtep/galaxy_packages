@@ -3,7 +3,7 @@
         <import>macros.xml</import>
     </macros>
     <expand macro="requirements" />
-    <command detect_errors="exit_code"><![CDATA[
+    <command detect_errors="aggressive"><![CDATA[
         clean_ltr.R --gff3 '$dante_ltr' --reference_sequence '$reference' --output output --cpu \${GALAXY_SLOTS:-1}
         &&
         mv output_clean.gff3 $dante_ltr_clean

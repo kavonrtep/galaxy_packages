@@ -1,10 +1,10 @@
 <tool id="tidecluster_annotation" name="TideCluster- Annotate Clusters" version="@TOOL_VERSION@">
+    <description>Annotate tandem repeats clusters identified by TideCluster using custom library of tandem repeats</description>
     <macros>
         <import>macros.xml</import>
     </macros>
-    <description>Annotate tandem repeats clusters identified by TideCluster using custom library of tandem repeats</description>
     <expand macro="requirements" />
-    <command detect_errors="exit_code"><![CDATA[
+    <command detect_errors="aggressive"><![CDATA[
         #set $prefix = 'tidecluster'
         mkdir extracted &&
         unzip '$input_archive' -d extracted && cd extracted &&

@@ -1,10 +1,10 @@
 <tool id="tidecluster" name="TideCluster" version="@TOOL_VERSION@">
+    <description>Identify tandem repeats in genome assemblies</description>
     <macros>
         <import>macros.xml</import>
     </macros>
-    <description>Identify tandem repeats in genome assemblies</description>
     <expand macro="requirements" />
-    <command detect_errors="exit_code"><![CDATA[
+    <command detect_errors="aggressive"><![CDATA[
         mkdir -p output && cd output &&
         TideCluster.py run_all
         -f '$fasta'

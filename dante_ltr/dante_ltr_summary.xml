@@ -3,7 +3,7 @@
         <import>macros.xml</import>
     </macros>
     <expand macro="requirements" />
-    <command detect_errors="exit_code"><![CDATA[
+    <command detect_errors="aggressive"><![CDATA[
         dante_ltr_summary -g '$input1' -o output &&
          ls -l &&
         cp output.html $output1 &&

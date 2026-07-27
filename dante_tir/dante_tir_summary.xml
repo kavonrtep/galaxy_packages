@@ -3,7 +3,7 @@
         <import>macros.xml</import>
     </macros>
     <expand macro="requirements" />
-    <command detect_errors="exit_code"><![CDATA[
+    <command detect_errors="aggressive"><![CDATA[
         mkdir -p output_dir &&
         dante_tir_summary.R -g '$tir_gff' -f '$reference_fasta' -o output_dir --threads \${GALAXY_SLOTS:-1} &&
         if [ -f output_dir/report.html ]; then

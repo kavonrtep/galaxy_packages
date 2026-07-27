@@ -3,7 +3,7 @@
         <import>macros.xml</import>
     </macros>
     <expand macro="requirements" />
-    <command detect_errors="exit_code"><![CDATA[
+    <command detect_errors="aggressive"><![CDATA[
         echo \$PATH
         &&
         dante_ltr --gff3 '$dante'
