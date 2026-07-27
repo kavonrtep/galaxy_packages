@@ -48,8 +48,9 @@
         mkdir -p '$report.extra_files_path' &&
         ( cd output && tar cf - --exclude='*.bw' --exclude='*.bam' --exclude='*bigwig*' . ) | ( cd '$report.extra_files_path' && tar xf - ) &&
 
-        ## Complete results archive (everything)
-        cd output && zip -r ../carp_output.zip * && cd .. &&
+        ## Complete results archive (everything). Built with python's zipfile
+        ## via shutil, because the CARP container image ships no `zip` binary.
+        python3 -c "import shutil; shutil.make_archive('carp_output', 'zip', 'output')" &&
         mv carp_output.zip '$output_archive'
     ]]></command>
     <inputs>
