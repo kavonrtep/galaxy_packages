@@ -19,9 +19,9 @@ def mutate(seq, rate):
             out.append(b)
     return "".join(out)
 
-# One satellite: 172 bp monomer, ~220 copies, ~3% per-base divergence per copy.
+# One satellite: 172 bp monomer, ~500 copies, ~3% per-base divergence per copy (array ~86 kb, above the default
 monomer = rand_seq(172)
-array = "".join(mutate(monomer, 0.03) for _ in range(220))   # ~37.8 kb
+array = "".join(mutate(monomer, 0.03) for _ in range(500))   # min_total_length=50000 TAREAN threshold)
 
 # Unique random flanks so the array sits inside a realistic contig.
 left = rand_seq(25000)
@@ -35,4 +35,4 @@ with open("synthetic_satellite.fasta", "w") as f:
     f.write(">chr_test synthetic contig with one 172bp satellite array\n")
     f.write(wrap(seq) + "\n")
 
-print(f"monomer={len(monomer)}bp copies=220 array={len(array)}bp total={len(seq)}bp")
+print(f"monomer={len(monomer)}bp copies=500 array={len(array)}bp total={len(seq)}bp")

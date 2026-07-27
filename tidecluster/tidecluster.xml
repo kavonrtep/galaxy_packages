@@ -101,16 +101,16 @@
 
     </outputs>
     <tests>
-        <!-- run_all on a small synthetic genome (test-data/synthetic_satellite.fasta,
-             generated deterministically by make_synthetic_satellite.py): one clean
-             high-copy 172 bp satellite array in random flanks. This reliably drives
-             TideHunter -> clustering -> TAREAN to a single cluster (TRC_1) with a
-             reconstructed consensus, so the clustering GFF3, the consensus dimer
-             library and the report can all be asserted deterministically. -->
+        <!-- run_all at default settings on a small synthetic genome
+             (test-data/synthetic_satellite.fasta, generated deterministically by
+             make_synthetic_satellite.py): one clean high-copy 172 bp satellite array
+             (~86 kb, deliberately above the default min_total_length of 50 kb so
+             TAREAN runs) in random flanks. This reliably drives TideHunter ->
+             clustering -> TAREAN to a single cluster (TRC_1) with a reconstructed
+             consensus, so the clustering GFF3, the consensus dimer library and the
+             report can all be asserted deterministically. -->
         <test expect_num_outputs="5">
             <param name="fasta" value="synthetic_satellite.fasta"/>
-            <param name="min_length" value="500"/>
-            <param name="min_total_length" value="5000"/>
             <output name="gff3_clustering">
                 <assert_contents>
                     <has_text text="TideCluster"/>
