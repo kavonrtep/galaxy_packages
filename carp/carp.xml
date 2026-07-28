@@ -29,9 +29,9 @@
         #if $tandem_repeat_library
         echo "tandem_repeat_library: tandem_repeat_library.fasta" >> config.yaml &&
         #end if
-        echo "repeatmasker_sensitivity: $repeatmasker_sensitivity" >> config.yaml &&
-        echo "repeatmasker_culling_limit: $repeatmasker_culling_limit" >> config.yaml &&
-        echo "tidecluster_reannotate_culling_limit: $tidecluster_reannotate_culling_limit" >> config.yaml &&
+        echo "repeatmasker_sensitivity: $advanced.repeatmasker_sensitivity" >> config.yaml &&
+        echo "repeatmasker_culling_limit: $advanced.repeatmasker_culling_limit" >> config.yaml &&
+        echo "tidecluster_reannotate_culling_limit: $advanced.tidecluster_reannotate_culling_limit" >> config.yaml &&
 
         ## Run the pipeline (Snakemake wrapper, threads from Galaxy)
         /opt/pipeline/run_pipeline.py -c config.yaml -t \${GALAXY_SLOTS:-1} &&
@@ -63,20 +63,23 @@
                label="Tandem repeat library (optional)"
                help="Reference tandem-repeat library used by TideCluster to name families, e.g. PisTR-B#Satellite"/>
 
-        <!-- RepeatMasker settings. Defaults: rush sensitivity and culling on
-             (limit 2) in both the main and the TideCluster-reannotation search. -->
-        <param name="repeatmasker_sensitivity" type="select" label="RepeatMasker sensitivity"
-               help="rush is fastest; default and quick trade speed for sensitivity.">
-            <option value="rush" selected="true">rush (fastest)</option>
-            <option value="default">default</option>
-            <option value="quick">quick</option>
-        </param>
-        <param name="repeatmasker_culling_limit" type="integer" value="2" min="0"
-               label="RepeatMasker culling limit (main search)"
-               help="rmblastn -culling_limit for the main RepeatMasker step. 0 = off. 2 (recommended) collapses per-locus redundant hits from a de-novo library for a large speed-up with minimal masking loss."/>
-        <param name="tidecluster_reannotate_culling_limit" type="integer" value="2" min="0"
-               label="RepeatMasker culling limit (TideCluster reannotation search)"
-               help="rmblastn -culling_limit for the TideCluster reannotation step, independent of the main search. 0 = off; 2 recommended."/>
+        <!-- RepeatMasker speed/sensitivity knobs. The defaults (rush + culling
+             2/2) are much faster and affect only the similarity-based RepeatMasker
+             masking, not the structure-based annotations. -->
+        <section name="advanced" title="Advanced settings: RepeatMasker speed vs. sensitivity" expanded="false">
+            <param name="repeatmasker_sensitivity" type="select" label="RepeatMasker sensitivity"
+                   help="Affects ONLY the similarity-based RepeatMasker masking — the structure-based annotations (DANTE, DANTE_LTR, DANTE_TIR, TideCluster) are not affected. The default 'rush', together with culling below, makes RepeatMasker about 7.5x faster at a small sensitivity cost (roughly 1.8% fewer masked bp). This is the recommended default and is especially suitable for large genomes, where RepeatMasker dominates run time. Choose 'default' or 'quick' for maximum sensitivity when run time is not a concern.">
+                <option value="rush" selected="true">rush (fastest, recommended default)</option>
+                <option value="default">default (more sensitive, slower)</option>
+                <option value="quick">quick</option>
+            </param>
+            <param name="repeatmasker_culling_limit" type="integer" value="2" min="0"
+                   label="RepeatMasker culling limit (main search)"
+                   help="rmblastn -culling_limit for the main RepeatMasker step. The default 2 (culling ON) is about 3x faster at only ~0.7% fewer masked bp, by collapsing redundant per-locus hits from the de-novo library; set 0 to turn culling off for maximum sensitivity. Affects only RepeatMasker masking, not the structure-based annotations."/>
+            <param name="tidecluster_reannotate_culling_limit" type="integer" value="2" min="0"
+                   label="RepeatMasker culling limit (TideCluster reannotation search)"
+                   help="Same culling for TideCluster's internal RepeatMasker, independent of the main search. The default 2 is about 3.7x faster at ~0.8% fewer masked bp; set 0 to turn it off."/>
+        </section>
     </inputs>
     <outputs>
         <data name="output_archive" format="zip"
@@ -92,9 +95,7 @@
              is only on the GFF3 header of the unified annotation. -->
         <test expect_num_outputs="3">
             <param name="genome" value="genome_micro.fasta"/>
-            <param name="repeatmasker_sensitivity" value="rush"/>
-            <param name="repeatmasker_culling_limit" value="2"/>
-            <param name="tidecluster_reannotate_culling_limit" value="2"/>
+            <!-- Advanced RepeatMasker settings left at defaults (rush, culling 2/2). -->
             <output name="unified_gff">
                 <assert_contents>
                     <has_text text="##gff-version"/>
@@ -127,16 +128,22 @@ CARP was developed for plant genomes. Do not use it on animal genomes.
 - *Tandem repeat library* — optional reference library for naming tandem
   families in TideCluster.
 
-**RepeatMasker settings**
+**Advanced settings: RepeatMasker speed vs. sensitivity**
 
-Two independent RepeatMasker searches run in the pipeline. Both default to
-culling limit 2 ("culling on"), and sensitivity defaults to ``rush``:
+These knobs affect only the similarity-based RepeatMasker masking — the
+structure-based annotations (DANTE, DANTE_LTR, DANTE_TIR, TideCluster) are
+**not** affected. The defaults (``rush`` sensitivity with culling limit 2 in
+both searches) are the recommended, much faster choice, especially suitable for
+large genomes where RepeatMasker dominates run time; the sensitivity cost is
+small:
 
-- *Sensitivity* — ``rush`` (fastest) / ``default`` / ``quick``.
-- *Culling limit (main search)* — caps redundant per-locus hits from the
-  de-novo library; 2 gives a large speed-up with minimal masking loss.
-- *Culling limit (TideCluster reannotation search)* — the same for the
-  TideCluster reannotation step.
+- *Sensitivity* — the default ``rush`` together with culling is about **7.5x
+  faster** than ``default`` at only ~1.8 % fewer masked bp. Use ``default`` or
+  ``quick`` for maximum sensitivity when run time is not a concern.
+- *Culling limit (main search)* — default ``2`` (on) is about **3x faster** at
+  ~0.7 % fewer masked bp; ``0`` turns culling off.
+- *Culling limit (TideCluster reannotation search)* — default ``2`` is about
+  **3.7x faster** at ~0.8 % fewer masked bp; ``0`` turns it off.
 
 **Outputs**
 

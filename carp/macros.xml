@@ -1,8 +1,8 @@
 <macros>
     <!-- Galaxy tool version = upstream CARP version + wrapper revision digit -->
-    <token name="@TOOL_VERSION@">1.1.6.1</token>
+    <token name="@TOOL_VERSION@">1.2.1.1</token>
     <!-- Container image tag published to GHCR for this release -->
-    <token name="@CONTAINER_TAG@">1.1.6</token>
+    <token name="@CONTAINER_TAG@">1.2.1</token>
     <xml name="requirements">
         <requirements>
             <container type="singularity">oras://ghcr.io/kavonrtep/carp/sif:@CONTAINER_TAG@</container>
