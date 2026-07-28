@@ -1,6 +1,6 @@
 <macros>
     <!-- Galaxy tool version = upstream CARP version + wrapper revision digit -->
-    <token name="@TOOL_VERSION@">1.2.1.1</token>
+    <token name="@TOOL_VERSION@">1.2.1.2</token>
     <!-- Container image tag published to GHCR for this release -->
     <token name="@CONTAINER_TAG@">1.2.1</token>
     <xml name="requirements">
