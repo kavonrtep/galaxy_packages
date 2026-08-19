@@ -44,6 +44,25 @@
         ## Unified annotation
         cp output/Repeat_Annotation_Unified.gff3 '$unified_gff' &&
 
+        ## Optional per-tool GFF3 outputs (none selected by default). These are
+        ## exactly the files that also sit at the root of the results archive;
+        ## copying them out only saves the user unpacking it. All four are
+        ## declared in carp_manifest.json, so cleanup_intermediates: maximal
+        ## never removes them (nor their symlink targets).
+#set $extra = str($extra_gff3).split(',') if $extra_gff3 else []
+#if 'dante' in $extra
+        cp output/DANTE_filtered.gff3 '$dante_gff' &&
+#end if
+#if 'dante_ltr' in $extra
+        cp output/DANTE_LTR.gff3 '$dante_ltr_gff' &&
+#end if
+#if 'dante_tir' in $extra
+        cp output/DANTE_TIR.gff3 '$dante_tir_gff' &&
+#end if
+#if 'tidecluster' in $extra
+        cp output/Tandem_repeats_TideCluster.gff3 '$tidecluster_gff' &&
+#end if
+
         ## Main HTML report + its complete linked tree. repeat_annotation_report.html
         ## deep-links run_provenance.json, plotly.min.js, DANTE_LTR/, DANTE_TIR/report.html
         ## and TideCluster/default/ (with its report subtree), so the whole output tree
@@ -67,6 +86,18 @@
         <param name="tandem_repeat_library" type="data" format="fasta" optional="true"
                label="Tandem repeat library (optional)"
                help="Reference tandem-repeat library used by TideCluster to name families, e.g. PisTR-B#Satellite"/>
+
+        <!-- Optional convenience outputs. Nothing here changes what the pipeline
+             computes: every one of these files is already inside the results
+             archive, ticking a box only lifts it out as its own dataset. -->
+        <param name="extra_gff3" type="select" multiple="true" optional="true" display="checkboxes"
+               label="Additional per-tool GFF3 outputs"
+               help="None by default. These are the individual tool annotations that feed the unified annotation. IMPORTANT: the very same files are ALWAYS present at the root of the complete results archive, whether or not you tick a box here — ticking one only lifts that file out as a separate dataset so you do not have to unpack the archive. The unified annotation remains the authoritative, non-overlapping result.">
+            <option value="dante">DANTE — filtered protein-domain annotations (DANTE_filtered.gff3)</option>
+            <option value="dante_ltr">DANTE_LTR — complete LTR retrotransposons (DANTE_LTR.gff3)</option>
+            <option value="dante_tir">DANTE_TIR — TIR DNA transposons (DANTE_TIR.gff3)</option>
+            <option value="tidecluster">TideCluster — tandem repeats (Tandem_repeats_TideCluster.gff3)</option>
+        </param>
 
         <!-- RepeatMasker speed/sensitivity knobs. The defaults (rush + culling
              2/2) are much faster and affect only the similarity-based RepeatMasker
@@ -93,15 +124,60 @@
               label="CARP on ${genome.hid}: unified repeat annotation (GFF3)"/>
         <data name="report" format="html"
               label="CARP on ${genome.hid}: repeat annotation report"/>
+
+        <!-- Optional per-tool GFF3s, off unless ticked. Identical to the files of
+             the same name inside the results archive. -->
+        <data name="dante_gff" format="gff3"
+              label="CARP on ${genome.hid}: DANTE filtered protein domains (GFF3)">
+            <filter>extra_gff3 and 'dante' in extra_gff3</filter>
+        </data>
+        <data name="dante_ltr_gff" format="gff3"
+              label="CARP on ${genome.hid}: DANTE_LTR complete LTR retrotransposons (GFF3)">
+            <filter>extra_gff3 and 'dante_ltr' in extra_gff3</filter>
+        </data>
+        <data name="dante_tir_gff" format="gff3"
+              label="CARP on ${genome.hid}: DANTE_TIR TIR DNA transposons (GFF3)">
+            <filter>extra_gff3 and 'dante_tir' in extra_gff3</filter>
+        </data>
+        <data name="tidecluster_gff" format="gff3"
+              label="CARP on ${genome.hid}: TideCluster tandem repeats (GFF3)">
+            <filter>extra_gff3 and 'tidecluster' in extra_gff3</filter>
+        </data>
     </outputs>
     <tests>
         <!-- Full pipeline run on a tiny genome. Heavy (pulls the container and
-             runs every step); output is not byte-deterministic, so the assertion
-             is only on the GFF3 header of the unified annotation. -->
-        <test expect_num_outputs="3">
+             runs every step); output is not byte-deterministic, so each assertion
+             is only on the GFF3 header. On a genome this small DANTE_TIR and
+             TideCluster legitimately find nothing, so those two files are
+             header-only — the test covers that they are produced and copied,
+             not that they carry features. -->
+        <test expect_num_outputs="7">
             <param name="genome" value="genome_micro.fasta"/>
+            <!-- All four optional per-tool GFF3s selected, so the one heavy run
+                 also covers the conditional outputs and their filters. -->
+            <param name="extra_gff3" value="dante,dante_ltr,dante_tir,tidecluster"/>
             <!-- Advanced RepeatMasker settings left at defaults (rush, culling 2/2). -->
             <output name="unified_gff">
+                <assert_contents>
+                    <has_text text="##gff-version"/>
+                </assert_contents>
+            </output>
+            <output name="dante_gff">
+                <assert_contents>
+                    <has_text text="##gff-version"/>
+                </assert_contents>
+            </output>
+            <output name="dante_ltr_gff">
+                <assert_contents>
+                    <has_text text="##gff-version"/>
+                </assert_contents>
+            </output>
+            <output name="dante_tir_gff">
+                <assert_contents>
+                    <has_text text="##gff-version"/>
+                </assert_contents>
+            </output>
+            <output name="tidecluster_gff">
                 <assert_contents>
                     <has_text text="##gff-version"/>
                 </assert_contents>
@@ -133,6 +209,24 @@ CARP was developed for plant genomes. Do not use it on animal genomes.
 - *Tandem repeat library* — optional reference library for naming tandem
   families in TideCluster.
 
+**Additional per-tool GFF3 outputs**
+
+The four checkboxes lift the individual tool annotations out as separate
+datasets. They are off by default and they change nothing about the run:
+
+- ``DANTE_filtered.gff3`` — filtered DANTE protein-domain annotations
+- ``DANTE_LTR.gff3`` — complete LTR retrotransposons
+- ``DANTE_TIR.gff3`` — TIR DNA transposons
+- ``Tandem_repeats_TideCluster.gff3`` — tandem repeats from TideCluster
+
+.. class:: infomark
+
+These very same files are **always** written to the root of the complete results
+archive, whether or not the boxes are ticked. The checkboxes only save you
+unpacking the archive to get at them. For most purposes use the unified
+annotation instead: it is the authoritative, non-overlapping merge of all of
+them.
+
 **Advanced settings: RepeatMasker speed vs. sensitivity**
 
 These knobs affect only the similarity-based RepeatMasker masking — the
@@ -160,6 +254,18 @@ small:
   with its complete linked tree: the DANTE_LTR, DANTE_TIR and TideCluster
   sub-reports and the run provenance are browsable from it. (The bulky BigWig
   and BAM tracks are not embedded in the report — get those from the archive.)
+- *Per-tool GFF3 files* (optional, off by default) — copies of
+  ``DANTE_filtered.gff3``, ``DANTE_LTR.gff3``, ``DANTE_TIR.gff3`` and
+  ``Tandem_repeats_TideCluster.gff3``, which are in the archive regardless.
+
+**Version note**
+
+CARP releases 1.0.0 to 1.3.0 built a RepeatMasker library containing no
+``Class_II`` sequences, so DNA transposons were annotated only where DANTE_TIR
+found a complete structural element and never by similarity. This was fixed in
+1.4.0; annotations produced from 1.4.0 onwards therefore differ from earlier
+ones (upstream measured ``Class_II`` up 25 % on an 80 Mbp genome). Re-run older
+analyses if DNA-transposon content matters for your assembly.
 
 **Container**
 
