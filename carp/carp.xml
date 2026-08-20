@@ -38,29 +38,31 @@
         ## targets are never deleted.
         echo "cleanup_intermediates: maximal" >> config.yaml &&
 
-        ## Memory budget, when Galaxy knows one. GALAXY_MEMORY_MB is set only by
-        ## some runners (SLURM, SGE, Kubernetes, AWS) and is absent on PBS and the
-        ## local runner, so it must be guarded like GALAXY_SLOTS. Five CARP rules
-        ## read snakemake's resources.mem_mb (default 0 = unset) to size their
-        ## worker pools and CAP3's budget; --default-resources cannot reach them
-        ## because the rules define mem_mb explicitly, so --set-resources per rule
-        ## is the supported route. When the variable is absent we pass nothing and
-        ## CARP falls back to its own detection (cgroup limit, walking up the
-        ## hierarchy so a PBS/Slurm job-scope limit is honoured, else MemAvailable).
-        ## These are concurrency/memory caps only: they cannot change any output.
-        ## snakemake's --set-resources is variadic (RULE:RESOURCE=VALUE ...), so all
-        ## five rules must ride on ONE flag: repeating the flag overwrites the
-        ## previous occurrence and only the last rule would get a budget.
-        CARP_MEM_ARGS='' &&
+        ## Memory budget, when Galaxy knows one. CARP takes the job's allocation as
+        ## a single -m <GB>, which sets max_memory_gb and thereby the default
+        ## resources.mem_mb of every memory-gated rule: the make_unified_annotation
+        ## worker pool, the three BigWig density pools, DANTE_TIR's concurrent CAP3
+        ## assemblies and TideCluster's TideHunter/TAREAN pools. Concurrency caps
+        ## only; they cannot change any output.
+        ##
+        ## Galaxy exposes an allocation as GALAXY_MEMORY_MB, but only for some
+        ## runners (SLURM, SGE, Kubernetes, AWS) and never for PBS/Torque or the
+        ## local runner, so guard it like GALAXY_SLOTS. Passing it matters most in
+        ## exactly this setting: the pipeline runs inside the container, where
+        ## /proc/meminfo reports the whole node and the scheduler's own variables
+        ## (PBS_RESC_MEM, SLURM_MEM_PER_NODE) have been stripped by --cleanenv, so
+        ## CARP's auto-detection cannot see the job's limit. When the variable is
+        ## absent we pass nothing and CARP auto-detects (scheduler environment,
+        ## then cgroup limit, then MemAvailable). Whole GB, truncated, which errs
+        ## low; below 1 GB pass nothing rather than -m 0, which means auto-detect.
+        CARP_MEM_ARG='' &&
         if [ "\${GALAXY_MEMORY_MB:-0}" -gt 0 ] 2>/dev/null; then
-            CARP_MEM_ARGS='--set-resources';
-            for carp_rule in dante_tir make_unified_annotation make_bigwig_density make_unified_tandem_per_family_bigwig make_tidecluster_tandem_per_family_bigwig; do
-                CARP_MEM_ARGS="\$CARP_MEM_ARGS \$carp_rule:mem_mb=\${GALAXY_MEMORY_MB}";
-            done;
+            CARP_MEM_GB=\$(( GALAXY_MEMORY_MB / 1024 ));
+            if [ "\$CARP_MEM_GB" -gt 0 ]; then CARP_MEM_ARG="-m \$CARP_MEM_GB"; fi;
         fi &&
 
         ## Run the pipeline (Snakemake wrapper, threads and memory from Galaxy)
-        /opt/pipeline/run_pipeline.py -c config.yaml -t \${GALAXY_SLOTS:-1} \${CARP_MEM_ARGS:+-S "\$CARP_MEM_ARGS"} &&
+        /opt/pipeline/run_pipeline.py -c config.yaml -t \${GALAXY_SLOTS:-1} \$CARP_MEM_ARG &&
 
         ## Unified annotation
         cp output/Repeat_Annotation_Unified.gff3 '$unified_gff' &&
@@ -292,20 +294,27 @@ analyses if DNA-transposon content matters for your assembly.
 
 Threads come from ``GALAXY_SLOTS``. Memory is passed on only when the job runner
 tells Galaxy what it allocated: if ``GALAXY_MEMORY_MB`` is defined, the wrapper
-hands it to the five memory-sensitive pipeline rules (``dante_tir``,
-``make_unified_annotation``, ``make_bigwig_density`` and the two per-family
-BigWig rules) as snakemake ``resources.mem_mb``, where it bounds their worker
-pools and CAP3's assembly budget. These are concurrency caps only and cannot
-change any output.
+converts it to whole GB and passes it as ``run_pipeline.py -m``, which sets
+``max_memory_gb`` and thereby bounds every memory-gated pool in the pipeline —
+the unified-annotation workers, the three BigWig density pools, DANTE_TIR's
+concurrent CAP3 assemblies and TideCluster's TideHunter/TAREAN pools. These are
+concurrency caps only and cannot change any output.
 
 Galaxy defines ``GALAXY_MEMORY_MB`` for SLURM, SGE, Kubernetes and AWS, but not
 for PBS/Torque or the local runner. Where it is undefined the wrapper passes
-nothing and CARP falls back to its own detection: the cgroup memory limit
-(walking up the hierarchy, so a PBS or Slurm job-scope limit is honoured), else
-``MemAvailable`` from the host. Administrators running large genomes on a
-runner that does not populate the variable should set it in the job destination
-environment, so the pipeline sizes its pools against the job's allocation rather
-than against whatever the node happens to have free.
+nothing and CARP auto-detects, in order: the scheduler environment, then the
+cgroup limit, then ``MemAvailable``.
+
+.. class:: warningmark
+
+Auto-detection is weakest in precisely the situation Galaxy creates. The
+pipeline runs inside the container, where ``/proc/meminfo`` reports the whole
+**node** rather than the job, and Galaxy launches it with ``--cleanenv``, which
+strips the scheduler variables (``PBS_RESC_MEM``, ``SLURM_MEM_PER_NODE``) that
+CARP would otherwise read. Administrators running large genomes on a runner that
+does not populate ``GALAXY_MEMORY_MB`` should set it in the job destination
+environment; otherwise the pipeline sizes its pools against memory the job is
+not allowed to use, and the symptom is an OOM kill hours into the run.
 
 **Container**
 
