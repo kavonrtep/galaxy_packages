@@ -33,9 +33,13 @@
         echo "repeatmasker_culling_limit: $advanced.repeatmasker_culling_limit" >> config.yaml &&
         echo "tidecluster_reannotate_culling_limit: $advanced.tidecluster_reannotate_culling_limit" >> config.yaml &&
         ## Maximal post-run cleanup of intermediate scratch (not exposed to the UI):
-        ## purges the large TideCluster tarean/kite/consensus trees and tool workdirs
-        ## from the results. Manifest outputs (the served reports/GFFs) and their
-        ## targets are never deleted.
+        ## purges the scratch FILES inside the large TideCluster tarean/kite/consensus
+        ## trees, plus the tool workdirs. Since CARP 1.6.1 the three trees themselves
+        ## are kept (they hold the inputs for TideCluster's per-array consensus and
+        ## report re-render, and the kite monomer-size CSV the report reads), so an
+        ## archived run stays re-renderable; upstream measures the file-level purge as
+        ## still freeing 90% of their size. Manifest outputs (the served reports/GFFs)
+        ## and their symlink targets are never deleted.
         echo "cleanup_intermediates: maximal" >> config.yaml &&
 
         ## Memory budget, when Galaxy knows one. CARP takes the job's allocation as
