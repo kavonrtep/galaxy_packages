@@ -11,5 +11,3 @@ long_description: |
   GHCR. Developed for plant genomes only.
 homepage_url: https://github.com/kavonrtep/CARP
 remote_repository_url: https://github.com/kavonrtep/galaxy_packages
-exclude:
-  - test-data

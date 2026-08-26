@@ -1,6 +1,3 @@
 /do_no_track_info.txt
 /tidecluster/do_not_track_info.md
 /do_not_track_info/
-
-# large local test genome, kept local only (also excluded from the shed tarball)
-carp/test-data/
