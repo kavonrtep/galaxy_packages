@@ -6,13 +6,19 @@ owner: repeatexplorer
 exclude:
   - shed.yml
   - __pycache__
-  - test_data/seqs.fasta
-  - test_data/ERR215189_1.fastq.gz
-  - test_data/ERR215189_2.fastq.gz
-  - test_data/single_output.fasta
   - tool_data/organele_ref_and_phi-X174.fasta.nhr
   - tool_data/organele_ref_and_phi-X174.fasta.nin
   - tool_data/organele_ref_and_phi-X174.fasta.nsq
   - tmp/*
-  - test_data/*
-
+  # Bulk fixtures for the standalone test_run*.sh drivers; kept in git,
+  # too large for the shed tarball. No <tests> block references them.
+  - test-data/VTS_contigs.info.minRD5
+  - test-data/seq_C_100k
+  - test-data/seq_I_100k
+  - test-data/seq_C_10k
+  - test-data/seq_I_10k
+  - test-data/SRR089356_1.fastq.gz
+  - test-data/SRR089356_2.fastq.gz
+  - test-data/rmlib.fa
+  - test-data/example_1_COMPARATIVE_ANALYSIS_COUNTS.csv
+  - test-data/example_2_COMPARATIVE_ANALYSIS_COUNTS.csv

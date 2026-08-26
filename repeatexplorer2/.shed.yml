@@ -7,7 +7,6 @@ owner: petr-novak
 exclude:
   - do_not_track_info
   - tmp
-  - test_data
   - singularity
   - todo_and_notes.md
   - venv/.gitignore

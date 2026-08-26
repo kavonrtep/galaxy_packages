@@ -12,4 +12,3 @@ exclude:
   - shed.yml
   - __pycache__
   - tmp
-  - test-data/

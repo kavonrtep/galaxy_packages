@@ -30,8 +30,9 @@ Each top-level directory = one Tool Shed repository, identified by its `.shed.ym
 ## Anatomy of a tool
 
 - `.shed.yml` — Tool Shed metadata: `name`, `owner`, `categories`, and an `exclude:` list that
-  keeps tmp dirs, test data, and large binary DB files out of the published tarball. When you
+  keeps tmp dirs, scratch, and large binary DB files out of the published tarball. When you
   add files that should not ship (scratch data, generated indexes), add them to `exclude:`.
+  **Do not exclude the fixtures a `<tests>` block references** — see the rule below.
 - `<tool_name>.xml` — the wrapper: `<command><![CDATA[ ... ]]></command>` chains CLI calls with
   `&&`, using Cheetah templating (`#if`, `$param`, `${output}`). Use `\${GALAXY_SLOTS:-1}` for
   CPU count. Self-contained tools invoke their sibling script by name (it must be executable and
@@ -109,8 +110,21 @@ Publishing to the Tool Shed (run from the repo root, pass the tool dir):
 - **main toolshed** (only after tests pass), owner `petr-novak`: **Petr's manual step — do not
   run it.** He publishes from inside the tool directory with his production key:
   `planemo shed_update --shed_target toolshed --shed_key $KEY --owner petr-novak .`
-- `.shed.yml` `exclude:` keeps `test-data/` and scratch out of the uploaded tarball; large test
-  genomes are also gitignored (kept local).
+- **Test fixtures must ship.** A fixture referenced by a `<tests>` block belongs in git and in
+  the tarball, or the test can only ever run on the machine that happens to hold the file —
+  not from a clone, not from an installed repository. Keep fixtures small enough that this is
+  painless (a rule of thumb: under 1 MB; a fixed-seed synthetic or a genome slice is ideal) and
+  do not put them in `.gitignore` or in `exclude:`. Issue #5 was exactly this: `carp`'s 199 KB
+  `genome_micro.fasta` was in neither, so its test was unrunnable by anyone else.
+- `exclude:` is for things no test needs: tmp dirs, generated indexes, and bulk data used only
+  by the standalone `test_run*.sh` drivers. Exclude those **by path**, and check the path is
+  real — `re_utils` carried entries for a `test_data/` directory that had been renamed to
+  `test-data/`, so they matched nothing and 66 MB shipped unnoticed for years.
+- Genuinely large reference data (hundreds of MB) should not be in the repository at all; it
+  belongs in a conda package, a data manager, or the container image.
+- Verify before publishing, since `shed_upload` tars the **working directory**, not git — an
+  untracked local file in a tool directory will be uploaded:
+  `planemo shed_upload --shed_target testtoolshed --tar_only <tool>/ && tar tzvf shed_upload.tar.gz`
 
 ## Conventions
 
