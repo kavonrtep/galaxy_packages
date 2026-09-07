@@ -80,17 +80,26 @@ planemo lint <tool>.xml
 planemo test <tool>.xml \
   --galaxy_branch release_25.1 \            # pin a release; the default pulls master (unstable)
   --conda_prefix /home/petr/miniconda3 \
-  --conda_channels petrnovak,bioconda,conda-forge \
+  --conda_channels conda-forge,bioconda,petrnovak \
   --conda_dependency_resolution --conda_auto_install --conda_auto_init \
   --galaxy_root <persistent>/gx             # reuse across runs so Galaxy installs once
 
 planemo serve <tool1>.xml <tool2>.xml --host 127.0.0.1 --port 9090 \
   --galaxy_root <persistent>/gx --galaxy_branch release_25.1 \
-  --conda_prefix /home/petr/miniconda3 --conda_channels petrnovak,bioconda,conda-forge \
+  --conda_prefix /home/petr/miniconda3 --conda_channels conda-forge,bioconda,petrnovak \
   --conda_dependency_resolution --conda_auto_install --conda_auto_init
 ```
 
 Pitfalls hit before:
+- **Channel order matters: `conda-forge` must come first.** Galaxy's conda resolver tries
+  `--strict-channel-priority` first (`lib/galaxy/tool_util/deps/conda_util.py`), and under strict
+  priority a channel list that demotes `conda-forge` below `bioconda` pushes the solver onto
+  bioconda's ancient R packages. `tidecluster` then fails to resolve (`r-igraph 2.0.3` ->
+  `glpk >=5.0` conflict) on every version, 1.18.0 included. This repo previously documented
+  `petrnovak,bioconda,conda-forge`, which is exactly that broken order; `conda-forge,bioconda,petrnovak`
+  resolves under both strict and flexible priority. Add `petrnovak` by appending it, never by
+  prepending. (Galaxy itself recovers either way — it retries without strict priority — but a
+  hand-run `conda create` does not.)
 - **Galaxy defaults to `master`** and can fail to build — always pass `--galaxy_branch` (e.g.
   `release_25.1`).
 - **Stale `~/.planemo/gx_venv*`** with a dangling python symlink breaks the framework install
