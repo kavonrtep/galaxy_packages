@@ -180,6 +180,12 @@
              not that they carry features. -->
         <test expect_num_outputs="7">
             <param name="genome" value="genome_micro.fasta"/>
+            <!-- Both optional libraries supplied, with canonical classes, so the
+                 run also covers the classification validation CARP 1.7.1 applies
+                 to user-supplied libraries. A non-canonical class here would
+                 abort at validate_classifications. -->
+            <param name="custom_library" value="custom_library.fasta"/>
+            <param name="tandem_repeat_library" value="tandem_repeat_library.fasta"/>
             <!-- All four optional per-tool GFF3s selected, so the one heavy run
                  also covers the conditional outputs and their filters. -->
             <param name="extra_gff3" value="dante,dante_ltr,dante_tir,tidecluster"/>
@@ -285,13 +291,59 @@ small:
   ``DANTE_filtered.gff3``, ``DANTE_LTR.gff3``, ``DANTE_TIR.gff3`` and
   ``Tandem_repeats_TideCluster.gff3``, which are in the archive regardless.
 
-**Version note (CARP 1.7.1 and newer): repeat library headers are validated**
+**What makes a repeat library valid**
 
 The optional *Custom repeat library* and *Tandem repeat library* are the only
 classification-bearing inputs CARP does not produce itself. Since 1.7.1 their
 headers are checked against CARP's classification vocabulary before the
 RepeatMasker library is built, and an unrecognised class **stops the run** with
 the offending class named.
+
+Each header is a RepeatMasker-style ``>name#class``: a free-form sequence name,
+a ``#``, then the classification. The classification must be canonical:
+
+- **slash-separated**, hierarchical, e.g. ``Class_I/LTR/Ty1_copia/Ale``.
+  Underscores inside a path component are part of that component's name
+  (``Ty1_copia``, ``EnSpm_CACTA``) and never separators.
+- rooted at one of ``Class_I``, ``Class_II``, ``Mobile_element`` or ``rDNA``,
+  or one of the four RepeatMasker-native classes that sit outside that
+  hierarchy: ``Satellite``, ``Simple_repeat``, ``Low_complexity``, ``Unknown``.
+- an intermediate node is acceptable when the lineage is unknown:
+  ``Class_I/LTR/Ty1_copia`` is as valid as ``Class_I/LTR/Ty1_copia/Ale``.
+
+For a **tandem repeat library**, ``Satellite`` is the class to use, and it is
+the one class that takes a free-form sub-path, so family names may be carried
+in the classification itself: ``Satellite/FabTR-1``,
+``Satellite/FabTR_PisTR-B``. The other three take no sub-path.
+
+Valid examples::
+
+    >myCopia_1#Class_I/LTR/Ty1_copia/Ale
+    >myCacta_1#Class_II/Subclass_1/TIR/EnSpm_CACTA
+    >my18S_1#rDNA/45S_rDNA/18S
+    >PisTR-B#Satellite
+    >FabTR_1#Satellite/FabTR-1
+
+.. class:: warningmark
+
+``Tandem_repeats`` is **not** a classification and will be rejected. It is a
+reporting bucket that appears in ``summary_statistics.csv`` and in
+split-by-class filenames, aggregating every tandem call that survives tier
+resolution. In a library, use ``Satellite``.
+
+.. class:: warningmark
+
+The commonest rejection is the legacy flat rDNA spelling: ``rDNA_45S/18S`` is
+**not** canonical, its current form is ``rDNA/45S_rDNA/18S``. Relabel the FASTA
+headers; the sequences do not change.
+
+Inside the CARP container, ``classification.py list-canonical`` prints the
+accepted set, ``classification.py validate --mode fasta --source RepeatMasker
+<file>`` checks a library and names every offending class, and
+``classification.py canonicalise-fasta-headers <in> <out>`` rewrites the
+headers that can be translated automatically.
+
+**Version note (CARP 1.7.1 and newer)**
 
 .. class:: warningmark
 
