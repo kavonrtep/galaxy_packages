@@ -6,7 +6,22 @@
     <expand macro="requirements" />
     <command detect_errors="aggressive"><![CDATA[
         mkdir -p output && cd output &&
-        TideCluster.py run_all
+
+        ## Memory budget, when Galaxy knows one. run_all sizes the TideHunter and
+        ## TAREAN worker pools against it; without it TideCluster reads the
+        ## scheduler environment, then the cgroup limit, then MemAvailable, and
+        ## MemAvailable describes the whole node rather than the job. Concurrency
+        ## caps only: they cannot change any output. GALAXY_MEMORY_MB is defined
+        ## only by some runners (SLURM, SGE, Kubernetes, AWS) and never by PBS or
+        ## the local runner, so guard it like GALAXY_SLOTS. Whole GB, truncated,
+        ## which errs low; below 1 GB pass nothing and let TideCluster detect.
+        TC_MEM_ARG='' &&
+        if [ "\${GALAXY_MEMORY_MB:-0}" -gt 0 ] 2>/dev/null; then
+            TC_MEM_GB=\$(( GALAXY_MEMORY_MB / 1024 ));
+            if [ "\$TC_MEM_GB" -gt 0 ]; then TC_MEM_ARG="--max_memory \$TC_MEM_GB"; fi;
+        fi &&
+
+        TideCluster.py run_all \$TC_MEM_ARG
         -f '$fasta'
         -pr 'tidecluster'
         #if $library:

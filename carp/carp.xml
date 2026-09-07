@@ -285,6 +285,24 @@ small:
   ``DANTE_filtered.gff3``, ``DANTE_LTR.gff3``, ``DANTE_TIR.gff3`` and
   ``Tandem_repeats_TideCluster.gff3``, which are in the archive regardless.
 
+**Version note (CARP 1.7.1 and newer): repeat library headers are validated**
+
+The optional *Custom repeat library* and *Tandem repeat library* are the only
+classification-bearing inputs CARP does not produce itself. Since 1.7.1 their
+headers are checked against CARP's classification vocabulary before the
+RepeatMasker library is built, and an unrecognised class **stops the run** with
+the offending class named.
+
+.. class:: warningmark
+
+This can fail a run that previously completed. Older curated libraries often
+carry legacy flat rDNA classes such as ``rDNA_45S/18S``, whose canonical form is
+now ``rDNA/45S_rDNA/18S``. The fix is to relabel the FASTA headers; the
+sequences themselves do not change. Previously such a class travelled through
+RepeatMasker into the unified annotation unchanged, so one logical class was
+reported as several rows that do not sum, and an rDNA total read off
+``summary_statistics.csv`` was short by whatever the non-canonical rows held.
+
 **Version note**
 
 CARP releases 1.0.0 to 1.3.0 built a RepeatMasker library containing no
