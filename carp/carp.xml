@@ -65,8 +65,51 @@
             if [ "\$CARP_MEM_GB" -gt 0 ]; then CARP_MEM_ARG="-m \$CARP_MEM_GB"; fi;
         fi &&
 
-        ## Run the pipeline (Snakemake wrapper, threads and memory from Galaxy)
-        /opt/pipeline/run_pipeline.py -c config.yaml -t \${GALAXY_SLOTS:-1} \$CARP_MEM_ARG &&
+        ## Run the pipeline (Snakemake wrapper, threads and memory from Galaxy).
+        ##
+        ## On failure, surface the diagnostics. Every rule redirects its own
+        ## output with `exec > <rule>.log 2> <rule>.err`, so the real error text
+        ## never reaches the job's stderr: snakemake reports only which rule
+        ## failed and prints the (usually empty) .log, while the traceback sits
+        ## in the .err inside the job's output directory, which is discarded
+        ## with the job. Galaxy users were left with "one of the commands
+        ## exited with non-zero exit code" and nothing else. Dump the tail of
+        ## the most recently written non-empty .err files to stderr before
+        ## exiting, so the cause appears in the Galaxy error report itself.
+        ## Only on failure: on a successful run this prints nothing, which
+        ## matters because detect_errors="aggressive" scans stderr.
+        if /opt/pipeline/run_pipeline.py -c config.yaml -t \${GALAXY_SLOTS:-1} \$CARP_MEM_ARG; then
+            : ;
+        else
+            carp_rc=\$?;
+            echo "" 1>&2;
+            echo "===== CARP pipeline failed (exit \$carp_rc) =====" 1>&2;
+            ## Ask snakemake's own log which rule failed, and dump exactly that
+            ## rule's log files. Picking the newest .err instead would bury the
+            ## cause: rules run with `set -x`, so a successful rule also leaves
+            ## a non-empty .err, and later-finishing rules would outrank the
+            ## failing one.
+            carp_snakelog=\$(ls -t .snakemake/log/*.snakemake.log 2>/dev/null | head -1);
+            carp_logs='';
+            if [ -n "\$carp_snakelog" ]; then
+                grep -E '^Error in rule ' "\$carp_snakelog" 1>&2;
+                carp_logs=\$(grep -A8 '^Error in rule ' "\$carp_snakelog" 2>/dev/null | grep -E '^[[:space:]]*log:' | sed 's/^[[:space:]]*log:[[:space:]]*//; s/ (check log file(s) for error details)//' | tr ',' '\n' | sed 's/^[[:space:]]*//; s/[[:space:]]*\$//' | sort -u);
+            fi;
+            if [ -z "\$carp_logs" ]; then
+                echo "(could not identify the failing rule; showing the most recent logs)" 1>&2;
+                carp_errs=\$(find output -name '*.err' -size +0c 2>/dev/null);
+                [ -n "\$carp_errs" ] && carp_logs=\$(ls -t \$carp_errs 2>/dev/null | head -3);
+            fi;
+            for carp_log in \$carp_logs; do
+                [ -s "\$carp_log" ] || continue;
+                echo "" 1>&2;
+                echo "----- \$carp_log (last 60 lines) -----" 1>&2;
+                tail -n 60 "\$carp_log" 1>&2;
+            done;
+            echo "" 1>&2;
+            echo "===== end of CARP diagnostics =====" 1>&2;
+            exit \$carp_rc;
+        fi &&
 
         ## Unified annotation
         cp output/Repeat_Annotation_Unified.gff3 '$unified_gff' &&
