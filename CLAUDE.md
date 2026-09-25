@@ -119,6 +119,10 @@ Publishing to the Tool Shed (run from the repo root, pass the tool dir):
 - **main toolshed** (only after tests pass), owner `petr-novak`: **Petr's manual step — do not
   run it.** He publishes from inside the tool directory with his production key:
   `planemo shed_update --shed_target toolshed --shed_key $KEY --owner petr-novak .`
+  Because it happens outside the conversation, **never state what is published from memory** —
+  query the Tool Shed API in the same turn you make the claim. See the
+  `published-version-check` skill for that and for the GitHub / GHCR / Anaconda equivalents
+  (read-only HTTPS; there is no ssh and no `gh` CLI here).
 - **Test fixtures must ship.** A fixture referenced by a `<tests>` block belongs in git and in
   the tarball, or the test can only ever run on the machine that happens to hold the file —
   not from a clone, not from an installed repository. Keep fixtures small enough that this is
