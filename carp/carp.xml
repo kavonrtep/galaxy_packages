@@ -32,6 +32,7 @@
         echo "repeatmasker_sensitivity: $advanced.repeatmasker_sensitivity" >> config.yaml &&
         echo "repeatmasker_culling_limit: $advanced.repeatmasker_culling_limit" >> config.yaml &&
         echo "tidecluster_reannotate_culling_limit: $advanced.tidecluster_reannotate_culling_limit" >> config.yaml &&
+        echo "dante_ltr_mode: $advanced.dante_ltr_mode" >> config.yaml &&
         ## Maximal post-run cleanup of intermediate scratch (not exposed to the UI):
         ## purges the scratch FILES inside the large TideCluster tarean/kite/consensus
         ## trees, plus the tool workdirs. Since CARP 1.6.1 the three trees themselves
@@ -185,6 +186,12 @@
             <param name="tidecluster_reannotate_culling_limit" type="integer" value="2" min="0"
                    label="RepeatMasker culling limit (TideCluster reannotation search)"
                    help="Same culling for TideCluster's internal RepeatMasker, independent of the main search. The default 2 is about 3.7x faster at ~0.8% fewer masked bp; set 0 to turn it off."/>
+
+            <param name="dante_ltr_mode" type="select" label="DANTE_LTR detection mode"
+                   help="How complete LTR retrotransposons are called. The default 'lineage' requires the element's protein domains to agree on a REXdb lineage. Where REXdb covers your genome poorly the domains disagree and the element is discarded, which can leave a genome with almost no LTR annotation at all — upstream measured zero complete elements on a 397 Mb green-alga assembly. 'core' instead seeds on the ordered RT/RH/INT core triplet, whose order gives the superfamily without consulting REXdb, and labels the element afterwards; on that same assembly it recovered 1408 complete elements over 13.2 Mb (3.3% of the genome). Elements whose lineage cannot be resolved then carry an internal-node classification such as Class_I/LTR/Ty3_gypsy or .../chromovirus. 'core' is not a superset of 'lineage': it requires all three core domains, and on a genome REXdb covers well it recovers about 96% of what 'lineage' finds. Use it when the LTR annotation comes back implausibly empty for a non-model species.">
+                <option value="lineage" selected="true">lineage (default) — domains must agree on a REXdb lineage</option>
+                <option value="core">core — seed on the RT/RH/INT core triplet, label afterwards</option>
+            </param>
         </section>
     </inputs>
     <outputs>
@@ -259,6 +266,21 @@
                 </assert_contents>
             </output>
         </test>
+        <!-- Second run, lean: only to cover dante_ltr_mode=core, which takes a
+             different DANTE_LTR code path and a different LTR-library annotation
+             conflict policy ("nested") from the default. Without this the
+             non-default mode would ship unexercised. -->
+        <test expect_num_outputs="3">
+            <param name="genome" value="genome_micro.fasta"/>
+            <section name="advanced">
+                <param name="dante_ltr_mode" value="core"/>
+            </section>
+            <output name="unified_gff">
+                <assert_contents>
+                    <has_text text="##gff-version"/>
+                </assert_contents>
+            </output>
+        </test>
     </tests>
     <help><![CDATA[
 **What it does**
@@ -319,6 +341,32 @@ small:
   ~0.7 % fewer masked bp; ``0`` turns culling off.
 - *Culling limit (TideCluster reannotation search)* — default ``2`` is about
   **3.7x faster** at ~0.8 % fewer masked bp; ``0`` turns it off.
+
+**Advanced settings: DANTE_LTR detection mode**
+
+Unlike the knobs above, this one is not about speed — it decides whether LTR
+retrotransposons are found at all on a genome that REXdb covers poorly.
+
+- ``lineage`` (default) calls an element only when its protein domains agree on
+  a REXdb lineage. Where REXdb coverage is thin the domains disagree and the
+  element is discarded. Upstream measured **zero** complete elements and a
+  13-fragment LTR library on a 397 Mb green-alga assembly.
+- ``core`` seeds on the ordered RT/RH/INT core triplet, whose order gives the
+  superfamily without consulting REXdb, and assigns the lineage afterwards. On
+  that same assembly: **1408 complete elements over 13.2 Mb**, 3.3 % of the
+  genome. Elements whose lineage cannot be resolved carry an internal-node
+  classification (``Class_I/LTR/Ty3_gypsy``, ``.../chromovirus``), and the
+  report labels those ``chromovirus (unspecified)`` so a bucket cannot be
+  misread as a lineage.
+
+.. class:: infomark
+
+``core`` is **not** a superset of ``lineage``: it requires all three core
+domains, and on a well-covered genome it recovers about 96 % of what ``lineage``
+finds. Keep the default for model species. Reach for ``core`` when the LTR
+annotation comes back implausibly empty — a near-zero complete-element count on
+a non-model genome is the signature of poor REXdb coverage rather than a genome
+without LTR-RTs.
 
 **Outputs**
 
@@ -397,6 +445,16 @@ sequences themselves do not change. Previously such a class travelled through
 RepeatMasker into the unified annotation unchanged, so one logical class was
 reported as several rows that do not sum, and an rDNA total read off
 ``summary_statistics.csv`` was short by whatever the non-canonical rows held.
+
+**Version note (CARP 1.9.0): LTR results move**
+
+1.9.0 upgrades DANTE_LTR to 0.6.2.0, which passes ``--spaced-kmer-mode 0`` to
+mmseqs when clustering the LTR library — previously linclust invented a random
+spaced-k-mer pattern per process. LTR-RT **detection** is byte-identical across
+the upgrade, but the **LTR library content changes**, and with it the
+RepeatMasker annotation built from that library (upstream measured roughly
++1.5 % representatives; −0.4 % on a CARP library). Expect small differences from
+a 1.8.x run on the same assembly. This is a determinism fix, not a regression.
 
 **Version note**
 
