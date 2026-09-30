@@ -4,12 +4,8 @@
         <import>macros.xml</import>
     </macros>
     <expand macro="requirements" />
-    <stdio>
-        <regex match="Traceback" source="stderr" level="fatal" description="Python error" />
-        <regex match="error" source="stderr" level="fatal" description="Unknown error" />
-        <exit_code range="1:" />
-    </stdio>
-    <command detect_errors="exit_code"><![CDATA[
+    <expand macro="stdio" />
+    <command><![CDATA[
         mkdir -p output_dir
         &&
         dante_tir.py --gff3 '$dante_gff' --fasta '$reference_fasta'  --output_dir output_dir --cpu \${GALAXY_SLOTS:-1}
@@ -28,20 +24,44 @@
                help="Genome assembly FASTA file corresponding to the DANTE annotations" />
     </inputs>
     <outputs>
-        <data name="classification_summary" format="tabular" label="DANTE_TIR - tabular summary on ${dante_gff.hid} and ${reference_fasta.hid}"
-              help="Summary table of detected TIR transposon counts per superfamily" />
-        <data name="tir_fasta" format="fasta" label="DANTE_TIR - transposons sequences (FASTA) on ${dante_gff.hid} and ${reference_fasta.hid}"
-              help="DANTE_TIR - Complete TIR transposon element sequences in FASTA format" />
-        <data name="tir_gff" format="gff3" label="DANTE_TIR - transposons annotation (GFF3) on ${dante_gff.hid} and ${reference_fasta.hid}"
-              help="Complete TIR transposon annotations with TIR sequences, target site duplications, and classifications" />
+        <data name="classification_summary" format="tabular" label="DANTE_TIR - tabular summary on ${dante_gff.hid} and ${reference_fasta.hid}" />
+        <data name="tir_fasta" format="fasta" label="DANTE_TIR - transposons sequences (FASTA) on ${dante_gff.hid} and ${reference_fasta.hid}" />
+        <data name="tir_gff" format="gff3" label="DANTE_TIR - transposons annotation (GFF3) on ${dante_gff.hid} and ${reference_fasta.hid}" />
     </outputs>
     <tests>
-        <test>
+        <!-- 80 concatenated MuDR/Mutator neighbourhoods of tiny_pea, 174 Subclass_1
+             copies in 1.94 Mb (see test-data/README.md). DANTE_TIR assembles the
+             termini of many copies of one superfamily, so a fixture only detects
+             anything above a copy-number threshold: 129 copies gives nothing, 174
+             gives 4 TIRs. The assertions sit well below 4 so a change in detection
+             sensitivity does not fail the test spuriously.
+             Asserted on content rather than byte-compared: the fixture is committed
+             but the CAP3 / mmseqs2 / BLAST versions in the resolved environment are
+             not pinned by the wrapper. -->
+        <test expect_num_outputs="3">
             <param name="dante_gff" value="test_dante.gff3" />
             <param name="reference_fasta" value="test_genome.fasta" />
-            <output name="tir_gff" file="test_tir_output.gff3" />
-            <output name="tir_fasta" file="test_tir_output.fasta" />
-            <output name="classification_summary" file="test_summary.txt" />
+            <output name="tir_gff">
+                <assert_contents>
+                    <has_text text="Class_II_Subclass_1_TIR_MuDR_Mutator"/>
+                    <!-- Name= is the documented GFF3 <-> FASTA join key, added in
+                         0.3.1; Multiplicity carries the copy number. -->
+                    <has_text text="Name="/>
+                    <has_text text="Multiplicity="/>
+                    <has_n_lines min="2"/>
+                </assert_contents>
+            </output>
+            <output name="tir_fasta">
+                <assert_contents>
+                    <has_text text="&gt;MuDR_Mutator"/>
+                    <has_size min="1"/>
+                </assert_contents>
+            </output>
+            <output name="classification_summary">
+                <assert_contents>
+                    <has_text text="MuDR"/>
+                </assert_contents>
+            </output>
         </test>
     </tests>
     <help><![CDATA[
@@ -62,6 +82,7 @@ DANTE_TIR identifies DNA transposons with Terminal Inverted Repeats (TIRs) based
    - tsd: Target site duplication sequence
    - Classification: Superfamily classification of the element
    - ID: Unique element identifier
+
    Output GFF3 can be summarized using "Summarize DANTE_TIR output" tool. This tools will generate graphical report and create library of representative elements suitable for RepeatMasker search.
 
 2. **TIR transposons sequences (FASTA)**: Complete sequences of all identified TIR transposon elements

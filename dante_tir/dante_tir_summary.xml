@@ -3,7 +3,8 @@
         <import>macros.xml</import>
     </macros>
     <expand macro="requirements" />
-    <command detect_errors="aggressive"><![CDATA[
+    <expand macro="stdio" />
+    <command><![CDATA[
         mkdir -p output_dir &&
         dante_tir_summary.R -g '$tir_gff' -f '$reference_fasta' -o output_dir --threads \${GALAXY_SLOTS:-1} &&
         if [ -f output_dir/report.html ]; then
@@ -19,8 +20,16 @@
         else
             touch '$all_representative_elements';
         fi &&
-        if ls *multiplicity3plus.fasta 1> /dev/null 2>&1; then
-            cat *multiplicity3plus.fasta > '$multiplicity3plus_elements';
+        ## dante_tir_summary.R names these after --min_cluster_size, so the file is
+        ## <prefix>_representative_elements_min3.fasta at the default of 3; nothing
+        ## has ever been called *multiplicity3plus.fasta, so the previous glob
+        ## matched nothing and this output was silently always empty. It also
+        ## writes an aggregate across superfamilies, which is what this output
+        ## wants; fall back to concatenating the per-superfamily files.
+        if [ -f all_representative_elements_min3.fasta ]; then
+            cp all_representative_elements_min3.fasta '$multiplicity3plus_elements';
+        elif ls *_representative_elements_min3.fasta 1> /dev/null 2>&1; then
+            cat *_representative_elements_min3.fasta > '$multiplicity3plus_elements';
         else
             touch '$multiplicity3plus_elements';
         fi &&
@@ -40,27 +49,61 @@
     </inputs>
     <outputs>
         <data name="output_archive" format="zip"
-              label="DANTE_TIR - archive with complete summary on ${tir_gff.hid} and ${reference_fasta.hid}"
-              help="ZIP archive containing all summary outputs including representative elements and clustering results" />
+              label="DANTE_TIR - archive with complete summary on ${tir_gff.hid} and ${reference_fasta.hid}" />
         <data name="all_representative_elements" format="fasta"
-              label="DANTE_TIR - All representative elements on ${tir_gff.hid} and ${reference_fasta.hid}"
-              help="Concatenated FASTA file containing all representative elements from all superfamilies" />
+              label="DANTE_TIR - All representative elements on ${tir_gff.hid} and ${reference_fasta.hid}" />
         <data name="multiplicity3plus_elements" format="fasta"
-              label="DANTE_TIR - Representative elements with 3+ copies on ${tir_gff.hid} and ${reference_fasta.hid}"
-              help="Concatenated FASTA file containing representative elements with multiplicity ≥3 from all superfamilies" />
+              label="DANTE_TIR - Representative elements with 3+ copies on ${tir_gff.hid} and ${reference_fasta.hid}" />
         <data name="representative_elements_csv" format="tabular"
-              label="DANTE_TIR - Representative elements CSV (concatenated) on ${tir_gff.hid} and ${reference_fasta.hid}"
-              help="Concatenated CSV file with detailed information about representative elements from all superfamilies" />
+              label="DANTE_TIR - Representative elements CSV (concatenated) on ${tir_gff.hid} and ${reference_fasta.hid}" />
         <data name="html_report" format="html"
-              label="DANTE_TIR - summary report on ${tir_gff.hid} and ${reference_fasta.hid}"
-              help="HTML report summarizing TIR transposon annotations and clustering results" />
+              label="DANTE_TIR - summary report on ${tir_gff.hid} and ${reference_fasta.hid}" />
     </outputs>
     <tests>
-        <test>
+        <!-- test_tir_final.gff3 is the DANTE_TIR output for test_genome.fasta, so the
+             two agree on sequence names and coordinates (see test-data/README.md).
+             Asserted on content rather than byte-compared: the report embeds a
+             timestamp and the archive is a zip, neither of which is stable. -->
+        <test expect_num_outputs="5">
             <param name="tir_gff" value="test_tir_final.gff3" />
             <param name="reference_fasta" value="test_genome.fasta" />
-            <output name="html_report" file="test_summary_report.html" />
-            <output name="output_archive" file="test_summary_results.zip" />
+            <output name="html_report">
+                <assert_contents>
+                    <has_text text="MuDR_Mutator"/>
+                    <has_size min="1000"/>
+                </assert_contents>
+            </output>
+            <output name="representative_elements_csv">
+                <assert_contents>
+                    <has_text text="Cluster_Size"/>
+                </assert_contents>
+            </output>
+            <output name="all_representative_elements">
+                <assert_contents>
+                    <has_text text="&gt;"/>
+                    <has_size min="1"/>
+                </assert_contents>
+            </output>
+            <!-- Empty for this fixture, and correctly so: the output holds only
+                 representative elements whose cluster has at least 3 copies, and
+                 the largest cluster here has 2 (Cluster_Size in the CSV above).
+                 The stale *multiplicity3plus.fasta glob that left this output empty
+                 on every run regardless is guarded instead by the
+                 all_representative_elements_min3.fasta archive member below -
+                 that is the name the wrapper now globs, so a rename upstream fails
+                 the test rather than silently emptying the output again. -->
+            <output name="multiplicity3plus_elements">
+                <assert_contents>
+                    <has_size min="0"/>
+                </assert_contents>
+            </output>
+            <output name="output_archive">
+                <assert_contents>
+                    <has_archive_member path="report.html"/>
+                    <has_archive_member path=".*_representative_elements\.csv"/>
+                    <has_archive_member path="all_representative_elements_min3\.fasta"/>
+                </assert_contents>
+            </output>
         </test>
     </tests>
     <help><![CDATA[

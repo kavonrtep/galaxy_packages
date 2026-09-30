@@ -1,9 +1,28 @@
 <macros>
-    <token name="@TOOL_VERSION@">0.2.0.1</token>
-    <token name="@REQUIREMENT_VERSION@">0.2.0</token>
+    <token name="@TOOL_VERSION@">0.3.1.1</token>
+    <token name="@REQUIREMENT_VERSION@">0.3.1</token>
     <xml name="requirements">
         <requirements>
             <requirement type="package" version="@REQUIREMENT_VERSION@">dante_tir</requirement>
         </requirements>
+    </xml>
+    <!-- Error detection. Replaces detect_errors="aggressive", which fails a job on any
+         stdout/stderr line matching "error:" (case-insensitive, fatal). mmseqs2 prints
+         "there must be an error: N deleted from M that now is empty, but not assigned to
+         a cluster" as ordinary clustering chatter - the string is compiled into the
+         binary - and that alone marked a completed TideCluster run as failed: exit status
+         0, every output written in full. Any wrapper whose program reaches mmseqs2 has
+         the same exposure. What is kept is the part that does not misfire: a non-zero
+         exit status, plus the out-of-memory patterns, which matter because a worker can
+         be OOM-killed without that reaching the exit status. -->
+    <xml name="stdio">
+        <stdio>
+            <exit_code range=":-1" level="fatal"/>
+            <exit_code range="1:" level="fatal"/>
+            <regex match="MemoryError" source="both" level="fatal_oom"/>
+            <regex match="std::bad_alloc" source="both" level="fatal_oom"/>
+            <regex match="java.lang.OutOfMemoryError" source="both" level="fatal_oom"/>
+            <regex match="Out of memory" source="both" level="fatal_oom"/>
+        </stdio>
     </xml>
 </macros>
