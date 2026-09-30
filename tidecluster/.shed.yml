@@ -4,6 +4,9 @@ description: Identify tandem repeats in genome assemblies
 long_description: |
   TideCluster is a software tool designed to identify tandem repeats in genome assemblies.
   This Galaxy tool wrapper allows for easy integration of TideCluster into Galaxy workflows.
+  Besides the main pipeline the repository provides tools to annotate the identified clusters
+  against a reference library, to annotate a genome with a cluster library, and to compare the
+  clusters of several genomes by grouping them into satellite families.
 type: unrestricted
 categories:
   - Genome annotation
@@ -11,5 +14,9 @@ remote_repository_url: https://github.com/kavonrtep/galaxy_packages
 homepage_url: https://github.com/kavonrtep/TideCluster
 exclude:
   - do_not_track_info.md
+  ## planemo test writes these into the tool directory, and shed_upload tars the
+  ## working directory rather than what git tracks.
+  - tool_test_output.html
+  - tool_test_output.json
 
 

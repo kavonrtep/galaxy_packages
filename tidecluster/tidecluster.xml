@@ -4,7 +4,8 @@
         <import>macros.xml</import>
     </macros>
     <expand macro="requirements" />
-    <command detect_errors="aggressive"><![CDATA[
+    <expand macro="stdio" />
+    <command><![CDATA[
         mkdir -p output && cd output &&
 
         ## Memory budget, when Galaxy knows one. run_all sizes the TideHunter and
@@ -28,7 +29,15 @@
         -l '$library'
         #end if
         -m $min_length
-        -T ' -p $min_period -P $max_period -e $max_diverg -c $min_copy'
+        ## -T and --long are mutually exclusive upstream, so in long mode no -T is
+        ## sent at all: the three rounds carry their own fixed TideHunter settings
+        ## (-p/-P per round, -c 5 -e 0.25), and anything passed here would be
+        ## rejected by argparse.
+        #if $tidehunter_mode.mode == 'long'
+        --long
+        #else
+        -T ' -p $tidehunter_mode.min_period -P $tidehunter_mode.max_period -e $tidehunter_mode.max_diverg -c $tidehunter_mode.min_copy'
+        #end if
         $no_dust
         -c \${GALAXY_SLOTS:-1}
         -M $min_total_length
@@ -74,15 +83,28 @@
                help="Path to library of tandem repeats" optional="true"/>
         <param type="integer" name="min_length" value="5000"
                label="Minimum length of tandem repeat"/>
-        <param type="integer" name="min_period" value="40"
-               label="Minimum period size of tandem repeat" min="2"/>
-        <param type="integer" name="max_period" value="3000"
-               label="Maximum period size of tandem repeat" max="20000"/>
-        <param type="float" name="max_diverg" value="0.25"
-               label="Maximum allowed divergence rate between two consecutive repeats"
-               min="0" max="1"/>
-        <param type="integer" name="min_copy" value="5"
-               label="minimum copy number of tandem repeat" min="2"/>
+        <conditional name="tidehunter_mode">
+            <param name="mode" type="select" label="Monomer size search mode"
+                   help="Standard runs TideHunter once over the monomer size range you set below. Long runs it in three rounds with fixed, increasing monomer size ranges (40-3000, 3001-10000, 10001-25000 nt), masking the repeats found in each round before the next one. Long mode detects tandem repeats with long monomers that a single round misses, at the cost of roughly three times the TideHunter runtime.">
+                <option value="standard" selected="true">Standard - one round over a monomer size range you choose</option>
+                <option value="long">Long monomers - three rounds, 40 to 25000 nt</option>
+            </param>
+            <when value="standard">
+                <param type="integer" name="min_period" value="40"
+                       label="Minimum period size of tandem repeat" min="2"/>
+                <param type="integer" name="max_period" value="3000"
+                       label="Maximum period size of tandem repeat" max="20000"/>
+                <param type="float" name="max_diverg" value="0.25"
+                       label="Maximum allowed divergence rate between two consecutive repeats"
+                       min="0" max="1"/>
+                <param type="integer" name="min_copy" value="5"
+                       label="minimum copy number of tandem repeat" min="2"/>
+            </when>
+            <when value="long">
+                <!-- The three rounds carry fixed TideHunter settings, so the period,
+                     divergence and copy number parameters do not apply here. -->
+            </when>
+        </conditional>
         <param type="boolean" name="no_dust" truevalue="--no_dust" falsevalue=""
                checked="false" label="Do not use dust filter in blastn when clustering"/>
         <param type="integer" name="min_total_length" value="50000"
@@ -156,17 +178,58 @@
                 </assert_contents>
             </output>
         </test>
+        <!-- Long-monomer mode on the same fixture. The synthetic satellite has a
+             172 bp monomer, so it is found in round 1 and the clustering result is
+             the same as above; what this test guards is that long mode reaches
+             TideCluster and that no -T is sent alongside it. The two are mutually
+             exclusive upstream, so a wrapper that sent both would fail in argparse
+             before any work started, and the settings TideCluster records for the
+             run are the evidence that long mode was the one used. -->
+        <test expect_num_outputs="5">
+            <param name="fasta" value="synthetic_satellite.fasta"/>
+            <conditional name="tidehunter_mode">
+                <param name="mode" value="long"/>
+            </conditional>
+            <output name="gff3_clustering">
+                <assert_contents>
+                    <has_text text="tandem_repeat"/>
+                    <has_text text="Name=TRC_1"/>
+                </assert_contents>
+            </output>
+            <output name="output_archive">
+                <assert_contents>
+                    <has_archive_member path="tidecluster_cmd_args.json">
+                        <has_text text="&quot;long&quot;: true"/>
+                    </has_archive_member>
+                </assert_contents>
+            </output>
+        </test>
     </tests>
     <help><![CDATA[
     **TideCluster** is a software tool designed to identify tandem repeats in genome assemblies by utilizing Tidehunter to detect tandem repeats clustering these repeats based on similarity using mmseqs2 and NCBI BLAST. The software runs in four steps as outlined below:
 
 - **Tidehunter step**: In this initial step, Tidehunter is utilized to identify tandem repeats. As TideHunter's performance diminishes with larger sequences, the input fasta file is divided into smaller overlapping segments, with each segment analyzed individually. Results from individual segments are parsed and merged into a single GFF3 file. Tandem repeats detected in this step are often fragmented into multiple overlapping pieces.
 
+  Two search modes are available. **Standard** runs TideHunter once over the monomer size range
+  given by the minimum and maximum period size. **Long monomers** runs it in three rounds with
+  fixed, increasing ranges - 40-3000, 3001-10000 and 10001-25000 nt - masking the repeats found
+  in each round before the next one starts. Long mode is the way to reach monomers of up to
+  25000 nt; simply raising the maximum period size in standard mode is considerably slower and
+  less sensitive for long monomers. Because each round carries its own TideHunter settings, the
+  period size, divergence rate and copy number parameters do not apply in long mode, and the
+  step takes roughly three times as long.
+
 - **Clustering step**: Prior to clustering, all arrays that do not meet the minimum length requirement are removed from the analysis and saved in a separate GFF3 file. Arrays exceeding the minimum length requirement are clustered based on similarity. Clustering occurs in two stages. First, mmseqs2 is employed in the initial round of clustering. The second round involves an all-to-all comparison using NCBI-BLAST, followed by graph-based clustering. The GFF3 file from the Tidehunter step is updated to include cluster assignment information. Simple sequence repeats are excluded from the clustering step and are analyzed separately.
 
 - **Annotation step**: Consensus sequences from TideHunter for each cluster are examined by RepeatMasker against a library of tandem repeats. The resulting annotation for each tandem repeat is used to update the information in the GFF3 file. This step is optional.
 
 - **TAREAN step**: In this final step, the Tandem Repeat Analyzer (TAREAN) estimates consensus sequences using a k-mer-based approach on the original sequences from the reference. Consensus sequences of simple sequence repeats are evaluated separately, as TAREAN performs poorly on tandem repeats with short monomers. The results of the analysis are saved in an HTML summary.
+
+The HTML report also groups clusters with similar consensus sequences into superfamilies and, where
+the bundled reference library matches, flags clusters as 45S or 5S rDNA.
+
+To compare the tandem repeats of several genomes, feed the result archives of two or more runs to
+**TideCluster - Comparative Analysis**, which groups clusters across runs into satellite families.
 
 **Credits**
 

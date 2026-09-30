@@ -1,9 +1,32 @@
 <macros>
-    <token name="@TOOL_VERSION@">1.21.2.1</token>
-    <token name="@REQUIREMENT_VERSION@">1.21.2</token>
+    <token name="@TOOL_VERSION@">1.21.3.1</token>
+    <token name="@REQUIREMENT_VERSION@">1.21.3</token>
     <xml name="requirements">
         <requirements>
             <requirement type="package" version="@REQUIREMENT_VERSION@">tidecluster</requirement>
         </requirements>
+    </xml>
+    <!-- Error detection. This replaces detect_errors="aggressive", which treats any
+         stdout or stderr line containing "error:" as fatal. mmseqs2 prints
+         "there must be an error: N deleted from M that now is empty, but not assigned
+         to a cluster" as ordinary clustering chatter, so aggressive failed a completed
+         run: exit status 0, every output written, marked as an error purely on that
+         line. The message is compiled into the mmseqs binary (seen with 16.747c6), not
+         something TideCluster can stop emitting, and the clustering step of every tool
+         here goes through it.
+         What is kept from aggressive is the part that does not misfire: a non-zero exit
+         status, trustworthy since TideCluster 1.20.1 made every step whose failure
+         invalidates the outputs abort with one, and the out-of-memory patterns, which
+         matter because a run can be OOM-killed in a worker without that reaching the
+         exit status. -->
+    <xml name="stdio">
+        <stdio>
+            <exit_code range=":-1" level="fatal"/>
+            <exit_code range="1:" level="fatal"/>
+            <regex match="MemoryError" source="both" level="fatal_oom"/>
+            <regex match="std::bad_alloc" source="both" level="fatal_oom"/>
+            <regex match="java.lang.OutOfMemoryError" source="both" level="fatal_oom"/>
+            <regex match="Out of memory" source="both" level="fatal_oom"/>
+        </stdio>
     </xml>
 </macros>

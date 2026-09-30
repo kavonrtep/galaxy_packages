@@ -4,7 +4,8 @@
         <import>macros.xml</import>
     </macros>
     <expand macro="requirements" />
-    <command detect_errors="aggressive"><![CDATA[
+    <expand macro="stdio" />
+    <command><![CDATA[
         tc_reannotate.py
         -s '$ref_seq'
         -f '$fasta_file'

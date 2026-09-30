@@ -4,7 +4,8 @@
         <import>macros.xml</import>
     </macros>
     <expand macro="requirements" />
-    <command detect_errors="aggressive"><![CDATA[
+    <expand macro="stdio" />
+    <command><![CDATA[
         #set $prefix = 'tidecluster'
         mkdir extracted &&
         unzip '$input_archive' -d extracted && cd extracted &&

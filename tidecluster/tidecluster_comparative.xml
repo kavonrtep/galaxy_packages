@@ -1,0 +1,330 @@
+<tool id="tidecluster_comparative" name="TideCluster - Comparative Analysis" version="@TOOL_VERSION@">
+    <description>Group tandem repeat clusters from several genomes into satellite families</description>
+    <macros>
+        <import>macros.xml</import>
+    </macros>
+    <expand macro="requirements" />
+    <expand macro="stdio" />
+    <command><![CDATA[
+#import re
+        mkdir -p runs comp_out report_out &&
+
+        ## Locate the clustering GFF3 of an unpacked run: at the top level of the
+        ## archive, or one directory down if the archive wraps the run. Plain
+        ## globbing rather than ls, because an unmatched glob makes ls exit
+        ## non-zero and that status would propagate out of the command
+        ## substitution and break the chain. Prints nothing when there is none.
+        tc_find_clustering_gff() { for g in "\$1"/*_clustering.gff3 "\$1"/*/*_clustering.gff3; do if [ -f "\$g" ]; then printf '%s\n' "\$g"; return 0; fi; done; } &&
+
+        ## The analysis is driven by a three-column table, one row per run:
+        ## input_dir, sample_code and the -pr prefix that run was made with.
+        printf '%s\t%s\t%s\n' 'input_dir' 'sample_code' 'tidecluster_prefix' > samples_raw.tsv &&
+
+#for $i, $archive in enumerate($archives)
+    #set $ident = str($archive.element_identifier)
+    #if $ident.lower().endswith('.zip')
+        #set $ident = $ident[:-4]
+    #end if
+    ## sample_code names a column of an R data frame that the analysis later looks
+    ## up by that same string, so it must survive make.names() unchanged: letters,
+    ## digits, underscore and dot only, and not starting with a digit or a dot.
+    ## Hyphens and spaces would be rewritten and the lookup would then miss.
+    #set $code = $re.sub('[^A-Za-z0-9_.]', '_', $ident)
+    #if not $code[:1].isalpha()
+        #set $code = 'S' + $code
+    #end if
+        mkdir -p 'runs/run_${i}' &&
+        unzip -q -o '$archive' -d 'runs/run_${i}' &&
+        ## The run's own prefix is read off the clustering GFF3 rather than assumed:
+        ## archives from this tool suite carry 'tidecluster', but a run made on the
+        ## command line can use any -pr value, and every other input path is
+        ## resolved from it.
+        TC_GFF=\$(tc_find_clustering_gff 'runs/run_${i}') &&
+        if [ -z "\$TC_GFF" ]; then echo 'Sample ${code}: the archive holds no *_clustering.gff3, so it is not a TideCluster result archive.' >&2; exit 1; fi &&
+        TC_DIR=\$(dirname "\$TC_GFF") &&
+        TC_PR=\$(basename "\$TC_GFF" _clustering.gff3) &&
+        ## Of the files the analysis reads, the TAREAN consensus library is the one
+        ## whose absence aborts it outright. A run that stopped before TAREAN never
+        ## wrote one, and neither did a run in which every cluster fell below the
+        ## minimum combined array length - which is easy to hit on a small genome at
+        ## the default 50 kb. Name the sample and the reason here instead of letting
+        ## it fail later on a path deep in the unpacked archive.
+        if [ ! -f "\${TC_DIR}/\${TC_PR}_consensus_dimer_library.fasta" ]; then echo 'Sample ${code}: the run has no TAREAN consensus library, so it cannot be compared. Either the run did not reach the TAREAN step, or every cluster fell below its minimum combined array length.' >&2; exit 1; fi &&
+        printf '%s\t%s\t%s\n' "\$TC_DIR" '${code}' "\$TC_PR" >> samples_raw.tsv &&
+#end for
+
+        ## Two inputs can carry the same name, while sample_code has to be unique -
+        ## it prefixes every output column and every sequence in the shared search
+        ## pool. Number the repeats instead of letting the analysis collide on them.
+        awk 'BEGIN{FS=OFS="\t"} NR==1{print; next} {n=++seen[\$2]; if (n>1) \$2=\$2"_"n; print}' samples_raw.tsv > samples.tsv &&
+
+        tc_comparative_analysis.R
+        -i samples.tsv
+        -o comp_out
+        -c \${GALAXY_SLOTS:-1}
+        ## Threshold presets. Kept as literals here rather than as defaults on
+        ## hidden parameters, so that what a preset means is readable in one place
+        ## and a run's settings can be reconstructed from the tool form alone.
+        ##   strict   90 / 0.90 / min - both consensus sequences covered end to end
+        ##   standard 80 / 0.80 / max - the upstream default
+        ##   relaxed  70 / 0.60 / max - 70 % is about as low as the nucleotide
+        ##                              search stays meaningful
+        #if $similarity.preset == 'custom'
+        --min_identity $similarity.min_identity
+        --min_coverage $similarity.min_coverage
+        --coverage_mode '$similarity.coverage_mode'
+        #elif $similarity.preset == 'strict'
+        --min_identity 90 --min_coverage 0.9 --coverage_mode min
+        #elif $similarity.preset == 'relaxed'
+        --min_identity 70 --min_coverage 0.6 --coverage_mode max
+        #else
+        --min_identity 80 --min_coverage 0.8 --coverage_mode max
+        #end if
+        --lowcomplexity_mask $lowcomplexity_mask
+        -a '$clustering.algorithm'
+        #if $clustering.algorithm == 'leiden'
+        --leiden_resolution $clustering.leiden_resolution
+        #end if
+        &&
+
+        ## tc_summarize_comparative_analysis.R looks for its html/ template
+        ## directory next to the path R reports in --file=, and does not resolve
+        ## symlinks. The conda package installs the script into
+        ## share/tidecluster/ and symlinks it into bin/, so invoking it off PATH
+        ## makes it look for bin/html and abort with "Template directory not
+        ## found" after the analysis has already run. Resolve the symlink and
+        ## invoke the real file, which works either way once that is fixed
+        ## upstream.
+        TC_SUMMARIZE=\$(readlink -f "\$(command -v tc_summarize_comparative_analysis.R)")
+        &&
+        "\$TC_SUMMARIZE" -i comp_out -o report_out/trc_comparative_report.html
+        &&
+        cp comp_out/trc_satellite_families.tsv '$satellite_families'
+        &&
+        cp comp_out/ssrs_groups.tsv '$ssrs_groups'
+        &&
+        cp comp_out/annotation_report.txt '$annotation_report'
+        &&
+        cp report_out/trc_comparative_report.html '$html_report'
+        &&
+        ## The report is not self-contained: it loads styles.css and the tab
+        ## scripts from a sibling js/ directory, so both go into
+        ## extra_files_path with the layout the page expects.
+        mkdir -p '${html_report.extra_files_path}'
+        &&
+        cp report_out/trc_comparative_report.html '${html_report.extra_files_path}/'
+        &&
+        if [ -d report_out/js ]; then cp -r report_out/js '${html_report.extra_files_path}/'; fi
+        &&
+        ## The summarizer caches its processed data next to the report, under the
+        ## report's own base name. It only speeds up a re-render of the same data
+        ## and duplicates what the report already holds, so keep it out of the
+        ## archive.
+        rm -f report_out/trc_comparative_report.rds
+        &&
+        cp -r report_out/. comp_out/
+        &&
+        ( cd comp_out && zip -qr ../comparative_results.zip . )
+        &&
+        mv comparative_results.zip '$output_archive'
+    ]]></command>
+    <inputs>
+        <param type="data" name="archives" format="zip" multiple="true" min="2"
+               label="TideCluster result archives"
+               help="The 'Archive with complete results' output of two or more TideCluster runs, one per genome. Each run must have reached the clustering and TAREAN steps; the annotation step is optional and only the annotation columns depend on it. The name of each dataset - or each element identifier, when a collection is used - becomes the sample label in every output table, so rename the elements to the sample names you want to see in the report."/>
+        <conditional name="similarity">
+            <param name="preset" type="select" label="Similarity thresholds"
+                   help="How similar two consensus sequences have to be for their clusters to end up in one satellite family. Pick the preset matching how closely related the compared genomes are: too strict and one family splits per sample, too permissive and unrelated satellites merge. The identity threshold is also what the sequence search itself runs at, so a relaxed setting is slower.">
+                <option value="standard" selected="true">Related species, one genus - 80 % identity, 80 % coverage, mode max (recommended)</option>
+                <option value="strict">Accessions or cultivars of one species - 90 % identity, 90 % coverage, mode min</option>
+                <option value="relaxed">Distantly related species, diverged satellites - 70 % identity, 60 % coverage, mode max</option>
+                <option value="custom">Custom thresholds</option>
+            </param>
+            <when value="standard"/>
+            <when value="strict"/>
+            <when value="relaxed"/>
+            <when value="custom">
+                <param type="float" name="min_identity" value="80" min="60" max="100"
+                       label="Minimum percent identity"
+                       help="Minimum percent identity of the best alignment for two clusters to be linked in the similarity graph. This is also the threshold the sequence search runs at. Values below 60 are not offered: a nucleotide search stops being informative there, and the result is an over-merged graph rather than a more sensitive one."/>
+                <param type="float" name="min_coverage" value="0.8" min="0.2" max="1"
+                       label="Minimum alignment coverage"
+                       help="Minimum fraction of a consensus sequence that the alignment has to span for two clusters to be linked. How this applies to the two sequences is set by the coverage mode below."/>
+                <param type="select" name="coverage_mode" label="Coverage mode"
+                       help="Which of the two per-sequence coverage values the minimum applies to. Consensus sequences of two related clusters are usually of different length, so this decides whether a short monomer may join a family of long higher-order repeats.">
+                    <option value="max" selected="true">max - a hit covering most of either sequence is accepted, so a short monomer can join a long family as its subset</option>
+                    <option value="min">min - both sequences have to be well covered, rejecting short-against-long subset hits</option>
+                </param>
+            </when>
+        </conditional>
+        <param type="boolean" name="lowcomplexity_mask" truevalue="1" falsevalue="0" checked="true"
+               label="Mask low-complexity sequence in the similarity search"
+               help="On by default. Turn it off for AT-rich or simple-repeat-rich satellites: masking strips most of their alignable sequence, so highly similar clusters fail the coverage cut and one biological family fragments into many. With masking off, unrelated low-complexity satellites can align and merge into one family instead, so only turn it off for targets you know are simple-repeat-rich."/>
+        <conditional name="clustering">
+            <param name="algorithm" type="select" label="Community detection algorithm"
+                   help="How connected clusters in the similarity graph are split into satellite families.">
+                <option value="leiden" selected="true">Leiden</option>
+                <option value="louvain">Louvain</option>
+                <option value="fast_greedy">Fast greedy</option>
+            </param>
+            <when value="leiden">
+                <param type="select" name="leiden_resolution" label="Family granularity"
+                       help="The Leiden resolution. Offered as three steps rather than a free number because the useful range under the default modularity objective is narrow, and a value outside it collapses every cluster into one family or splits each into its own.">
+                    <option value="0.5">Coarse - fewer, larger families</option>
+                    <option value="1.0" selected="true">Standard</option>
+                    <option value="2.0">Fine - more, smaller families</option>
+                </param>
+            </when>
+            <when value="louvain"/>
+            <when value="fast_greedy"/>
+        </conditional>
+    </inputs>
+    <outputs>
+        <data name="satellite_families" format="tsv"
+              label="${tool.name} on ${on_string}: Satellite families"/>
+        <data name="ssrs_groups" format="tsv"
+              label="${tool.name} on ${on_string}: SSR groups"/>
+        <data name="annotation_report" format="txt"
+              label="${tool.name} on ${on_string}: Annotation summary"/>
+        <data name="html_report" format="html"
+              label="${tool.name} on ${on_string}: Comparative report"/>
+        <collection name="annotated_gff3" type="list"
+                    label="${tool.name} on ${on_string}: GFF3 with satellite families">
+            <discover_datasets pattern="(?P&lt;designation&gt;.+)_tc_annotated\.gff3"
+                               directory="comp_out/gff3" format="gff3"/>
+        </collection>
+        <data name="output_archive" format="zip"
+              label="${tool.name} on ${on_string}: Archive with complete results"/>
+    </outputs>
+    <tests>
+        <!-- Two miniature TideCluster run directories (see test-data/README.md for
+             their provenance), 14 clusters each with 10 shared between them, so the
+             fixture drives real cross-sample grouping rather than a degenerate
+             one-cluster-per-family split. The runs use the prefix 'tc' rather than
+             the 'tidecluster' this suite writes, which is deliberate: it exercises
+             the per-run prefix detection. The satellite family table has to carry
+             a length column per sample, which is also how the sample codes derived
+             from the input names are checked. -->
+        <test expect_num_outputs="6">
+            <param name="archives" value="comparative_run_a.zip,comparative_run_b.zip"/>
+            <output name="satellite_families">
+                <assert_contents>
+                    <has_text text="Satellite_family"/>
+                    <has_text text="comparative_run_a_length"/>
+                    <has_text text="comparative_run_b_length"/>
+                    <has_n_lines min="5"/>
+                </assert_contents>
+            </output>
+            <output name="annotation_report">
+                <assert_contents>
+                    <has_text text="Total satellite families"/>
+                </assert_contents>
+            </output>
+            <output name="html_report">
+                <assert_contents>
+                    <has_text text="TRC Comparative Analysis Report"/>
+                    <has_text text="comparative_run_a"/>
+                    <has_text text="comparative_run_b"/>
+                </assert_contents>
+            </output>
+            <output_collection name="annotated_gff3" type="list" count="2">
+                <element name="comparative_run_a">
+                    <assert_contents>
+                        <has_text text="Satellite_family"/>
+                        <has_text text="TRC_1"/>
+                    </assert_contents>
+                </element>
+            </output_collection>
+            <!-- The archive is the only route to the similarity graph and the raw
+                 search results, so check they are in it rather than only that it
+                 exists. -->
+            <output name="output_archive">
+                <assert_contents>
+                    <has_archive_member path="trc_satellite_families.tsv"/>
+                    <has_archive_member path="trc_graph.graphml"/>
+                    <has_archive_member path="mmseqs2_results.tsv"/>
+                    <has_archive_member path="gff3/comparative_run_a_tc_annotated.gff3"/>
+                </assert_contents>
+            </output>
+        </test>
+    </tests>
+    <help><![CDATA[
+**TideCluster Comparative Analysis**
+
+Compares the tandem repeat clusters (TRCs) of several genomes and groups similar clusters into
+**satellite families**, so that a family can be followed across samples even where the individual
+runs numbered its clusters differently. Consensus sequences of all clusters of all samples are
+compared all-against-all with MMseqs2, the surviving pairs form a similarity graph, and community
+detection splits that graph into families. Families are numbered by their total genomic length
+across all samples, so family 1 is the largest.
+
+Clusters that TAREAN reconstructed a consensus for and clusters below the TAREAN threshold are both
+included: the search pool holds the TAREAN consensus dimer of each cluster plus every per-array
+TideHunter consensus, which lets a small cluster join a family of a large one. Simple sequence
+repeats are grouped by their motif instead of by sequence similarity.
+
+**Inputs**
+
+Two or more *Archive with complete results* datasets, one per TideCluster run. A run must have
+reached the clustering and TAREAN steps. The annotation step is optional - a run made without a
+reference library simply leaves the annotation columns empty, and everything else is unaffected.
+
+The name of each input dataset becomes that sample's label in every output table and in the report.
+Passing a collection is the convenient way to control those labels: the element identifiers are
+used, so rename the elements to your sample names first. Characters that are not letters, digits,
+underscore or dot are replaced by an underscore, and duplicate names are numbered.
+
+**Outputs**
+
+- **Satellite families**: the main table. One row per family, with the member cluster IDs, the total
+  array length, and the similarity-based annotation for each sample, plus the annotation prevalent
+  across samples.
+- **SSR groups**: simple sequence repeat clusters grouped by repeat motif.
+- **Annotation summary**: how many families were annotated, unannotated or carry conflicting
+  annotations.
+- **Comparative report**: an interactive HTML report with a per-sample overview, a matrix of
+  families shared between sample pairs, a family-by-sample matrix with hierarchical clustering, and
+  a karyotype view of where the families sit in each genome.
+- **GFF3 with satellite families**: a collection with one annotated GFF3 per sample, carrying the
+  ``Satellite_family`` and ``ssrs_type`` attributes on each region.
+- **Archive with complete results**: everything above plus the similarity graph
+  (``trc_graph.graphml``, for Cytoscape or igraph) and the raw MMseqs2 hit table
+  (``mmseqs2_results.tsv``, which records both coverage values so an edge that did or did not
+  survive can be inspected without re-running the search).
+
+**Choosing the thresholds**
+
+Two clusters are linked when their best alignment reaches both a percent identity and a coverage
+threshold. Those two numbers decide the outcome more than anything else here: set them too high and
+one biological family appears as a separate family per sample, set them too low and unrelated
+satellites merge into one. The presets pick them together, by how closely related the compared
+genomes are:
+
+- **Accessions or cultivars of one species** - 90 % identity, 90 % coverage, mode *min*
+- **Related species of one genus** - 80 % identity, 80 % coverage, mode *max* (recommended)
+- **Distantly related species, diverged satellites** - 70 % identity, 60 % coverage, mode *max*
+
+Coverage mode is what the stricter presets hinge on. Consensus sequences of related clusters
+are usually of different length, so under *max* a hit covering most of *either* sequence counts,
+which lets a short basic monomer join a family of long higher-order repeats as its subset. Under
+*min* both sequences have to be covered, so a family is built only from consensus sequences of
+comparable length that align end to end.
+
+Custom thresholds are available, within the range where the underlying nucleotide search still
+says something: identity is not offered below 60 %, because below that a search returns
+spurious alignments rather than more sensitive ones, and the result is an over-merged graph.
+
+Both coverage values of every alignment are kept in ``mmseqs2_results.tsv``, so after a run you can
+see how close a pair came to the threshold and whether a different preset would have joined it,
+without repeating the search.
+
+**Credits**
+
+- https://github.com/kavonrtep/TideCluster
+- MMseqs2: sensitive protein sequence searching for the analysis of massive data sets
+  (https://doi.org/10.1038/nbt.3988)
+    ]]></help>
+    <citations>
+
+    </citations>
+</tool>
