@@ -4,7 +4,8 @@
         <import>macros.xml</import>
     </macros>
     <expand macro="requirements"/>
-    <command detect_errors="aggressive"><![CDATA[
+    <expand macro="stdio" />
+    <command><![CDATA[
         ## Ensure the baked-in conda tools and pipeline scripts are on PATH even
         ## if Galaxy execs the container with a cleaned environment.
         export PATH=/opt/conda/bin:/opt/pipeline/scripts:\$PATH &&
@@ -77,8 +78,10 @@
         ## exited with non-zero exit code" and nothing else. Dump the tail of
         ## the most recently written non-empty .err files to stderr before
         ## exiting, so the cause appears in the Galaxy error report itself.
-        ## Only on failure: on a successful run this prints nothing, which
-        ## matters because detect_errors="aggressive" scans stderr.
+        ## Only on failure: on a successful run this prints nothing. The failing
+        ## branch exits with the pipeline's own status, so the job fails on that
+        ## status alone - the diagnostics below are for the reader, not the
+        ## error detection (see the stdio macro in macros.xml).
         if /opt/pipeline/run_pipeline.py -c config.yaml -t \${GALAXY_SLOTS:-1} \$CARP_MEM_ARG; then
             : ;
         else
