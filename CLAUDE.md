@@ -110,6 +110,41 @@ Pitfalls hit before:
 - **`planemo serve` leaves Galaxy running** after the wrapper is killed: the detached `gunicorn`
   master (bound to the port) survives. Kill it by the PID listening on the port, not by pattern.
 - `planemo shed_lint` can hang for minutes — use a timeout or skip it.
+- **Run these conda tools with the environment activated, never by absolute path.**
+  `/path/to/envs/__dante_tir@0.3.1/bin/dante_tir.py` leaves `cap3`, `mmseqs` and `blastn` off
+  `PATH`. The run still **exits 0** and reports zero results, so it is indistinguishable from a
+  genuinely negative run; the cause appears only in a per-step file inside the working directory
+  (`working_dir/*.cap.err` → `/bin/sh: 1: cap3: not found`). A whole investigation was built on
+  unactivated runs and had to be thrown away. Use
+  `source $CONDA/bin/activate <env> && dante_tir.py …`. Galaxy activates the env itself, so this
+  only bites manual runs — and when a run fails, read the per-step `.err`/`.log` files in the
+  working directory before concluding anything from the top-level message, which for these
+  pipelines is often just `error in running command`.
+- **`dante_tir` needs a channel carrying `r-rbeast`** (every published version depends on it).
+  It is absent from conda-forge, bioconda and petrnovak, and comes from `pkgs/r` — part of conda's
+  `defaults` — or from the `r` channel. So it resolves under a normal conda config, but a solve
+  with `--override-channels -c conda-forge -c bioconda -c petrnovak` fails with `nothing provides
+  r-rbeast`, which looks like a broken package and is not. For `planemo test` use
+  `--conda_channels conda-forge,bioconda,petrnovak,r` — appended, never prepended, since
+  `conda-forge` must stay first.
+- **`detect_errors="aggressive"` is unusable for anything that runs mmseqs2.** Aggressive fails a
+  job on any stdout/stderr line matching `error:` (case-insensitive, fatal), and mmseqs2 prints
+  `there must be an error: N deleted from M that now is empty, but not assigned to a cluster` as
+  ordinary clustering chatter — the string is compiled into the binary (seen in 16.747c6). A
+  51-minute `tidecluster` run was marked failed on that line alone: exit status 0, all five outputs
+  written at full size, archive passing `unzip -t`. Galaxy also marks the output datasets `error`,
+  so they cannot be chained onward. `tidecluster/macros.xml` now defines a `stdio` macro that keeps
+  the two halves of aggressive that do not misfire — non-zero exit (trustworthy since TideCluster
+  1.20.1 made failing steps abort) and the four out-of-memory patterns — and drops the generic
+  `error:`/`exception:` matches. The same macro is now duplicated into `dante_ltr`, `dante_tir`
+  and `carp` (each is its own Tool Shed repo, so the macro cannot be shared) and expanded by all
+  of their tools. `dante_tir/dante_tir.xml` had a worse variant of the same bug: an explicit
+  `<stdio>` block with `<regex match="error" ...level="fatal"/>`, which fires on the bare
+  substring anywhere in stderr. Note that `<stdio>` rules are *additive* to `detect_errors`
+  rather than overriding it (`parse_stdio` in `lib/galaxy/tool_util/parser/xml.py` prepends
+  them), so a tool can carry both. The two remaining `aggressive` tools, `dante/summarize_gff.xml`
+  and `dante/dante_gff_to_tabular.xml`, only run `summarize_gff.R` over a GFF3 and never reach
+  mmseqs2, so they were left alone.
 
 Publishing to the Tool Shed (run from the repo root, pass the tool dir):
 - **testtoolshed** (sandbox, failures OK), owner `petrn`:
