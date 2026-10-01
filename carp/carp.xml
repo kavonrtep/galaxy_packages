@@ -298,6 +298,30 @@ them into a single, non-overlapping annotation. It integrates:
 - **TideCluster** — tandem repeats / satellites and rDNA arrays
 - **RepeatMasker** — genome-wide similarity masking with a CARP-built library
 
+**How it works**
+
+.. image:: https://raw.githubusercontent.com/kavonrtep/CARP/87f751c910bf0c1d41ee2a05eec7254699c3d998/figs/carp_workflow.png
+   :alt: CARP workflow: annotation layers added to a genome, then reconciled into one non-overlapping annotation
+   :width: 100%
+
+CARP stacks layers of evidence over the assembly and then reconciles them.
+
+- **Structural layers first.** DANTE_LTR, DANTE_TIR, DANTE_LINE and TideCluster
+  recognise elements by their own structure — terminal repeats, target site
+  duplications, tandem periodicity. Only elements still intact enough to show
+  that structure are found, which is a minority of a plant genome's repeat
+  content, but they are identified precisely and classified.
+- **A library is built from exactly those elements**, so the reference comes from
+  the genome being annotated rather than from an external database.
+- **Similarity reaches the rest.** RepeatMasker searches that library (plus any
+  custom library you supply) back against the whole assembly. This is what
+  annotates the degraded, fragmented copies that make up most of the repetitive
+  fraction and that no structural method can see.
+- **Overlaps are resolved by tier priority**, so every base ends up with exactly
+  one call: structural evidence wins where it exists, similarity fills in the
+  rest. That reconciled result is the ``Repeat_Annotation_Unified.gff3`` output,
+  and it is the one to use unless you specifically need a single tool's view.
+
 .. class:: warningmark
 
 CARP was developed for plant genomes. Do not use it on animal genomes.
