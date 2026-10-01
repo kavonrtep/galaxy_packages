@@ -1,6 +1,10 @@
-# CLAUDE.md
+# Repository guide for coding agents
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This is the project instruction set for coding agents working in this repository.
+`AGENTS.md` is a symlink to this file, so Claude Code and Codex read the same
+text — edit this file, never the symlink. Keeping them as two copies let them
+drift: AGENTS.md sat 62 lines behind and was missing the conda channel-order
+pitfall, which was live in `~/.planemo.yml` for weeks.
 
 ## What this repository is
 

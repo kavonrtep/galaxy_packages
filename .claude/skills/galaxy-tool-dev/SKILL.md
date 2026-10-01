@@ -11,8 +11,8 @@ description: >-
 
 # Galaxy tool development, testing and publishing
 
-Each top-level directory is one Tool Shed repository (see the repo `CLAUDE.md`
-for architecture). Most in-house tools (dante*, tidecluster, …) are thin
+Each top-level directory is one Tool Shed repository (see the repo instruction
+file, `CLAUDE.md` / `AGENTS.md`, for architecture). Most in-house tools (dante*, tidecluster, …) are thin
 wrappers around a conda package on the **`petrnovak`** Anaconda channel.
 
 `~/.planemo.yml` pins `galaxy_branch: release_25.1`, `conda_prefix`,
@@ -102,10 +102,12 @@ Add a `<tests>` block if the tool has none. Key rules (learned the hard way):
 Interactive inspection (click through the report in a real Galaxy):
 
 ```
-planemo serve <dir>/*.xml --host 127.0.0.1 --port 9090 \
-  --galaxy_root ~/.planemo/galaxy_root \
-  --conda_dependency_resolution --conda_auto_install --conda_auto_init
+scripts/planemo.sh serve <dir>/
 ```
+
+It refuses to start when something already holds the port and names the PID,
+rather than failing obscurely, and kills the Galaxy it started when you stop it.
+Set `PORT=<other>` to run a second session alongside the first.
 
 ## 4. Publish
 
