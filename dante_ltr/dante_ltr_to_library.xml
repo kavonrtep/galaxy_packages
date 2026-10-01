@@ -6,7 +6,7 @@
     <expand macro="stdio" />
     <command><![CDATA[
         cp '$dante_ltr' dante_ltr.gff3 &&
-        dante_ltr_to_library --gff3 dante_ltr.gff3 --reference_sequence '$reference' --output output --cpu \${GALAXY_SLOTS:-1} --min_coverage 3
+        dante_ltr_to_library --gff3 dante_ltr.gff3 --reference_sequence '$reference' --output_dir output --cpu \${GALAXY_SLOTS:-1} --min_coverage 3
         &&
         ls -l output
         &&

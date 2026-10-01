@@ -7,8 +7,22 @@
     <command><![CDATA[
         echo \$PATH
         &&
+
+        ## Memory budget, when Galaxy knows one. dante_ltr 0.6 sizes its worker pool
+        ## against it; without it the tool reads the scheduler environment, then the
+        ## cgroup limit, then MemAvailable, and MemAvailable describes the whole node
+        ## rather than the job. GALAXY_MEMORY_MB is defined only by some runners and
+        ## never by PBS or the local runner, so guard it like GALAXY_SLOTS. Whole GB,
+        ## truncated; below 1 GB pass nothing and let the tool detect.
+        DLTR_MEM_ARG='' &&
+        if [ "\${GALAXY_MEMORY_MB:-0}" -gt 0 ] 2>/dev/null; then
+            DLTR_MEM_GB=\$(( GALAXY_MEMORY_MB / 1024 ));
+            if [ "\$DLTR_MEM_GB" -gt 0 ]; then DLTR_MEM_ARG="--max_memory \$DLTR_MEM_GB"; fi;
+        fi &&
+
         dante_ltr --gff3 '$dante'
           --reference_sequence '$reference' -M $max_missing --output output --cpu \${GALAXY_SLOTS:-1}
+          --mode '$mode' \$DLTR_MEM_ARG
         &&
         mv output.gff3 $te_ltr_gff
         &&
@@ -24,6 +38,11 @@
         <param type="data" name="dante" format="gff3" label="GFF3 output from DANTE pipeline - full output"/>
         <param type="data" name="reference" format="fasta" label="Reference sequence matching DANTE output" />
         <param type="integer" name="max_missing" min="0" max="3" value="1" label="Maximum number of missing protein domains to tolerate in full length retrotransposon" />
+        <param name="mode" type="select" label="Detection strategy"
+               help="Lineage mode requires a full lineage-keyed domain complement, which depends on the genome being well covered by REXdb. Core mode instead seeds on the ordered RT/RH/INT core - the order of those three domains identifies the superfamily - and classifies afterwards, so it finds elements whose accessory domains are undetectable. Use core for species poorly represented in REXdb; lineage otherwise.">
+            <option value="lineage" selected="true">Lineage - full lineage-keyed domain complement (default)</option>
+            <option value="core">Core - ordered RT/RH/INT core, classified afterwards</option>
+        </param>
     </inputs>
     <outputs>
         <data name="te_ltr_gff" format="gff3" label="LTR retrotransposons annotation (GFF3)
@@ -49,6 +68,19 @@
         - elements as cluster of proteins domains with same classification, no LTRs - rank D
 
        .. _REXdb: https://doi.org/10.1186/s13100-018-0144-1
+
+**Detection strategy**
+
+Two strategies are available, and which one suits a genome depends on how well that
+species is represented in REXdb.
+
+- **Lineage** (default) requires a full lineage-keyed domain complement. It is the
+  more specific of the two and gives lineage-level classification directly, but it
+  can only find elements whose accessory domains were detected by DANTE.
+- **Core** seeds on the ordered RT/RH/INT core instead. The order of those three
+  domains identifies the superfamily, and classification happens afterwards. On a
+  genome poorly covered by REXdb the accessory domains are often undetectable, so
+  lineage mode misses elements that core mode still recovers.
 
       Principles of detection of LTR retrotransposons is describet in github_ repository of this tool.
 

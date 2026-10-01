@@ -1,6 +1,11 @@
 <macros>
-    <token name="@TOOL_VERSION@">4.0.4.2</token>
-    <token name="@REQUIREMENT_VERSION@">0.4.0.4</token>
+    <!-- Tool version follows this repo's dante_ltr scheme: the requirement with
+         its leading zero dropped, plus a wrapper-revision digit (0.4.0.4 ->
+         4.0.4.x, 0.6.2.0 -> 6.2.0.x). Not the convention used elsewhere in the
+         repo, but changing it now would make the version sort below the
+         published 4.0.4.2 and Galaxy would offer the older tool as newer. -->
+    <token name="@TOOL_VERSION@">6.2.0.1</token>
+    <token name="@REQUIREMENT_VERSION@">0.6.2.0</token>
     <xml name="requirements">
         <requirements>
             <requirement type="package" version="@REQUIREMENT_VERSION@">dante_ltr</requirement>
