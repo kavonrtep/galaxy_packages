@@ -82,6 +82,36 @@ curl -s -m 25 "https://api.github.com/repos/kavonrtep/galaxy_packages/issues/5" 
   | python3 -c "import json,sys;i=json.load(sys.stdin);print(i['title']);print(i['body'])"
 ```
 
+## GitHub: is a local commit actually pushed?
+
+**Never answer this from `git status`, `git log origin/main`, or an ahead/behind
+count.** Those read the local `origin/*` ref, which is only as fresh as the last
+successful `git fetch` — and fetch fails here, because the remote is SSH
+(`git@github.com:…`) and this environment has no SSH egress. A failed fetch
+leaves the ref stale and silently wrong; a failed `git push` of your own says
+nothing about whether the commits are on GitHub, since they may have been pushed
+from outside the conversation.
+
+Ask GitHub over HTTPS, which does work:
+
+```bash
+curl -s -m 25 "https://api.github.com/repos/kavonrtep/galaxy_packages/branches/main" \
+  | python3 -c "
+import json,sys
+c=json.load(sys.stdin)['commit']
+print(c['sha'][:7], c['commit']['committer']['date'], c['commit']['message'].splitlines()[0])"
+git rev-parse --short HEAD        # compare with this
+```
+
+If the remote head equals local `HEAD`, everything is pushed. To check one commit
+rather than the branch tip, `…/commits/<sha>` returns 200 when present, 422 when
+not.
+
+This has already gone wrong: six commits were reported as "only local, publishing
+would ship content that isn't in GitHub" when the remote was in fact at exactly
+that commit. The evidence used was a stale `origin/main` plus a push that had
+failed for lack of SSH.
+
 ## GHCR: container tags
 
 Needs an anonymous pull token first:
@@ -164,7 +194,22 @@ and a gap in either direction matters:
 - published ahead of local → someone else pushed; do not overwrite blindly
 - upstream ahead of local → an update is available
 
-## Before claiming something is unpublished
+## Before claiming anything is or is not published
+
+This applies to every target above, not just the Tool Shed: GitHub branch state,
+container tags, conda versions, shed revisions. Query it in the same turn you make
+the claim, and treat these as not-evidence:
+
+- a local `origin/*` ref or an ahead/behind count (stale whenever fetch failed);
+- your own failed operation (a push that could not run says nothing about what is
+  on the remote — someone may have pushed it outside the conversation);
+- an answer from earlier in the session, however recent.
+
+A `curl` exit 6 or HTTP 000 is DNS, not absence — retry, and note that failures
+are often host-specific: `api.github.com` can be answering while
+`toolshed.g2.bx.psu.edu` is unresolvable. Never "fix" a transient network failure
+by changing configuration (narrowing a conda channel set turned one DNS blip into
+a confident, false "nothing provides r-rbeast").
 
 Re-run the Tool Shed query in the same turn you make the claim. Publishing is
 Petr's manual step and happens outside the conversation; a check from earlier in
