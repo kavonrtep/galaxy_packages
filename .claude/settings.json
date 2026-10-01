@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.command // \"\"' | grep -q planemo || exit 0; f=$(find /mnt/ssd/galaxy_packages -maxdepth 2 \\( -name tool_test_output.html -o -name tool_test_output.json -o -name shed_upload.tar.gz \\) -print -delete 2>/dev/null); [ -n \"$f\" ] && jq -cn --arg f \"$f\" '{systemMessage:(\"removed stray planemo artifacts: \" + ($f|gsub(\"\\n\";\", \")))}'; exit 0",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

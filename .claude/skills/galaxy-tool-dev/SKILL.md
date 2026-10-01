@@ -15,10 +15,22 @@ Each top-level directory is one Tool Shed repository (see the repo `CLAUDE.md`
 for architecture). Most in-house tools (dante*, tidecluster, …) are thin
 wrappers around a conda package on the **`petrnovak`** Anaconda channel.
 
-`~/.planemo.yml` already pins `galaxy_branch: release_25.1`, `conda_prefix`,
-`conda_ensure_channels: petrnovak,bioconda,conda-forge`, and the testtoolshed
-key — so those flags are not repeated below. planemo is installed persistently
-via pipx (`~/.local/bin/planemo`).
+`~/.planemo.yml` pins `galaxy_branch: release_25.1`, `conda_prefix`,
+`conda_ensure_channels: conda-forge,bioconda,petrnovak,r`, and the testtoolshed
+key. planemo is installed persistently via pipx (`~/.local/bin/planemo`).
+
+**Prefer `scripts/planemo.sh {lint|test|serve} <target>`** over calling planemo
+directly. It encodes the channel order, a separate `galaxy_root` per mode, test
+reports written outside the repository, `TMPDIR` on the big disk, and a port
+check plus cleanup for `serve` — each of which has gone wrong at least once. The
+flags below are what it passes, for when you need to deviate.
+
+Channel order matters: `conda-forge` must come **first**, and new channels are
+appended, never prepended. Under `--strict-channel-priority` a list that demotes
+conda-forge below bioconda pushes the solver onto bioconda's old R stack and
+`tidecluster` stops resolving at any version. `r` is in the list because it
+carries `r-rbeast`, which every `dante_tir` release depends on and which
+conda-forge, bioconda and petrnovak do not have.
 
 ## 1. Version bump (thin wrappers)
 
@@ -45,11 +57,14 @@ target version, run the tool on a tiny input, confirm real output filenames),
 then planemo:
 
 ```
-planemo lint <dir>/<tool>.xml
-planemo test <dir>/<tool>.xml \
-  --conda_dependency_resolution --conda_auto_install --conda_auto_init \
-  --galaxy_root ~/.planemo/galaxy_root
+scripts/planemo.sh lint <dir>/<tool>.xml
+scripts/planemo.sh test <dir>/<tool>.xml
 ```
+
+Use a **different `galaxy_root` for `test` than for `serve`** (the script uses
+`gx_test/` and `gx/`). Both against one root means two Galaxy instances on one
+SQLite database, which is the "database is locked" failure; with separate roots a
+test can run while a serve session stays up.
 
 Add a `<tests>` block if the tool has none. Key rules (learned the hard way):
 
@@ -69,6 +84,16 @@ Add a `<tests>` block if the tool has none. Key rules (learned the hard way):
 - **Ship the test data**: commit it under `test-data/` and do NOT `.shed.yml`
   `exclude:` it, so the test runs from a clone and on the Tool Shed. Keep it
   small (< 1 MB; a fixed-seed synthetic is ideal).
+- **A detection tool has a threshold, so measure it before sizing a fixture.**
+  Tools that assemble evidence across many copies of a repeat detect *nothing*
+  below some copy number, and a fixture under it produces a clean, passing,
+  completely uninformative run. Build fixtures at two or three sizes, record what
+  each detects, and put the table in `test-data/README.md` — `dante_tir` needed
+  174 Subclass_1 copies (2.4 MB) where 129 (1.68 MB) found nothing, which is why
+  that one fixture is over the 1 MB guideline. Then assert *well below* the count
+  you measured, so a shift in detection sensitivity does not fail the test.
+  Concatenating only the neighbourhoods of interest as separate records gets far
+  more copies per byte than one contiguous slice.
 - **Container tools run the whole `<command>` inside the image** — every binary
   in the command (including collection steps) must exist there. The CARP image
   has no `zip`, so `zip -r` failed after the pipeline; build archives with
@@ -100,6 +125,33 @@ report the command for him to run manually from the tool directory:
 planemo shed_update --shed_target toolshed --shed_key $KEY --owner petr-novak .
 ```
 
+## Running a packaged tool by hand
+
+Before blaming a wrapper, reproduce outside Galaxy — but **activate the conda
+environment**; do not call the entry point by absolute path:
+
+```
+source /home/petr/miniconda3/bin/activate '/home/petr/miniconda3/envs/__dante_tir@0.3.1'
+dante_tir.py -g … -f … -o out -c 8
+```
+
+Running `<env>/bin/dante_tir.py` directly leaves `cap3`, `mmseqs` and `blastn`
+off `PATH`. The run then **exits 0 and reports zero results** — indistinguishable
+from a genuinely negative run — with the cause only in
+`out/working_dir/*.cap.err` (`/bin/sh: 1: cap3: not found`). A whole
+investigation was built on unactivated runs and had to be discarded, including a
+wrong report that the conda package was broken. Galaxy activates the environment
+itself, so this only bites manual runs.
+
+**When a run fails, read the per-step logs before concluding anything.** These
+pipelines deliberately redirect each step into its own `.log`/`.err`, so the
+top-level message is often just `error in running command` (R's `system()`) or
+snakemake naming a rule. The cause is in `working_dir/*.err`, `out/log/`, or the
+rule's own log — never in the summary line. Equally, do not conclude a package is
+unavailable from a failed `conda create`: `curl` exit 6 / HTTP 000 and
+`repo.anaconda.com` errors are transient DNS, and "fixing" one by narrowing the
+channel set manufactures a convincing but false `nothing provides <dep>`.
+
 ## Pitfalls (all hit in practice)
 
 - Default Galaxy branch is unstable `master` — the pinned `release_25.1` in
@@ -110,7 +162,14 @@ planemo shed_update --shed_target toolshed --shed_key $KEY --owner petr-novak .
   runs inside the first job — pre-build the conda env, or just rerun (the
   resolved `__<tool>@<version>` env is cached).
 - `planemo serve` leaves a detached `gunicorn` master bound to the port after
-  the wrapper is killed — stop it by the PID listening on the port.
+  the wrapper is killed — stop it by the PID listening on the port, not by
+  pattern. **Check the port before serving**: one leak was found still holding
+  both the port and the shared `galaxy_root` six weeks later, and a second
+  instance on that root would have deadlocked on its database.
+  `scripts/planemo.sh serve` checks, and reaps its own on exit.
+- A failed job's outputs are marked `error` in Galaxy even when the files are
+  complete, so they cannot be used as input downstream. Nothing short of fixing
+  the detection and re-running makes them usable again.
 - `planemo shed_lint` can hang for minutes — timeout or skip it.
 
 ## References & IUC best practices
@@ -127,8 +186,17 @@ Key conventions from them, worth applying to new/edited tools here:
   → `outputs` → `tests` → `help` → `citations`. Several older tools here put
   `description` after `macros` — fix when touching them. Run `planemo format`
   before committing.
-- `<command detect_errors="aggressive">` (fails on non-zero exit **and** on
-  `error:`/`exception:` in stderr) in preference to `<stdio>`.
+- IUC suggests `<command detect_errors="aggressive">` over `<stdio>`. **Do not use
+  it for anything in this repo whose program reaches mmseqs2** — which is every
+  in-house tool. Aggressive fails a job on any stream line matching `error:`, and
+  mmseqs2 prints `there must be an error: N deleted from M that now is empty, but
+  not assigned to a cluster` as ordinary clustering output. That alone failed a
+  completed 51-minute TideCluster run: exit status 0, every output written in
+  full, and Galaxy marks the output datasets `error` too, so they cannot be
+  chained onward. Expand each repo's `stdio` macro instead (keeps non-zero exit
+  and the out-of-memory patterns, drops the text matching). Note also that
+  `<stdio>` rules are *additive* to `detect_errors` rather than overriding it, so
+  a tool can carry both and the laxer `detect_errors` will not protect it.
 - Recent `profile=` (~1 year back), version from macro tokens. IUC uses
   `@TOOL_VERSION@+galaxy@VERSION_SUFFIX@`; this repo's existing tools instead use
   `<upstream>.<wrapper>` (e.g. `1.18.0.1`) — match the tool you're editing.
