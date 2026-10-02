@@ -161,7 +161,16 @@ Publishing to the Tool Shed (run from the repo root, pass the tool dir):
   Because it happens outside the conversation, **never state what is published from memory** —
   query the Tool Shed API in the same turn you make the claim. See the
   `published-version-check` skill for that and for the GitHub / GHCR / Anaconda equivalents
-  (read-only HTTPS; there is no ssh and no `gh` CLI here).
+  (see below for what access is available).
+- **What network access you have depends on whether you are sandboxed.** Check, do not assume.
+  Outside the sandbox, `gh` is installed and authenticated as `kavonrtep`, so the GitHub API,
+  issues and HTTPS pushes all work; ssh egress does not, so `git push` over the
+  `git@github.com:` remote fails regardless. Inside the sandbox, assume read-only HTTPS via
+  `curl` only. `gh auth status` settles it in one command.
+- **Always ask before any outward-facing `gh` action.** Filing issues, commenting and pushing
+  happen under Petr's account, so they need his word each time — having the token is not
+  standing authorization. Reading (`gh issue view`, `gh api`) is fine unasked.
+
 - **Test fixtures must ship.** A fixture referenced by a `<tests>` block belongs in git and in
   the tarball, or the test can only ever run on the machine that happens to hold the file —
   not from a clone, not from an installed repository. Keep fixtures small enough that this is

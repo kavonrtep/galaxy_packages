@@ -7,8 +7,9 @@ description: >-
   and to compare that against the wrapper version in this repo. Triggers on
   "latest version", "newest release", "what's on the toolshed", "is it
   published", "which revision", "what version is installed", "check upstream",
-  or any tool version bump. Access here is READ-ONLY over HTTPS: there is no
-  ssh and no `gh` CLI, so every query goes through curl against a public API.
+  or any tool version bump. What access is available depends on the sandbox:
+  curl against public APIs always works, and outside the sandbox `gh` is
+  installed and authenticated too. ssh is never available.
 ---
 
 # Finding out what is actually published
@@ -18,8 +19,13 @@ Publication state changes underneath you — Petr pushes to the Tool Shed himsel
 and upstream cuts releases between conversations. A check from an hour ago is
 evidence about the past, not the present. Re-query, then answer.
 
-Access is read-only HTTPS. There is no ssh key and no `gh` CLI; all of the
-following use `curl` against public endpoints and need no authentication.
+The `curl` recipes below use public endpoints and need no authentication, so they
+work everywhere. **But check what else is available before assuming `curl` is all
+you have** — outside the sandbox `gh` is installed and authenticated, which makes
+reading issues, PRs and branch state much easier (`gh auth status` settles it in
+one command). ssh egress is absent either way, so a `git@github.com:` push always
+fails. Reading with `gh` is fine unasked; anything that writes — filing an issue,
+commenting, pushing — happens under Petr's account and needs his word each time.
 
 ## GitHub: releases and tags
 
