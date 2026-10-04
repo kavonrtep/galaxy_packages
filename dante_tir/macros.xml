@@ -1,9 +1,33 @@
 <macros>
-    <token name="@TOOL_VERSION@">0.3.1.1</token>
+    <token name="@TOOL_VERSION@">0.3.1.2</token>
     <token name="@REQUIREMENT_VERSION@">0.3.1</token>
+    <!-- STOPGAP: the two extra requirements pin the Bioconductor stack.
+         dante_tir's conda recipe pins no Bioconductor versions at all
+         (bioconductor-biostrings / -bsgenome / -rsamtools / -rtracklayer are
+         unpinned and biocgenerics only arrives transitively), so one package
+         version can resolve to different stacks on different machines. On the
+         production Galaxy, detect_tirs.R died at load time with
+
+             package or namespace load failed for 'BiocGenerics' ...
+             undefined exports: start<-, end<-, width, ...
+
+         which is a NAMESPACE/code mismatch, not a missing package. The pins below
+         are the combination verified to work: the solve is conflict-free, it
+         resolves the r43 / Bioconductor 3.18 stack (BiocGenerics 0.48.1,
+         S4Vectors 0.40.2, IRanges 2.36.0, Biostrings 2.70.1), BiocGenerics loads,
+         and dante_tir runs the committed fixture to its expected 4 TIRs.
+
+         Note this also changes the environment Galaxy builds: with more than one
+         requirement, resolve_all names it mulled-v1-<hash> instead of
+         __dante_tir@0.3.1, so a fresh env is created rather than the existing one
+         reused. See kavonrtep/dante_tir - remove these two lines once the recipe
+         pins its own Bioconductor stack, since duplicating a recipe's pins here
+         will otherwise drift. -->
     <xml name="requirements">
         <requirements>
             <requirement type="package" version="@REQUIREMENT_VERSION@">dante_tir</requirement>
+            <requirement type="package" version="4.3.3">r-base</requirement>
+            <requirement type="package" version="0.48.1">bioconductor-biocgenerics</requirement>
         </requirements>
     </xml>
     <!-- Error detection. Replaces detect_errors="aggressive", which fails a job on any
