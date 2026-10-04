@@ -12,3 +12,7 @@ exclude:
   - shed.yml
   - __pycache__
   - tmp
+  # Generated indexes. Running the tool on test_genome.fasta leaves a .fai beside
+  # it (Rsamtools indexFa writes next to the input), and shed_upload tars the
+  # working directory rather than what git tracks.
+  - test-data/test_genome.fasta.fai
