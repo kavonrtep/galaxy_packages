@@ -4,11 +4,25 @@
          4.0.4.x, 0.6.2.0 -> 6.2.0.x). Not the convention used elsewhere in the
          repo, but changing it now would make the version sort below the
          published 4.0.4.2 and Galaxy would offer the older tool as newer. -->
-    <token name="@TOOL_VERSION@">6.2.0.1</token>
-    <token name="@REQUIREMENT_VERSION@">0.6.2.0</token>
+    <token name="@TOOL_VERSION@">6.3.1.1</token>
+    <token name="@REQUIREMENT_VERSION@">0.6.3.1</token>
+    <!-- Container tag published to GHCR for this release; kept in step with
+         @REQUIREMENT_VERSION@. -->
+    <token name="@CONTAINER_TAG@">0.6.3.1</token>
+    <!-- Both a container and a package requirement. Galaxy prefers the container
+         where the job destination sets singularity_enabled, and falls back to
+         resolving the conda package where it does not, so servers that cannot run
+         containers keep working. The container is the more robust of the two: a
+         .sif is one digest-verified file, whereas a conda environment is thousands
+         of files hardlinked out of a shared package cache, where a single truncated
+         file breaks every environment referencing it at once. 0.6.3.1 exists
+         specifically to make this possible - all commands are on PATH without conda
+         activation, so the image runs with a cleaned environment as a Galaxy tool container,
+         and upstream's release gate runs these wrapper commands inside the image. -->
     <xml name="requirements">
         <requirements>
             <requirement type="package" version="@REQUIREMENT_VERSION@">dante_ltr</requirement>
+            <container type="singularity">oras://ghcr.io/kavonrtep/dante_ltr/sif:@CONTAINER_TAG@</container>
         </requirements>
     </xml>
     <!-- Error detection. Replaces detect_errors="aggressive", which fails a job on any
