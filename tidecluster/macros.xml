@@ -1,9 +1,26 @@
 <macros>
-    <token name="@TOOL_VERSION@">1.21.3.1</token>
+    <token name="@TOOL_VERSION@">1.21.3.2</token>
     <token name="@REQUIREMENT_VERSION@">1.21.3</token>
+    <!-- Container tag published to GHCR for this release; kept in step with
+         @REQUIREMENT_VERSION@. -->
+    <token name="@CONTAINER_TAG@">1.21.3</token>
+    <!-- Both a container and a package requirement, deliberately. Galaxy prefers
+         the container where the job destination has singularity enabled, and
+         falls back to resolving the conda package where it does not, so this works
+         on either kind of server.
+         The container is the more robust of the two: a .sif is one digest-verified
+         file, whereas a conda environment is thousands of files hardlinked out of a
+         shared package cache - and a single truncated file in that cache breaks
+         every environment referencing it at once, including environments that were
+         working and were never rebuilt. That is what took out tidecluster and
+         dante_tir on the production server (mmseqs failing with
+         "libgomp.so.1: file too short"). A container also removes the conda solve
+         at run time, and with it the channel-order and unpinned-dependency
+         hazards. -->
     <xml name="requirements">
         <requirements>
             <requirement type="package" version="@REQUIREMENT_VERSION@">tidecluster</requirement>
+            <container type="singularity">oras://ghcr.io/kavonrtep/tidecluster/sif:@CONTAINER_TAG@</container>
         </requirements>
     </xml>
     <!-- Error detection. This replaces detect_errors="aggressive", which treats any

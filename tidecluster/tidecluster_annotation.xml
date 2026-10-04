@@ -8,7 +8,9 @@
     <command><![CDATA[
         #set $prefix = 'tidecluster'
         mkdir extracted &&
-        unzip '$input_archive' -d extracted && cd extracted &&
+## python3 -m zipfile rather than unzip: the TideCluster image has no unzip,
+        ## and with a container the whole command runs inside the image.
+        python3 -m zipfile -e '$input_archive' extracted && cd extracted &&
         TideCluster.py annotation
         -pr '$prefix'
         -l '$library'

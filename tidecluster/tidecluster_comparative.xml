@@ -34,7 +34,7 @@
         #set $code = 'S' + $code
     #end if
         mkdir -p 'runs/run_${i}' &&
-        unzip -q -o '$archive' -d 'runs/run_${i}' &&
+        python3 -m zipfile -e '$archive' 'runs/run_${i}' &&
         ## The run's own prefix is read off the clustering GFF3 rather than assumed:
         ## archives from this tool suite carry 'tidecluster', but a run made on the
         ## command line can use any -pr value, and every other input path is
@@ -124,7 +124,9 @@
         &&
         cp -r report_out/. comp_out/
         &&
-        ( cd comp_out && zip -qr ../comparative_results.zip . )
+## python3 -m zipfile rather than zip/unzip throughout: neither is in the
+        ## TideCluster image, and a container runs the whole command inside it.
+        ( cd comp_out && python3 -m zipfile -c ../comparative_results.zip . )
         &&
         mv comparative_results.zip '$output_archive'
     ]]></command>

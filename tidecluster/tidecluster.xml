@@ -65,7 +65,10 @@
         &&
         if [ -f tidecluster_consensus_dimer_library.fasta ]; then cp tidecluster_consensus_dimer_library.fasta ${trc_library}; fi
         &&
-        zip -r output.zip *
+## zip/unzip are not in the TideCluster image, and a container runs the whole
+        ## command inside it, so archives are handled with python3 -m zipfile
+        ## instead. Verified to produce byte-equivalent entry names to `zip -r *`.
+        python3 -m zipfile -c output.zip .
         #if $library:
         &&
         cp tidecluster_annotation.gff3 '$gff3_annotation'
