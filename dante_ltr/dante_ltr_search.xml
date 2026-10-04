@@ -52,6 +52,40 @@
         <data name="html_report" format="html" label="LTR retrotransposons detection on $dante.hid and $reference.hid report" />
 
     </outputs>
+    <tests>
+        <!-- 500 kb contiguous slice of tiny_pea Chr1 with its DANTE annotation
+             (see test-data/README.md for why it is contiguous and why 500 kb).
+             Both runs find 12 complete elements; the assertions sit well below
+             that so a change in detection sensitivity does not fail the test. -->
+        <test expect_num_outputs="3">
+            <param name="dante" value="dante_chr1_slice.gff3" ftype="gff3"/>
+            <param name="reference" value="chr1_slice.fasta" ftype="fasta"/>
+            <output name="te_ltr_gff">
+                <assert_contents>
+                    <has_text text="transposable_element"/>
+                    <has_text text="Class_I"/>
+                    <has_text text="dante_ltr"/>
+                </assert_contents>
+            </output>
+            <output name="statistics">
+                <assert_contents><has_size min="1"/></assert_contents>
+            </output>
+        </test>
+        <!-- Core mode. This is the path that aborted on a real genome before
+             0.6.3.0 (issue #14), so it is worth exercising explicitly rather than
+             trusting that the default path covers it. -->
+        <test expect_num_outputs="3">
+            <param name="dante" value="dante_chr1_slice.gff3" ftype="gff3"/>
+            <param name="reference" value="chr1_slice.fasta" ftype="fasta"/>
+            <param name="mode" value="core"/>
+            <output name="te_ltr_gff">
+                <assert_contents>
+                    <has_text text="transposable_element"/>
+                    <has_text text="dante_ltr_core"/>
+                </assert_contents>
+            </output>
+        </test>
+    </tests>
     <help><![CDATA[
         This tool uses output from DANTE annotation pipeline to identify full length LTR
         transposable elements. Output is in the GFF3 format and include annotation of

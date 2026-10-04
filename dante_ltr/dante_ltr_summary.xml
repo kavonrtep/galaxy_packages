@@ -17,6 +17,20 @@
     <outputs>
         <data label="DANTE_LTR summmary from dataset $input1.hid" format="html" name="output1" />
     </outputs>
+    <tests>
+        <!-- 0.6.3.0 fixed this tool failing on single-element and no-PBS+TSD
+             input, where dante_ltr only warned and the report went missing
+             silently, so assert the report has real content rather than existing. -->
+        <test expect_num_outputs="1">
+            <param name="input1" value="dante_ltr_chr1_slice.gff3" ftype="gff3"/>
+            <output name="output1">
+                <assert_contents>
+                    <has_text text="html"/>
+                    <has_size min="1000"/>
+                </assert_contents>
+            </output>
+        </test>
+    </tests>
     <help><![CDATA[
         This tool takes GFF3 output from DANTE_LTR and make graphical summary of the results.
     ]]></help>

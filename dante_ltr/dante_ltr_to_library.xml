@@ -21,6 +21,21 @@
         <data name="dante_ltr_library" format="fasta"
               label="Representative library from DANTE_LTR $dante_ltr.hid on reference $reference.hid"/>
     </outputs>
+    <tests>
+        <!-- The wrapper passes a fixed min_coverage of 3, so the fixture has to
+             contain at least three similar elements for the library to be
+             non-empty; this slice yields 11 representative sequences. -->
+        <test expect_num_outputs="1">
+            <param name="dante_ltr" value="dante_ltr_chr1_slice.gff3" ftype="gff3"/>
+            <param name="reference" value="chr1_slice.fasta" ftype="fasta"/>
+            <output name="dante_ltr_library">
+                <assert_contents>
+                    <has_text text="&gt;"/>
+                    <has_size min="1"/>
+                </assert_contents>
+            </output>
+        </test>
+    </tests>
     <help><![CDATA[
         This tool extract representative sequences from LTR-RT library identified
          by DANTE_LTR. Resulting library is suitable for RepeatMasker search.

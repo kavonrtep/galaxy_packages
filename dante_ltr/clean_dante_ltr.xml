@@ -39,6 +39,24 @@
         <data name="summary" format="pdf" label="LTR retrotransposons lengths summary  based on $dante_ltr.hid and reference $reference.hid"/>
 
     </outputs>
+    <tests>
+        <!-- Input is dante_ltr's own output for the same slice, committed as a
+             fixture so this does not have to chain tools. All six outputs are
+             asserted, because the wrapper moves all six unconditionally and a
+             missing one fails the job rather than producing an empty dataset. -->
+        <test expect_num_outputs="6">
+            <param name="dante_ltr" value="dante_ltr_chr1_slice.gff3" ftype="gff3"/>
+            <param name="reference" value="chr1_slice.fasta" ftype="fasta"/>
+            <output name="dante_ltr_clean">
+                <assert_contents><has_text text="transposable_element"/></assert_contents>
+            </output>
+            <output name="rm_lib"><assert_contents><has_text text="&gt;"/></assert_contents></output>
+            <output name="te_full"><assert_contents><has_text text="&gt;"/></assert_contents></output>
+            <output name="ltr5"><assert_contents><has_text text="&gt;"/></assert_contents></output>
+            <output name="ltr3"><assert_contents><has_text text="&gt;"/></assert_contents></output>
+            <output name="summary"><assert_contents><has_size min="1000"/></assert_contents></output>
+        </test>
+    </tests>
     <help><![CDATA[
         This tool takes output from DANTE_LTR search identifies good quality retrotransposons.
          Good quality retrotransposons are considered those which does not have any cross-similarity between distinct lineages.
