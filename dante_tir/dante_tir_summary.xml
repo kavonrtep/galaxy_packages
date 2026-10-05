@@ -38,8 +38,15 @@
         else
             touch '$representative_elements_csv';
         fi &&
-        zip -r summary_results.zip * &&
-        mv summary_results.zip '$output_archive'
+        ## python3 -m zipfile rather than zip: the image has no zip, and with a
+        ## container the whole command runs inside it. The archive is written to the
+        ## PARENT directory, not into output_dir. zipfile walks sorted(os.listdir())
+        ## with no self-exclusion, so an archive inside its own source directory is
+        ## added to itself and ZipFile.write reads it to EOF while it is still
+        ## growing. summary_results.zip sorts after report.html, so it was added
+        ## last: the archive grew without bound, reached 451 GB and filled a disk.
+        python3 -m zipfile -c ../summary_results.zip . &&
+        mv ../summary_results.zip '$output_archive'
     ]]></command>
     <inputs>
         <param name="tir_gff" type="data" format="gff3" label="DANTE_TIR GFF3 file"
