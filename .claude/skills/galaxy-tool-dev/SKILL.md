@@ -156,6 +156,22 @@ channel set manufactures a convincing but false `nothing provides <dep>`.
 
 ## Pitfalls (all hit in practice)
 
+- **`--` is illegal inside an XML comment, and tool XML is full of CLI flags.**
+  A comment mentioning `--long`, `--cleanenv` or `--min_coverage` makes the file
+  unparseable, and `planemo lint` reports it as
+  `galaxy.util ERROR: Error parsing file <path>` — naming the file but not the
+  cause, which reads like a lint bug rather than a typo. Reword the flag out of
+  the comment (`long mode`, `min_coverage of 3`). Hit three times in one session.
+  Sweep the whole repo for it with:
+
+  ```
+  python3 -c "
+  import glob, re, io
+  for f in glob.glob('*/[a-z_]*.xml'):
+      for m in re.finditer(r'<!--(.*?)-->', io.open(f).read(), re.S):
+          if '--' in m.group(1): print(f, m.group(1).strip()[:60])"
+  ```
+
 - Default Galaxy branch is unstable `master` — the pinned `release_25.1` in
   `~/.planemo.yml` avoids it.
 - A stale `~/.planemo/gx_venv*` with a dangling python symlink breaks the
@@ -165,7 +181,13 @@ channel set manufactures a convincing but false `nothing provides <dep>`.
   resolved `__<tool>@<version>` env is cached).
 - `planemo serve` leaves a detached `gunicorn` master bound to the port after
   the wrapper is killed — stop it by the PID listening on the port, not by
-  pattern. **Check the port before serving**: one leak was found still holding
+  pattern. **`pkill -f <pattern>` matches your own shell** whenever the pattern
+  appears in the command you are running, so `pkill -f "planemo test"` typed
+  inside a command containing that string kills the command issuing it, part way
+  through. That happened three times in one session, once aborting a cleanup
+  during a disk emergency. The safe form collects PIDs first and excludes self:
+  `P=$(pgrep -f planemo | grep -vw $$ | grep -vw $PPID); kill $P`.
+  **Check the port before serving**: one leak was found still holding
   both the port and the shared `galaxy_root` six weeks later, and a second
   instance on that root would have deadlocked on its database.
   `scripts/planemo.sh serve` checks, and reaps its own on exit.
