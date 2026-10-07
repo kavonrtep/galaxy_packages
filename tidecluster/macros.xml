@@ -1,5 +1,5 @@
 <macros>
-    <token name="@TOOL_VERSION@">1.21.3.3</token>
+    <token name="@TOOL_VERSION@">1.21.3.4</token>
     <token name="@REQUIREMENT_VERSION@">1.21.3</token>
     <!-- Container tag published to GHCR for this release; kept in step with
          @REQUIREMENT_VERSION@. -->

@@ -7,6 +7,36 @@
     <expand macro="stdio" />
     <command><![CDATA[
 #import re
+## Sample names are taken from the form, one per archive, not from the dataset
+## names. sample_code names a column of an R data frame that the analysis later
+## looks up by that same string, so it has to survive make.names() unchanged:
+## letters, digits, underscore and dot only, not starting with a digit or a dot.
+## The validator on the parameter already enforces exactly that; the substitution
+## here is what keeps it true for a value that reached the job without going
+## through the form, and it is also what keeps the name safe to quote into the
+## shell below.
+#set $codes = []
+#for $s in $samples
+    #set $code = $re.sub('[^A-Za-z0-9_.]', '_', str($s.sample_name).strip())
+    #if not $code[:1].isalpha()
+        #set $code = 'S' + $code
+    #end if
+    #silent $codes.append($code)
+#end for
+## Both checks run before anything is unpacked, so a mistake on the form costs
+## nothing. Uniqueness is not something Galaxy can validate across repeat blocks,
+## and sample_code prefixes every output column and every sequence in the shared
+## search pool, so a collision would silently mislabel the results.
+#if len($samples) < 2
+        echo 'A comparative analysis needs at least two samples.' >&2 && exit 1 &&
+#end if
+## Bare loop names in the comprehension, not $c: a $-name compiles to a
+## search-list lookup, which is not where a comprehension-local variable lives.
+#set $dups = sorted(set([c for c in $codes if $codes.count(c) > 1]))
+#set $dup_list = ', '.join($dups)
+#if len($dups) > 0
+        echo 'Sample names have to be unique. Used more than once: $dup_list.' >&2 && exit 1 &&
+#end if
         mkdir -p runs comp_out report_out &&
 
         ## Locate the clustering GFF3 of an unpacked run: at the top level of the
@@ -18,23 +48,12 @@
 
         ## The analysis is driven by a three-column table, one row per run:
         ## input_dir, sample_code and the -pr prefix that run was made with.
-        printf '%s\t%s\t%s\n' 'input_dir' 'sample_code' 'tidecluster_prefix' > samples_raw.tsv &&
+        printf '%s\t%s\t%s\n' 'input_dir' 'sample_code' 'tidecluster_prefix' > samples.tsv &&
 
-#for $i, $archive in enumerate($archives)
-    #set $ident = str($archive.element_identifier)
-    #if $ident.lower().endswith('.zip')
-        #set $ident = $ident[:-4]
-    #end if
-    ## sample_code names a column of an R data frame that the analysis later looks
-    ## up by that same string, so it must survive make.names() unchanged: letters,
-    ## digits, underscore and dot only, and not starting with a digit or a dot.
-    ## Hyphens and spaces would be rewritten and the lookup would then miss.
-    #set $code = $re.sub('[^A-Za-z0-9_.]', '_', $ident)
-    #if not $code[:1].isalpha()
-        #set $code = 'S' + $code
-    #end if
+#for $i, $s in enumerate($samples)
+    #set $code = $codes[$i]
         mkdir -p 'runs/run_${i}' &&
-        python3 -m zipfile -e '$archive' 'runs/run_${i}' &&
+        python3 -m zipfile -e '$s.archive' 'runs/run_${i}' &&
         ## The run's own prefix is read off the clustering GFF3 rather than assumed:
         ## archives from this tool suite carry 'tidecluster', but a run made on the
         ## command line can use any -pr value, and every other input path is
@@ -50,13 +69,8 @@
         ## the default 50 kb. Name the sample and the reason here instead of letting
         ## it fail later on a path deep in the unpacked archive.
         if [ ! -f "\${TC_DIR}/\${TC_PR}_consensus_dimer_library.fasta" ]; then echo 'Sample ${code}: the run has no TAREAN consensus library, so it cannot be compared. Either the run did not reach the TAREAN step, or every cluster fell below its minimum combined array length.' >&2; exit 1; fi &&
-        printf '%s\t%s\t%s\n' "\$TC_DIR" '${code}' "\$TC_PR" >> samples_raw.tsv &&
+        printf '%s\t%s\t%s\n' "\$TC_DIR" '${code}' "\$TC_PR" >> samples.tsv &&
 #end for
-
-        ## Two inputs can carry the same name, while sample_code has to be unique -
-        ## it prefixes every output column and every sequence in the shared search
-        ## pool. Number the repeats instead of letting the analysis collide on them.
-        awk 'BEGIN{FS=OFS="\t"} NR==1{print; next} {n=++seen[\$2]; if (n>1) \$2=\$2"_"n; print}' samples_raw.tsv > samples.tsv &&
 
         tc_comparative_analysis.R
         -i samples.tsv
@@ -131,9 +145,28 @@
         mv comparative_results.zip '$output_archive'
     ]]></command>
     <inputs>
-        <param type="data" name="archives" format="zip" multiple="true" min="2"
-               label="TideCluster result archives"
-               help="The 'Archive with complete results' output of two or more TideCluster runs, one per genome. Each run must have reached the clustering and TAREAN steps; the annotation step is optional and only the annotation columns depend on it. The name of each dataset - or each element identifier, when a collection is used - becomes the sample label in every output table, so rename the elements to the sample names you want to see in the report."/>
+        <!-- One block per genome, each pairing an archive with the name to label it
+             by. The sample names are asked for here rather than read off the input
+             datasets because a history name ('TideCluster on data 17: Archive with
+             complete results') is both long and uninformative, and it ends up as a
+             column name in every output table and as an axis label in the report. -->
+        <repeat name="samples" title="Sample" min="2" default="2"
+                help="Add one block per genome. At least two are needed.">
+            <param type="data" name="archive" format="zip"
+                   label="TideCluster result archive"
+                   help="The 'Archive with complete results' output of a TideCluster run. The run must have reached the clustering and TAREAN steps; the annotation step is optional and only the annotation columns depend on it."/>
+            <param type="text" name="sample_name"
+                   label="Sample name"
+                   help="Label for this genome in every output table, in the report and in the name of its annotated GFF3. Keep it short - it prefixes a column per sample in the satellite family table - and use something like a species abbreviation or an accession code: Slyc, Spimp, cv_Heinz. Letters, digits, underscore and dot only, starting with a letter; names have to be unique across the blocks.">
+                <validator type="empty_field"/>
+                <!-- The analysis looks its own columns up by this string after R has
+                     passed them through make.names(), so a character that make.names()
+                     would rewrite makes the lookup miss. Rejected on the form rather
+                     than silently substituted, so the name in the report is the name
+                     that was typed. -->
+                <validator type="regex" message="Use letters, digits, underscore and dot only, starting with a letter (for example Slyc, S_pimpinellifolium or cv_Heinz.1).">^[A-Za-z][A-Za-z0-9_.]*$</validator>
+            </param>
+        </repeat>
         <conditional name="similarity">
             <param name="preset" type="select" label="Similarity thresholds"
                    help="How similar two consensus sequences have to be for their clusters to end up in one satellite family. Pick the preset matching how closely related the compared genomes are: too strict and one family splits per sample, too permissive and unrelated satellites merge. The identity threshold is also what the sequence search itself runs at, so a relaxed setting is slower.">
@@ -204,16 +237,23 @@
              fixture drives real cross-sample grouping rather than a degenerate
              one-cluster-per-family split. The runs use the prefix 'tc' rather than
              the 'tidecluster' this suite writes, which is deliberate: it exercises
-             the per-run prefix detection. The satellite family table has to carry
-             a length column per sample, which is also how the sample codes derived
-             from the input names are checked. -->
+             the per-run prefix detection. The sample names are deliberately unlike
+             the file names, so the assertions below also show that the labels come
+             from the form and not from the input datasets. -->
         <test expect_num_outputs="6">
-            <param name="archives" value="comparative_run_a.zip,comparative_run_b.zip"/>
+            <repeat name="samples">
+                <param name="archive" value="comparative_run_a.zip"/>
+                <param name="sample_name" value="Slyc"/>
+            </repeat>
+            <repeat name="samples">
+                <param name="archive" value="comparative_run_b.zip"/>
+                <param name="sample_name" value="S_pimp"/>
+            </repeat>
             <output name="satellite_families">
                 <assert_contents>
                     <has_text text="Satellite_family"/>
-                    <has_text text="comparative_run_a_length"/>
-                    <has_text text="comparative_run_b_length"/>
+                    <has_text text="Slyc_length"/>
+                    <has_text text="S_pimp_length"/>
                     <has_n_lines min="5"/>
                 </assert_contents>
             </output>
@@ -225,12 +265,12 @@
             <output name="html_report">
                 <assert_contents>
                     <has_text text="TRC Comparative Analysis Report"/>
-                    <has_text text="comparative_run_a"/>
-                    <has_text text="comparative_run_b"/>
+                    <has_text text="Slyc"/>
+                    <has_text text="S_pimp"/>
                 </assert_contents>
             </output>
             <output_collection name="annotated_gff3" type="list" count="2">
-                <element name="comparative_run_a">
+                <element name="Slyc">
                     <assert_contents>
                         <has_text text="Satellite_family"/>
                         <has_text text="TRC_1"/>
@@ -245,9 +285,27 @@
                     <has_archive_member path="trc_satellite_families.tsv"/>
                     <has_archive_member path="trc_graph.graphml"/>
                     <has_archive_member path="mmseqs2_results.tsv"/>
-                    <has_archive_member path="gff3/comparative_run_a_tc_annotated.gff3"/>
+                    <has_archive_member path="gff3/Slyc_tc_annotated.gff3"/>
                 </assert_contents>
             </output>
+        </test>
+        <!-- Uniqueness is not something Galaxy can validate across repeat blocks, so
+             it is a guard in the command template. Tested here because nothing else
+             renders that branch, and a change to the pre-pass that quietly stopped
+             computing it would otherwise go unnoticed. The guard runs before the
+             first archive is unpacked, so this test costs seconds. -->
+        <test expect_failure="true">
+            <repeat name="samples">
+                <param name="archive" value="comparative_run_a.zip"/>
+                <param name="sample_name" value="Slyc"/>
+            </repeat>
+            <repeat name="samples">
+                <param name="archive" value="comparative_run_b.zip"/>
+                <param name="sample_name" value="Slyc"/>
+            </repeat>
+            <assert_stderr>
+                <has_text text="Sample names have to be unique. Used more than once: Slyc."/>
+            </assert_stderr>
         </test>
     </tests>
     <help><![CDATA[
@@ -267,14 +325,18 @@ repeats are grouped by their motif instead of by sequence similarity.
 
 **Inputs**
 
-Two or more *Archive with complete results* datasets, one per TideCluster run. A run must have
-reached the clustering and TAREAN steps. The annotation step is optional - a run made without a
-reference library simply leaves the annotation columns empty, and everything else is unaffected.
+One block per genome, each holding an *Archive with complete results* dataset and the name to
+label that genome by. At least two blocks are needed. A run must have reached the clustering and
+TAREAN steps. The annotation step is optional - a run made without a reference library simply
+leaves the annotation columns empty, and everything else is unaffected.
 
-The name of each input dataset becomes that sample's label in every output table and in the report.
-Passing a collection is the convenient way to control those labels: the element identifiers are
-used, so rename the elements to your sample names first. Characters that are not letters, digits,
-underscore or dot are replaced by an underscore, and duplicate names are numbered.
+The sample name is typed on the form rather than taken from the input dataset, because it is used
+as a column name in the output tables, as an axis label in the report and in the file name of that
+sample's annotated GFF3, and a history name is usually too long to read in any of those places.
+Keep it short - a species abbreviation or an accession code - and use letters, digits, underscore
+and dot only, starting with a letter. That is the set R's ``make.names()`` leaves unchanged, which
+is why anything else is rejected on the form instead of being substituted. Names have to be unique
+across the blocks; a duplicate stops the job before any analysis is run.
 
 **Outputs**
 
