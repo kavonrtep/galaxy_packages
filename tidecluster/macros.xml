@@ -36,6 +36,36 @@
          invalidates the outputs abort with one, and the out-of-memory patterns, which
          matter because a run can be OOM-killed in a worker without that reaching the
          exit status. -->
+    <!-- Citations, one macro per cited work so each tool lists what it actually
+         runs. TideCluster has no journal article yet, so it is cited as the
+         repository; the upstream README also points at a Zenodo DOI, which is not
+         recorded here because the badge does not name it and zenodo.org could not
+         be reached to resolve it. -->
+    <xml name="citation_tidecluster">
+        <citation type="bibtex">@misc{tidecluster,
+    author = {Novak, Petr and Macas, Jiri},
+    title = {TideCluster},
+    howpublished = {\url{https://github.com/kavonrtep/TideCluster}},
+    note = {Laboratory of Molecular Cytogenetics, Biology Centre CAS}
+}</citation>
+    </xml>
+    <xml name="citation_tidehunter">
+        <citation type="doi">10.1093/bioinformatics/btz376</citation>
+    </xml>
+    <xml name="citation_tarean">
+        <citation type="doi">10.1093/nar/gkx257</citation>
+    </xml>
+    <xml name="citation_mmseqs2">
+        <citation type="doi">10.1038/nbt.3988</citation>
+    </xml>
+    <xml name="citation_repeatmasker">
+        <citation type="bibtex">@misc{repeatmasker,
+    author = {Smit, AFA and Hubley, R and Green, P},
+    title = {RepeatMasker Open-4.0},
+    year = {2013--2015},
+    howpublished = {\url{http://www.repeatmasker.org}}
+}</citation>
+    </xml>
     <xml name="stdio">
         <stdio>
             <exit_code range=":-1" level="fatal"/>

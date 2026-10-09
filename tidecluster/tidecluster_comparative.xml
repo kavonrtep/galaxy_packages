@@ -389,6 +389,8 @@ without repeating the search.
   (https://doi.org/10.1038/nbt.3988)
     ]]></help>
     <citations>
-
+        <expand macro="citation_tidecluster"/>
+        <expand macro="citation_tarean"/>
+        <expand macro="citation_mmseqs2"/>
     </citations>
 </tool>

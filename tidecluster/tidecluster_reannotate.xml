@@ -14,7 +14,8 @@
     ]]></command>
     <inputs>
         <param type="data" name="ref_seq" format="fasta" label="Reference sequence" help="FASTA file to be annotated by TRC library"/>
-        <param type="data" name="fasta_file" format="fasta" label="Tandem repeat library" help="FASTA file with tandem repeat library from TideCluster"/>
+        <param type="data" name="fasta_file" format="fasta" label="Tandem repeat library"
+               help="The 'Library of tandem repeats' output of a TideCluster run, which TAREAN writes with headers in RepeatMasker format ('&gt;TRC_1#Satellite'). Any other library works as long as it has that form; a plain FASTA whose headers lack the '#' part does not - this tool reads the classification out of every header and stops with an IndexError if one is missing."/>
     </inputs>
     <outputs>
         <data name="output" format="gff3" label="${tool.name} on ${on_string}: GFF3 Output"/>
@@ -26,6 +27,7 @@
         Reannotate tandem repeats using similarity-based approach can fill in gaps in annotation provided by TideCluster/TideHunter.
     ]]></help>
     <citations>
-        <!-- Add citations here -->
+        <expand macro="citation_tidecluster"/>
+        <expand macro="citation_repeatmasker"/>
     </citations>
 </tool>

@@ -91,8 +91,9 @@
     <inputs>
         <param type="data" name="fasta" format="fasta" label="Reference fasta"
                help="Path to reference sequence in fasta format"/>
-        <param type="data" name="library" format="fasta" label="Library"
-               help="Path to library of tandem repeats" optional="true"/>
+        <param type="data" name="library" format="fasta" label="Library of tandem repeats"
+               help="Optional. Reference library for the annotation step; leave it empty to skip that step. The library has to be in RepeatMasker format: each FASTA header is a sequence name and a classification separated by '#', as in '&gt;CL38_sat#Satellite/centromeric'. The part after '#' is free text and is exactly what TideCluster reports as the annotation. A plain FASTA without it is not rejected - RepeatMasker then classifies every hit as 'Unspecified', so the run finishes and the annotation carries no information."
+               optional="true"/>
         <param type="integer" name="min_length" value="5000"
                label="Minimum length of tandem repeat"/>
         <conditional name="tidehunter_mode">
@@ -240,6 +241,18 @@
 
 - **Annotation step**: Consensus sequences from TideHunter for each cluster are examined by RepeatMasker against a library of tandem repeats. The resulting annotation for each tandem repeat is used to update the information in the GFF3 file. This step is optional.
 
+The annotation library is a FASTA file in RepeatMasker format, meaning each header holds a
+sequence name and a classification separated by ``#``::
+
+    >CL38_sat#Satellite/centromeric
+    >FabTR_12#Satellite
+    >45S_rDNA#rDNA/45S
+
+The string after ``#`` is free text and is what is reported as the annotation of a cluster. A
+plain FASTA without it is accepted by RepeatMasker, which then classifies every hit as
+``Unspecified``, so the run succeeds while the annotation says nothing. Libraries exported from
+RepeatMasker, Dfam, RepBase or a previous TideCluster run already carry the ``#`` part.
+
 - **TAREAN step**: In this final step, the Tandem Repeat Analyzer (TAREAN) estimates consensus sequences using a k-mer-based approach on the original sequences from the reference. Consensus sequences of simple sequence repeats are evaluated separately, as TAREAN performs poorly on tandem repeats with short monomers. The results of the analysis are saved in an HTML summary.
 
 The HTML report also groups clusters with similar consensus sequences into superfamilies and, where
@@ -257,6 +270,9 @@ TideCluster utilizes Tidehunter [https://github.com/Xinglab/TideHunter] for tand
 - TideHunter: efficient and sensitive tandem repeat detection from noisy long-reads using seed-and-chain (https://doi.org/10.1093/bioinformatics/btz376)
     ]]></help>
     <citations>
-
+        <expand macro="citation_tidecluster"/>
+        <expand macro="citation_tidehunter"/>
+        <expand macro="citation_tarean"/>
+        <expand macro="citation_repeatmasker"/>
     </citations>
 </tool>

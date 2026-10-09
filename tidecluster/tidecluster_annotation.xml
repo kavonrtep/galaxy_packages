@@ -22,7 +22,8 @@
     ]]></command>
     <inputs>
         <param type="data" name="input_archive" format="zip" label="Output archive from previous TideCluster run" help="The zip archive containing the output from a previous TideCluster run."/>
-        <param type="data" name="library" format="fasta" label="Library of tandem repeats" help="Path to library of tandem repeats."/>
+        <param type="data" name="library" format="fasta" label="Library of tandem repeats"
+               help="Reference library the cluster consensus sequences are searched against. The library has to be in RepeatMasker format: each FASTA header is a sequence name and a classification separated by '#', as in '&gt;CL38_sat#Satellite/centromeric'. The part after '#' is free text and is exactly what TideCluster reports as the annotation. A plain FASTA without it is not rejected - RepeatMasker then classifies every hit as 'Unspecified', so the run finishes and the annotation carries no information."/>
     </inputs>
     <outputs>
         <data name="gff3_annotation" format="gff3" label="${tool.name} on ${on_string}: GFF3 TideCluster Annotated Output"/>
@@ -37,7 +38,12 @@
 
 
     - Output archive from previous TideCluster run: The zip archive containing the output from a previous TideCluster run.
-    - Library of tandem repeats: FASTA library with tandem repeats, Library must be in RepeatMasker format
+    - Library of tandem repeats: FASTA library with tandem repeats. It must be in RepeatMasker
+      format, i.e. each header is a sequence name and a classification separated by ``#``, as in
+      ``>CL38_sat#Satellite/centromeric``. The string after ``#`` is free text and is what is
+      reported as the annotation. A plain FASTA without it is accepted by RepeatMasker, which then
+      classifies every hit as ``Unspecified``, so the run succeeds while the annotation says
+      nothing.
 
     **Outputs:**
 
@@ -45,6 +51,7 @@
     - TSV TideCluster Annotated Output: Summarized annotation for each TRC cluster in a tab-delimited format.
     ]]></help>
     <citations>
-        <!-- Add citations here -->
+        <expand macro="citation_tidecluster"/>
+        <expand macro="citation_repeatmasker"/>
     </citations>
 </tool>
