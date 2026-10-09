@@ -276,7 +276,8 @@
                     <has_text text="S_pimp"/>
                 </assert_contents>
             </output>
-            <!-- The pairwise table from a real 1.22.0 run on these two fixtures:
+            <!-- The pairwise table from a real run on these two fixtures (checked
+                 under 1.22.1 on both resolution paths, conda and the container):
                  10 TRCs carry a TAREAN monomer and 9 pairs have a blastn hit,
                  within and across samples. Asserted on the cross-sample
                  TRC_1/TRC_1 row, which is the same satellite in both samples and
