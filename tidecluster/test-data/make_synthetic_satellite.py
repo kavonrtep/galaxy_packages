@@ -35,4 +35,14 @@ with open("synthetic_satellite.fasta", "w") as f:
     f.write(">chr_test synthetic contig with one 172bp satellite array\n")
     f.write(wrap(seq) + "\n")
 
+# Reference library for the tc_reannotate ("Annotate Genome") test: the
+# unmutated monomer, named in RepeatMasker format so the class after "#" is
+# what the tool reports. Written from the monomer computed above rather than
+# from a copy taken out of the array, and after the genome so the random stream
+# - and therefore synthetic_satellite.fasta - is unchanged by its presence.
+with open("trc_library.fasta", "w") as f:
+    f.write(">TRC_1#Satellite/synthetic\n")
+    f.write(wrap(monomer) + "\n")
+
 print(f"monomer={len(monomer)}bp copies=500 array={len(array)}bp total={len(seq)}bp")
+print("trc_library.fasta: 1 reference, TRC_1#Satellite/synthetic")

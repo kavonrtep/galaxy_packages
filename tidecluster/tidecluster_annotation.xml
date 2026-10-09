@@ -29,6 +29,43 @@
         <data name="gff3_annotation" format="gff3" label="${tool.name} on ${on_string}: GFF3 TideCluster Annotated Output"/>
         <data name="tsv_annotation" format="tsv" label="${tool.name} on ${on_string}: TSV TideCluster Annotated Output"/>
     </outputs>
+    <tests>
+        <!-- test-data/annotation_run.zip, built by make_annotation_fixture.py out
+             of comparative_run_a.zip: a 3 kB run directory with three clusters,
+             two of which have a reference in annotation_library.fasta. That covers
+             the three outcomes this tool has in one run - a cluster annotated from
+             the library, a second annotated as a different class, and a third with
+             no reference, which must come back as annotation=NA rather than as a
+             guess.
+             The two classes are invented and exist only in the FASTA headers of
+             the library, so what the assertions below really pin is the behaviour
+             the parameter help describes: the string after '#' is what is
+             reported. The coverage proportions are left unasserted - they depend
+             on RepeatMasker's alignment and would make the test brittle across
+             versions - but the class strings and the NA do not. -->
+        <test expect_num_outputs="2">
+            <param name="input_archive" value="annotation_run.zip"/>
+            <param name="library" value="annotation_library.fasta"/>
+            <output name="tsv_annotation">
+                <assert_contents>
+                    <has_text_matching expression="TRC\tannotation\tproportion_coverage"/>
+                    <has_text_matching expression="TRC_26\tSatellite/testfam\t0\."/>
+                    <has_text_matching expression="TRC_28\trDNA/45S\t1"/>
+                    <has_n_lines n="3"/>
+                </assert_contents>
+            </output>
+            <output name="gff3_annotation">
+                <assert_contents>
+                    <has_text text="##gff-version 3"/>
+                    <has_text text="annotation=Satellite/testfam"/>
+                    <has_text text="annotation=rDNA/45S"/>
+                    <!-- TRC_36 has no reference in the library. -->
+                    <has_text text="Name=TRC_36;repeat_type=TR;annotation=NA"/>
+                    <has_n_lines n="7"/>
+                </assert_contents>
+            </output>
+        </test>
+    </tests>
     <help><![CDATA[
     **TideCluster Annotation Step**
 
