@@ -95,29 +95,31 @@
         --min_identity 80 --min_coverage 0.8 --coverage_mode max
         #end if
         --lowcomplexity_mask $lowcomplexity_mask
+        --similarity_evalue $similarity_evalue
         -a '$clustering.algorithm'
         #if $clustering.algorithm == 'leiden'
         --leiden_resolution $clustering.leiden_resolution
         #end if
         &&
 
-        ## tc_summarize_comparative_analysis.R looks for its html/ template
-        ## directory next to the path R reports in --file=, and does not resolve
-        ## symlinks. The conda package installs the script into
-        ## share/tidecluster/ and symlinks it into bin/, so invoking it off PATH
-        ## makes it look for bin/html and abort with "Template directory not
-        ## found" after the analysis has already run. Resolve the symlink and
-        ## invoke the real file, which works either way once that is fixed
-        ## upstream.
-        TC_SUMMARIZE=\$(readlink -f "\$(command -v tc_summarize_comparative_analysis.R)")
-        &&
-        "\$TC_SUMMARIZE" -i comp_out -o report_out/trc_comparative_report.html
+        ## Called by its plain name: until 1.21.3 the summarizer looked for its
+        ## html/ templates next to the path R reports in --file=, which for the
+        ## bin/ symlink of the conda package and of the container was the wrong
+        ## directory, and it aborted with "Template directory not found" after
+        ## the analysis had already run. 1.21.4 resolves the symlink itself
+        ## (upstream issue #9), so the workaround that invoked the real file is
+        ## gone. This wrapper therefore needs tidecluster >= 1.21.4.
+        tc_summarize_comparative_analysis.R -i comp_out -o report_out/trc_comparative_report.html
         &&
         cp comp_out/trc_satellite_families.tsv '$satellite_families'
         &&
         cp comp_out/ssrs_groups.tsv '$ssrs_groups'
         &&
         cp comp_out/annotation_report.txt '$annotation_report'
+        &&
+        ## Written on every run since 1.22.0, header-only when fewer than two
+        ## TRCs have a TAREAN monomer, so this needs no guard.
+        cp comp_out/trc_similarity_tarean.tsv '$trc_similarity'
         &&
         cp report_out/trc_comparative_report.html '$html_report'
         &&
@@ -195,6 +197,9 @@
         <param type="boolean" name="lowcomplexity_mask" truevalue="1" falsevalue="0" checked="true"
                label="Mask low-complexity sequence in the similarity search"
                help="On by default. Turn it off for AT-rich or simple-repeat-rich satellites: masking strips most of their alignable sequence, so highly similar clusters fail the coverage cut and one biological family fragments into many. With masking off, unrelated low-complexity satellites can align and merge into one family instead, so only turn it off for targets you know are simple-repeat-rich."/>
+        <param type="float" name="similarity_evalue" value="1e-5" min="0" max="1"
+               label="E-value threshold for the pairwise TRC similarity table"
+               help="Applies only to the 'TRC pairwise similarity' output, not to the satellite families. It is the single filter on that table, so it is deliberately permissive: the table is meant to be filtered afterwards on identity and overlap, which are the informative columns. Raise it to keep weak hits between diverged satellites, lower it to keep the table small on a large comparison."/>
         <conditional name="clustering">
             <param name="algorithm" type="select" label="Community detection algorithm"
                    help="How connected clusters in the similarity graph are split into satellite families.">
@@ -223,6 +228,8 @@
               label="${tool.name} on ${on_string}: Annotation summary"/>
         <data name="html_report" format="html"
               label="${tool.name} on ${on_string}: Comparative report"/>
+        <data name="trc_similarity" format="tabular"
+              label="${tool.name} on ${on_string}: TRC pairwise similarity"/>
         <collection name="annotated_gff3" type="list"
                     label="${tool.name} on ${on_string}: GFF3 with satellite families">
             <discover_datasets pattern="(?P&lt;designation&gt;.+)_tc_annotated\.gff3"
@@ -240,7 +247,7 @@
              the per-run prefix detection. The sample names are deliberately unlike
              the file names, so the assertions below also show that the labels come
              from the form and not from the input datasets. -->
-        <test expect_num_outputs="6">
+        <test expect_num_outputs="7">
             <repeat name="samples">
                 <param name="archive" value="comparative_run_a.zip"/>
                 <param name="sample_name" value="Slyc"/>
@@ -269,6 +276,21 @@
                     <has_text text="S_pimp"/>
                 </assert_contents>
             </output>
+            <!-- The pairwise table from a real 1.22.0 run on these two fixtures:
+                 10 TRCs carry a TAREAN monomer and 9 pairs have a blastn hit,
+                 within and across samples. Asserted on the cross-sample
+                 TRC_1/TRC_1 row, which is the same satellite in both samples and
+                 therefore an exact self-match (identity 100, both overlaps 1) -
+                 stable in a way the diverged pairs and the row count are not,
+                 since those move with the blast version. -->
+            <output name="trc_similarity">
+                <assert_contents>
+                    <has_text_matching expression="spec1\tspec2\ttrc_spec1\ttrc_spec2\tidentity\toverlap1_in_2\toverlap2_in_1\tmonomer_length1\tmonomer_length2"/>
+                    <has_text_matching expression="Slyc\tS_pimp\tTRC_1\tTRC_1\t100\t1\t1\t181\t181"/>
+                    <has_n_columns n="9"/>
+                    <has_n_lines min="5"/>
+                </assert_contents>
+            </output>
             <output_collection name="annotated_gff3" type="list" count="2">
                 <element name="Slyc">
                     <assert_contents>
@@ -285,6 +307,7 @@
                     <has_archive_member path="trc_satellite_families.tsv"/>
                     <has_archive_member path="trc_graph.graphml"/>
                     <has_archive_member path="mmseqs2_results.tsv"/>
+                    <has_archive_member path="trc_similarity_tarean.tsv"/>
                     <has_archive_member path="gff3/Slyc_tc_annotated.gff3"/>
                 </assert_contents>
             </output>
@@ -349,6 +372,10 @@ across the blocks; a duplicate stops the job before any analysis is run.
 - **Comparative report**: an interactive HTML report with a per-sample overview, a matrix of
   families shared between sample pairs, a family-by-sample matrix with hierarchical clustering, and
   a karyotype view of where the families sit in each genome.
+- **TRC pairwise similarity**: one row per pair of clusters, within and across samples, that have a
+  TAREAN monomer and any similarity to each other. Independent of the satellite families above, so
+  it is the output to use when the question is how similar two particular clusters are rather than
+  which family they fall in. See *Reading the pairwise similarity table* below.
 - **GFF3 with satellite families**: a collection with one annotated GFF3 per sample, carrying the
   ``Satellite_family`` and ``ssrs_type`` attributes on each region.
 - **Archive with complete results**: everything above plus the similarity graph
@@ -381,6 +408,26 @@ spurious alignments rather than more sensitive ones, and the result is an over-m
 Both coverage values of every alignment are kept in ``mmseqs2_results.tsv``, so after a run you can
 see how close a pair came to the threshold and whether a different preset would have joined it,
 without repeating the search.
+
+**Reading the pairwise similarity table**
+
+The columns are ``spec1``, ``spec2`` (the sample names), ``trc_spec1``, ``trc_spec2`` (the cluster
+IDs), ``identity`` (percent identity over the aligned region), ``overlap1_in_2`` and
+``overlap2_in_1`` (the fraction of each monomer covered by the alignment to the other, 0 to 1), and
+``monomer_length1``, ``monomer_length2``.
+
+Only clusters with a TAREAN consensus appear; simple sequence repeats and clusters absent from the
+clustering GFF3 are left out. The comparison does not depend on where a consensus starts, so a
+rotated or reverse-complemented copy of the same satellite scores 1 in both overlap columns.
+
+**The two overlap columns differ when one monomer contains sequence the other does not.** A 360 bp
+monomer made of a 180 bp satellite plus unrelated sequence covers the short one fully (1.0) and is
+itself only half covered (~0.5). A higher-order repeat - several diverged copies of one monomer -
+is instead covered fully in both directions, and the ratio of the two monomer lengths is what
+distinguishes the two cases.
+
+Only the e-value threshold is applied, so the table is meant to be filtered afterwards on identity
+and overlap.
 
 **Credits**
 
