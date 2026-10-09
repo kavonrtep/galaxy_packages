@@ -143,8 +143,13 @@
 
         <data name="trc_library" format="fasta"
               label="${tool.name} on ${on_string}: Library of tandem repeats"/>
+        <!-- Labelled just "Report": the page carries the TAREAN consensus
+             estimates but also the clustering overview, the superfamily grouping
+             and the rDNA flags, so naming it after one step misdescribed it. The
+             output name is left as tarean_report so that existing workflows and
+             job reruns keep resolving it. -->
         <data name="tarean_report" format="html"
-              label="${tool.name} on ${on_string}: TAREAN Report"/>
+              label="${tool.name} on ${on_string}: Report"/>
 
 
 
