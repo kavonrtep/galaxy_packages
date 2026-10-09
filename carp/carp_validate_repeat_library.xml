@@ -1,0 +1,194 @@
+<tool id="carp_validate_repeat_library" name="CARP - Check Repeat Library" version="@TOOL_VERSION@" profile="22.05">
+    <description>Check a tandem repeat or custom repeat library and convert it to the CARP classification format</description>
+    <macros>
+        <import>macros.xml</import>
+    </macros>
+    <expand macro="requirements"/>
+    <expand macro="stdio"/>
+    <command><![CDATA[
+        ## Same reason as in carp.xml: the baked-in conda tools and the pipeline
+        ## scripts are on PATH in the image, but Galaxy may exec the container with
+        ## a cleaned environment, and a login shell rebuilds PATH from /etc/profile.
+        export PATH=/opt/conda/bin:/opt/pipeline/scripts:\$PATH &&
+
+        ## The script reads the FASTA by content and takes every output path from
+        ## the --out-* options, so the dataset needs no .fasta symlink. It finds
+        ## classification_vocabulary.yaml next to the pipeline in /opt/pipeline.
+        validate_repeat_library.py '$library'
+          --type '$library_type'
+          $drop_invalid
+          --out-fasta '$converted_library'
+          --out-tsv '$report_table'
+          --out-html '$report'
+    ]]></command>
+    <inputs>
+        <param type="data" name="library" format="fasta"
+               label="Repeat library to check"
+               help="A FASTA library you intend to pass to CARP. Headers are expected as '&gt;ID#CLASS'; a library with no classifications at all can still be checked, and the report will say what is missing."/>
+        <param name="library_type" type="select"
+               label="Which CARP library is this file meant to be"
+               help="The two libraries are checked against different rules, so this is not a cosmetic choice. A tandem library may only carry Satellite and rDNA classes, and a transposable-element class in it is reported as an error rather than converted - those sequences belong in the custom library.">
+            <option value="tandem" selected="true">Tandem repeat library - satellites, rDNA, telomeric repeats (CARP's tandem_repeat_library, used by TideCluster to name clusters)</option>
+            <option value="custom">Custom library - transposable elements and any other repeats (CARP's custom_library, added to the RepeatMasker library)</option>
+        </param>
+        <param type="boolean" name="drop_invalid" truevalue="--drop-invalid" falsevalue="" checked="false"
+               label="Write the library without the sequences that cannot be converted"
+               help="Off by default, in which case a single unconvertible sequence means no library is written and the job fails - dropping sequences changes what the genome is annotated with, so it is never done silently. Tick this once the report has shown you which sequences would go, and they are ones you are willing to lose."/>
+    </inputs>
+    <outputs>
+        <data name="converted_library" format="fasta"
+              label="${tool.name} on ${on_string}: converted ${library_type} library"/>
+        <data name="report_table" format="tabular"
+              label="${tool.name} on ${on_string}: per-sequence report"/>
+        <data name="report" format="html"
+              label="${tool.name} on ${on_string}: library check report"/>
+    </outputs>
+    <tests>
+        <!-- The fixtures are the upstream golden inputs (see test-data/README.md).
+             Checked against a run of the 1.9.3 image: the outputs here are the same
+             files, to the byte count, that upstream's own test compares against.
+
+             Note what is not asserted: the tool prints its per-sequence problems as
+             "ERROR  #16 >trna#tRNA: ..." on stdout, in the successful
+             'drop invalid' run as much as in the failing one. detect_errors
+             "aggressive" would therefore fail test 2 below on a correct run, which
+             is the same misfire the stdio macro in macros.xml exists to avoid. -->
+        <!-- 1. A real-world tandem library with non-CARP headers: all 22 sequences
+               convert, so the library is written and the job succeeds. -->
+        <test expect_num_outputs="3">
+            <param name="library" value="validate_tandem_input.fasta"/>
+            <param name="library_type" value="tandem"/>
+            <output name="converted_library">
+                <assert_contents>
+                    <!-- a bare satellite name, an rDNA name, and a telomere -->
+                    <has_text text="&gt;X04322.1#Satellite/CEN180"/>
+                    <has_text text="&gt;M65137.1#rDNA/5S_rDNA"/>
+                    <has_text text="&gt;X52322.1#rDNA/45S_rDNA"/>
+                    <has_text text="&gt;plant_telomere#Satellite/telomere"/>
+                </assert_contents>
+            </output>
+            <output name="report_table">
+                <assert_contents>
+                    <has_text_matching expression="index\tinput_id\tinput_class\toutput_id\toutput_class\tstatus\tlength_bp\trule\tchanges\terrors"/>
+                    <has_text_matching expression="X04322.1\tCEN180\tX04322.1\tSatellite/CEN180\tconverted"/>
+                    <has_n_columns n="10"/>
+                    <!-- 22 sequences and the header -->
+                    <has_n_lines n="23"/>
+                </assert_contents>
+            </output>
+            <output name="report">
+                <assert_contents>
+                    <has_text text="Library Check"/>
+                </assert_contents>
+            </output>
+        </test>
+        <!-- 2. A custom library covering every conversion path, three records of
+               which cannot be converted, run with the drop switch on: the 15
+               convertible records are written and the job succeeds. The assertions
+               pick one record per rule family. -->
+        <test expect_num_outputs="3">
+            <param name="library" value="validate_custom_input.fasta"/>
+            <param name="library_type" value="custom"/>
+            <param name="drop_invalid" value="true"/>
+            <output name="converted_library">
+                <assert_contents>
+                    <!-- RepeatMasker/Dfam name, DANTE spelling, bare lineage name,
+                         Wicker code, Satellite spelling, and a duplicate ID -->
+                    <has_text text="&gt;rm_gypsy#Class_I/LTR/Ty3_gypsy"/>
+                    <has_text text="&gt;dante_tekay#Class_I/LTR/Ty3_gypsy/chromovirus/Tekay"/>
+                    <has_text text="&gt;bare_athila#Class_I/LTR/Ty3_gypsy/non-chromovirus/OTA/Athila"/>
+                    <has_text text="&gt;wicker_cacta#Class_II/Subclass_1/TIR/EnSpm_CACTA"/>
+                    <has_text text="&gt;sat_lower#Satellite/centromeric"/>
+                    <has_text text="&gt;rm_gypsy_dup2#Class_II/Subclass_1/TIR/EnSpm_CACTA"/>
+                    <!-- 15 records, one line of sequence each -->
+                    <has_n_lines n="30"/>
+                </assert_contents>
+            </output>
+            <output name="report_table">
+                <assert_contents>
+                    <has_text text="dropped"/>
+                    <has_n_lines n="19"/>
+                </assert_contents>
+            </output>
+        </test>
+        <!-- 3. The same custom library without the drop switch. Upstream exits 2 and
+               creates the library empty; the stdio macro turns the non-zero exit
+               into a failed job, so the empty FASTA can never be chained into a
+               CARP run. The reason is on stdout, and in the HTML report. -->
+        <test expect_failure="true">
+            <param name="library" value="validate_custom_input.fasta"/>
+            <param name="library_type" value="custom"/>
+            <assert_stdout>
+                <has_text text="3 need a manual fix"/>
+                <has_text text="No library written: fix the errors above, or rerun with --drop-invalid."/>
+            </assert_stdout>
+        </test>
+    </tests>
+    <help><![CDATA[
+**CARP - Check Repeat Library**
+
+Checks one of the two optional user libraries of the CARP pipeline before a run, and rewrites the
+headers it can convert safely.
+
+CARP classifies repeats with its own vocabulary. A library whose headers use other class names -
+``#CEN180``, ``#LTR/Gypsy``, ``#RLC`` - stops the pipeline at its ``validate_classifications``
+step, and that step runs after DANTE, DANTE_LTR, DANTE_TIR and DANTE_LINE, so the failure arrives
+hours into a run. This tool is the cheap check beforehand.
+
+**Inputs**
+
+A FASTA library, and which of the two CARP libraries it is meant to be:
+
+- **Tandem repeat library** (``tandem_repeat_library``): satellites and other tandem repeats, used
+  by TideCluster to name the clusters it finds. Only ``Satellite``, ``Satellite/<name>`` and
+  ``rDNA/...`` classes are allowed. The tool trusts you that the sequences are tandem repeats - it
+  does not look for tandem structure, since a library entry is usually a single monomer.
+- **Custom library** (``custom_library``): transposable elements and anything else, added to the
+  RepeatMasker library. Every class has to be a CARP classification.
+
+**Outputs**
+
+- **Converted library**: the library to pass to CARP, 60 bp per line, in input order, letter case
+  of the input kept.
+- **Per-sequence report**: one row per input sequence, with ``input_id``, ``input_class``,
+  ``output_id``, ``output_class``, ``status`` (``unchanged``, ``converted``, ``error``,
+  ``dropped``), ``length_bp``, the ``rule`` that set the class, and the changes and errors.
+- **Library check report**: a single HTML page with the verdict, the counts, every sequence in a
+  filterable table, and the format guideline for that library type - for a custom library, the
+  full list of valid classes.
+
+**What gets converted**
+
+Both library types are first cleaned up the same way: text after the first space in a header is
+dropped, characters other than letters, digits and ``. _ : - + | ( ) [ ]`` in an ID become ``_``,
+a repeated ID becomes ``ID_dup2``, alignment gaps are removed, ``U`` becomes ``T``, a trailing
+``?`` on the class is removed, and Windows line endings are converted.
+
+Then the class is translated. For a tandem library, a bare name becomes a satellite name
+(``#CEN180`` to ``#Satellite/CEN180``), and rDNA names become ``rDNA/...`` classes. For a custom
+library the tool tries, in order, CARP's own classification normaliser (which reads DANTE and
+DANTE_TIR spellings), ``Satellite`` spellings, a CARP class name or path ending (``Athila``), a
+dictionary of RepeatMasker/Dfam names and Wicker et al. (2007) three-letter codes, and rDNA names.
+Wicker codes map to the superfamily only, because their family names are species-specific and do
+not correspond to REXdb lineages.
+
+**The tool never guesses a class.** Anything it cannot translate is reported as an error, as are an
+empty sequence, a protein sequence, an empty ID and more than one ``#`` in a header.
+
+**When some sequences cannot be converted**
+
+The job fails and the converted library is empty. That is deliberate: an incomplete library changes
+what the genome is annotated with, so it is not produced silently, and a failed job cannot be
+chained into a CARP run by accident. Read the HTML report to see which sequences are the problem,
+then either fix their headers, move them to the other library, or - if you are willing to lose them
+- tick *Write the library without the sequences that cannot be converted* and run again.
+
+**Credits**
+
+- CARP: https://github.com/kavonrtep/CARP
+- Library format and conversion rules: ``docs/library_validation.md`` in the CARP repository
+- Wicker T. et al. (2007) A unified classification system for eukaryotic transposable elements.
+  Nat Rev Genet 8:973-982 (https://doi.org/10.1038/nrg2165)
+    ]]></help>
+    <expand macro="citations"/>
+</tool>

@@ -526,13 +526,5 @@ must have Singularity/Apptainer enabled and able to pull ``oras://`` images.
 
 More information: https://github.com/kavonrtep/CARP
     ]]></help>
-    <citations>
-        <citation type="bibtex">
-@misc{carp,
-    title={CARP: Comprehensive Annotation of Repeats Pipeline},
-    author={Novak, Petr and Macas, Jiri},
-    url={https://github.com/kavonrtep/CARP},
-}
-        </citation>
-    </citations>
+    <expand macro="citations"/>
 </tool>

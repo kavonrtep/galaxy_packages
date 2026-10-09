@@ -9,5 +9,9 @@ long_description: |
   genome assembly and merge them into a single non-overlapping annotation.
   The pipeline runs from a Singularity/Apptainer container image published to
   GHCR. Developed for plant genomes only.
+  The repository also provides a tool that checks a custom or tandem repeat
+  library against CARP's classification vocabulary and converts its headers.
+  It is worth running before a pipeline run: an invalid library is otherwise
+  only reported hours in, when the pipeline validates classifications.
 homepage_url: https://github.com/kavonrtep/CARP
 remote_repository_url: https://github.com/kavonrtep/galaxy_packages

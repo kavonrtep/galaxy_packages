@@ -1,8 +1,8 @@
 <macros>
     <!-- Galaxy tool version = upstream CARP version + wrapper revision digit -->
-    <token name="@TOOL_VERSION@">1.9.0.3</token>
+    <token name="@TOOL_VERSION@">1.9.3.1</token>
     <!-- Container image tag published to GHCR for this release -->
-    <token name="@CONTAINER_TAG@">1.9.0</token>
+    <token name="@CONTAINER_TAG@">1.9.3</token>
     <xml name="requirements">
         <requirements>
             <container type="singularity">oras://ghcr.io/kavonrtep/carp/sif:@CONTAINER_TAG@</container>
@@ -17,6 +17,18 @@
          the same exposure. What is kept is the part that does not misfire: a non-zero
          exit status, plus the out-of-memory patterns, which matter because a worker can
          be OOM-killed without that reaching the exit status. -->
+    <!-- Shared by both tools in this directory. -->
+    <xml name="citations">
+        <citations>
+            <citation type="bibtex">
+@misc{carp,
+    title={CARP: Comprehensive Annotation of Repeats Pipeline},
+    author={Novak, Petr and Macas, Jiri},
+    url={https://github.com/kavonrtep/CARP},
+}
+            </citation>
+        </citations>
+    </xml>
     <xml name="stdio">
         <stdio>
             <exit_code range=":-1" level="fatal"/>
