@@ -85,10 +85,10 @@
     </conditional>
     <param name="database" type="select" label="Select REXdb database">
         <option value="Viridiplantae_v4.0" selected="true">Viridiplantae_v4.0</option>
-        <option value="Viridiplantae_v3.0" selected="true">Viridiplantae_v3.0</option>
-        <option value="Metazoa_v3.1" selected="true">Metazoa_v3.1</option>
-        <option value="Viridiplantae_v2.2" selected="true">Viridiplantae_v2.2</option>
-        <option value="Metazoa_v3.0" selected="true">Metazoa_v3.0</option>
+        <option value="Viridiplantae_v3.0">Viridiplantae_v3.0</option>
+        <option value="Metazoa_v3.1">Metazoa_v3.1</option>
+        <option value="Viridiplantae_v2.2">Viridiplantae_v2.2</option>
+        <option value="Metazoa_v3.0">Metazoa_v3.0</option>
     </param>
     <param name="scoring_matrix" type="select" label="Select scoring matrix">
       <option value="BL80" selected="true" >BLOSUM80</option>
@@ -96,7 +96,7 @@
       <option value="MIQS">MIQS</option>
     </param>
 
-    <param name="iterative" type="select" label="Run iterative search" truevalue="true" valsevalue="false"
+    <param name="iterative" type="select" label="Run iterative search"
            help="Second iteration run search against database of proteins extracted from query. Second iteration can yield some extra hits in some cases.">
       <option value="No" selected="true">No</option>
       <option value="Yes">Yes</option>
