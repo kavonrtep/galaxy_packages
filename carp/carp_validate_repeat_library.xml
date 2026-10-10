@@ -175,6 +175,34 @@ not correspond to REXdb lineages.
 **The tool never guesses a class.** Anything it cannot translate is reported as an error, as are an
 empty sequence, a protein sequence, an empty ID and more than one ``#`` in a header.
 
+**The class vocabulary**
+
+Every class CARP accepts, written out in full - each line is exactly the string that goes after
+the ``#`` in a header, so it can be copied as it stands. The hierarchy is in the paths themselves:
+a class and the classes under it share a prefix, and any of them may be used on its own where the
+finer assignment is unknown, so ``Class_I/LTR/Ty1_copia`` is as valid as ``Class_I/LTR/Ty1_copia/Ale``.
+Underscores inside a path component belong to that component's name (``Ty1_copia``,
+``EnSpm_CACTA``) and are never separators. ``Mobile_element`` is a root of its own, not a parent of
+``Class_I``.
+
+::
+
+@CLASS_LIST@
+
+Four RepeatMasker-native classes sit outside that hierarchy::
+
+@CLASS_SPECIAL@
+
+A **tandem repeat library** accepts only the satellite and rDNA classes::
+
+@CLASS_LIST_TANDEM@
+
+This list is generated from the classification vocabulary of @VOCABULARY_SOURCE@ - the image this
+tool runs - so it describes the version in use rather than a copy typed out once. The authoritative
+copy is ``classification_vocabulary.yaml`` inside that image, and for a custom library the HTML
+report lists every valid class as the tool itself sees them; read either if this text ever looks
+out of step with what a run accepts.
+
 **When some sequences cannot be converted**
 
 The job fails and the converted library is empty. That is deliberate: an incomplete library changes

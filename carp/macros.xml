@@ -17,6 +17,121 @@
          the same exposure. What is kept is the part that does not misfire: a non-zero
          exit status, plus the out-of-memory patterns, which matter because a worker can
          be OOM-killed without that reaching the exit status. -->
+    <!-- Which classes may appear in a library header. Generated from CARP's own
+         classification_vocabulary.yaml in the pinned @CONTAINER_TAG@ image by
+         scripts/update_carp_vocabulary_help.py, and kept here rather than in the
+         two tools so they cannot describe different vocabularies. Re-run that
+         script when the container tag moves; its check mode (see its help)
+         fails when these tokens no longer match the vocabulary of the pinned
+         tag, which is the guard against the help outliving the vocabulary it
+         describes. Do not edit the generated blocks by hand. -->
+    <!-- BEGIN GENERATED VOCABULARY_SOURCE -->
+    <token name="@VOCABULARY_SOURCE@">CARP 1.9.3 (vocabulary version 1)</token>
+    <!-- END GENERATED VOCABULARY_SOURCE -->
+    <!-- BEGIN GENERATED CLASS_LIST -->
+    <token name="@CLASS_LIST@">    Mobile_element
+    Class_I
+    Class_I/DIRS
+    Class_I/LINE
+    Class_I/LTR
+    Class_I/LTR/Ty1_copia
+    Class_I/LTR/Ty1_copia/Ale
+    Class_I/LTR/Ty1_copia/Alesia
+    Class_I/LTR/Ty1_copia/Alexandra
+    Class_I/LTR/Ty1_copia/Angela
+    Class_I/LTR/Ty1_copia/Bianca
+    Class_I/LTR/Ty1_copia/Bryana
+    Class_I/LTR/Ty1_copia/Bryco
+    Class_I/LTR/Ty1_copia/Ferco
+    Class_I/LTR/Ty1_copia/Gymco-I
+    Class_I/LTR/Ty1_copia/Gymco-II
+    Class_I/LTR/Ty1_copia/Gymco-III
+    Class_I/LTR/Ty1_copia/Gymco-IV
+    Class_I/LTR/Ty1_copia/Ikeros
+    Class_I/LTR/Ty1_copia/Ivana
+    Class_I/LTR/Ty1_copia/Lyco
+    Class_I/LTR/Ty1_copia/Osser
+    Class_I/LTR/Ty1_copia/SIRE
+    Class_I/LTR/Ty1_copia/TAR
+    Class_I/LTR/Ty1_copia/Tork
+    Class_I/LTR/Ty1_copia/Ty1-outgroup
+    Class_I/LTR/Ty3_gypsy
+    Class_I/LTR/Ty3_gypsy/chromovirus
+    Class_I/LTR/Ty3_gypsy/chromovirus/Chlamyvir
+    Class_I/LTR/Ty3_gypsy/chromovirus/chromo-outgroup
+    Class_I/LTR/Ty3_gypsy/chromovirus/chromo-unclass
+    Class_I/LTR/Ty3_gypsy/chromovirus/CRM
+    Class_I/LTR/Ty3_gypsy/chromovirus/Ferney
+    Class_I/LTR/Ty3_gypsy/chromovirus/Galadriel
+    Class_I/LTR/Ty3_gypsy/chromovirus/Reina
+    Class_I/LTR/Ty3_gypsy/chromovirus/Tcn1
+    Class_I/LTR/Ty3_gypsy/chromovirus/Tekay
+    Class_I/LTR/Ty3_gypsy/non-chromovirus
+    Class_I/LTR/Ty3_gypsy/non-chromovirus/non-chromo-outgroup
+    Class_I/LTR/Ty3_gypsy/non-chromovirus/OTA
+    Class_I/LTR/Ty3_gypsy/non-chromovirus/OTA/Athila
+    Class_I/LTR/Ty3_gypsy/non-chromovirus/OTA/Tat
+    Class_I/LTR/Ty3_gypsy/non-chromovirus/OTA/Tat/Ogre
+    Class_I/LTR/Ty3_gypsy/non-chromovirus/OTA/Tat/Retand
+    Class_I/LTR/Ty3_gypsy/non-chromovirus/OTA/Tat/TatI
+    Class_I/LTR/Ty3_gypsy/non-chromovirus/OTA/Tat/TatII
+    Class_I/LTR/Ty3_gypsy/non-chromovirus/OTA/Tat/TatIII
+    Class_I/LTR/Ty3_gypsy/non-chromovirus/OTA/Tatius
+    Class_I/LTR/Ty3_gypsy/non-chromovirus/Phygy
+    Class_I/LTR/Ty3_gypsy/non-chromovirus/Selgy
+    Class_I/pararetrovirus
+    Class_I/Penelope
+    Class_I/SINE
+    Class_II
+    Class_II/Subclass_1
+    Class_II/Subclass_1/TIR
+    Class_II/Subclass_1/TIR/EnSpm_CACTA
+    Class_II/Subclass_1/TIR/hAT
+    Class_II/Subclass_1/TIR/Kolobok
+    Class_II/Subclass_1/TIR/Merlin
+    Class_II/Subclass_1/TIR/MITE
+    Class_II/Subclass_1/TIR/MITE/Stowaway
+    Class_II/Subclass_1/TIR/MuDR_Mutator
+    Class_II/Subclass_1/TIR/Novosib
+    Class_II/Subclass_1/TIR/P
+    Class_II/Subclass_1/TIR/PIF_Harbinger
+    Class_II/Subclass_1/TIR/PiggyBac
+    Class_II/Subclass_1/TIR/Sola1
+    Class_II/Subclass_1/TIR/Sola2
+    Class_II/Subclass_1/TIR/Tc1_Mariner
+    Class_II/Subclass_2
+    Class_II/Subclass_2/Helitron
+    rDNA
+    rDNA/45S_rDNA
+    rDNA/45S_rDNA/18S
+    rDNA/45S_rDNA/25S
+    rDNA/45S_rDNA/5.8S
+    rDNA/45S_rDNA/IGS
+    rDNA/45S_rDNA/ITS1
+    rDNA/45S_rDNA/ITS2
+    rDNA/5S_rDNA
+    rDNA/5S_rDNA/5S</token>
+    <!-- END GENERATED CLASS_LIST -->
+    <!-- BEGIN GENERATED CLASS_LIST_TANDEM -->
+    <token name="@CLASS_LIST_TANDEM@">    Satellite
+    Satellite/&lt;name&gt;      any name you choose, e.g. Satellite/FabTR_PisTR-B
+    rDNA
+    rDNA/45S_rDNA
+    rDNA/45S_rDNA/18S
+    rDNA/45S_rDNA/25S
+    rDNA/45S_rDNA/5.8S
+    rDNA/45S_rDNA/IGS
+    rDNA/45S_rDNA/ITS1
+    rDNA/45S_rDNA/ITS2
+    rDNA/5S_rDNA
+    rDNA/5S_rDNA/5S</token>
+    <!-- END GENERATED CLASS_LIST_TANDEM -->
+    <!-- BEGIN GENERATED CLASS_SPECIAL -->
+    <token name="@CLASS_SPECIAL@">    Satellite        Tandem repeat / satellite from RepeatMasker default library (a sub-name may be appended, e.g. Satellite/&lt;name&gt;)
+    Simple_repeat    Simple sequence repeats (SSRs) from RepeatMasker
+    Low_complexity   Low-complexity regions from RepeatMasker
+    Unknown          RepeatMasker fallback when classification cannot be resolved</token>
+    <!-- END GENERATED CLASS_SPECIAL -->
     <!-- Shared by both tools in this directory. -->
     <xml name="citations">
         <citations>

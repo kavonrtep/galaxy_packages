@@ -187,6 +187,31 @@ Publishing to the Tool Shed (run from the repo root, pass the tool dir):
   untracked local file in a tool directory will be uploaded:
   `planemo shed_upload --shed_target testtoolshed --tar_only <tool>/ && tar tzvf shed_upload.tar.gz`
 
+## Generated documentation
+
+`carp/macros.xml` carries four **generated** tokens — `@CLASS_LIST@`,
+`@CLASS_LIST_TANDEM@`, `@CLASS_SPECIAL@`, `@VOCABULARY_SOURCE@` — holding the list of
+classifications a CARP library header may use. Both carp tools expand them in `<help>`, so the
+vocabulary is written once and cannot drift between the two.
+
+They come from CARP's own `classification_vocabulary.yaml`, so **re-run the generator whenever
+`@CONTAINER_TAG@` in `carp/macros.xml` moves**:
+
+```
+python3 scripts/update_carp_vocabulary_help.py                 # rewrite the tokens
+python3 scripts/update_carp_vocabulary_help.py --check         # exit 1 if stale
+```
+
+`--check` is the guard against the help describing an older vocabulary than the image the tool
+runs; it compares against the pinned tag and does not go looking for newer releases. By default
+the vocabulary is read from the matching git tag on GitHub (the image is built from it, and that
+is a text download rather than a 4 GB pull); `--from-container` reads the copy inside the image,
+and `--vocabulary FILE` uses a local copy when there is no network. Do not edit the blocks between
+the `BEGIN GENERATED` / `END GENERATED` markers by hand.
+
+The help also tells the reader where the authoritative list is (the YAML in the image, and the
+tool's own HTML report), so a stale block is never the only source.
+
 ## Conventions
 
 - Multi-tool repos share one `macros.xml` per directory; add a new tool by dropping its `.xml`
