@@ -6,6 +6,12 @@ owner: repeatexplorer
 exclude:
   - shed.yml
   - __pycache__
+  ## 82 MB, and nothing needs it: both filtering tools take their filter
+  ## database as a user-supplied dataset, and no test enables that option. It is
+  ## here only as a convenient -F argument for the standalone test_run*.sh
+  ## drivers. The three index entries below named the generated BLAST database
+  ## but not the FASTA itself, so it has been shipping unnoticed.
+  - tool_data/organele_ref_and_phi-X174.fasta
   - tool_data/organele_ref_and_phi-X174.fasta.nhr
   - tool_data/organele_ref_and_phi-X174.fasta.nin
   - tool_data/organele_ref_and_phi-X174.fasta.nsq

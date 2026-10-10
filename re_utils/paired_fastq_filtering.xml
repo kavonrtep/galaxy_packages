@@ -1,4 +1,4 @@
-<tool id="paired_fastq_filtering" name="Preprocessing of FASTQ paired-end reads" version="1.0.0.3">
+<tool id="paired_fastq_filtering" name="Preprocessing of FASTQ paired-end reads" version="1.0.0.4">
     <stdio>
         <exit_code range="1:" level="fatal" description="Error"/>
     </stdio>
@@ -96,7 +96,6 @@
                        label="Custom options" help="Consult cutadapt for usage" value="">
                     <sanitizer sanitize="False"/>
                 </param>
-                >
             </when>
         </conditional>
 
@@ -124,19 +123,69 @@
         <data format="fasta" name="paired"
               label="Interlaced paired reads from datasets ${A.hid} and ${B.hid} "/>
         <data format="png" name="png_output"
-              label="Nucleotide composition after filtering of ${A.hid} and ${B.hid} "/>"
+              label="Nucleotide composition after filtering of ${A.hid} and ${B.hid} "/>
     </outputs>
 
 
     <tests>
-        <test>
-            <param name="A" value="ERR215189_1_part.fastq.gz"/>
-            <param name="B" value="ERR215189_2_part.fastq.gz"/>
-            <param name="max_n" value="0"/>
+        <!-- test-data/filtering_{1,2}.fastq.gz, the first 1000 read pairs of
+             SRR089356 (see make_filtering_fixture.py). The previous test named
+             ERR215189_1_part.fastq.gz and an expected FASTA and PNG, none of which
+             were ever committed, and it asserted an output called "output" while
+             this tool writes "paired" - so it could not run even where the files
+             had existed.
+
+             At the defaults below, 1648 of the 2000 reads survive, so the test
+             sees real filtering rather than a pass-through. Asserted by content:
+             the surviving count moves with the cutadapt and ShortRead versions,
+             while the interlaced /1 and /2 structure and the fact that some reads
+             are dropped do not. The counts below are of header lines per mate, not
+             of lines: this tool writes each read on one line but its single-end
+             sibling wraps at 80 characters, so a line count would track the wrap
+             width rather than the number of reads. 1000 pairs go in, so an upper
+             bound of 999 per mate is what pins the dropping.
+
+             Note the read names: "Rename sequences" is checked by default, which
+             passes -R and replaces the names with a numeric counter, so the output
+             reads are >10001/1, >10001/2, >10002/1 and so on. The second test
+             below turns it off and is the only place the original names appear. -->
+        <test expect_num_outputs="2">
+            <param name="A" value="filtering_1.fastq.gz" ftype="fastq.gz"/>
+            <param name="B" value="filtering_2.fastq.gz" ftype="fastq.gz"/>
             <param name="cut_off" value="10"/>
             <param name="percent_above" value="95"/>
-            <output name="output" value="paired_output.fasta"/>
-            <output name="png_output" value="paired_output.png"/>
+            <param name="max_n" value="0"/>
+            <output name="paired">
+                <assert_contents>
+                    <has_line_matching expression="&gt;\d+/1" min="500" max="999"/>
+                    <has_line_matching expression="&gt;\d+/2" min="500" max="999"/>
+                </assert_contents>
+            </output>
+            <!-- The nucleotide-composition plot: 1000x1000 px, so a PNG of
+                 plausible size rather than a byte comparison, which would track
+                 the R graphics device. -->
+            <output name="png_output">
+                <assert_contents>
+                    <has_size min="10000"/>
+                </assert_contents>
+            </output>
+        </test>
+        <!-- The same run with renaming off. Worth one test of its own: the flag is
+             on by default, so nothing else here would notice if -R stopped being
+             passed, or started being passed when unticked. -->
+        <test expect_num_outputs="2">
+            <param name="A" value="filtering_1.fastq.gz" ftype="fastq.gz"/>
+            <param name="B" value="filtering_2.fastq.gz" ftype="fastq.gz"/>
+            <param name="cut_off" value="10"/>
+            <param name="percent_above" value="95"/>
+            <param name="max_n" value="0"/>
+            <param name="rename" value="false"/>
+            <output name="paired">
+                <assert_contents>
+                    <has_line_matching expression="&gt;SRR089356\.\d+ .*/1" min="500" max="999"/>
+                    <has_line_matching expression="&gt;SRR089356\.\d+ .*/2" min="500" max="999"/>
+                </assert_contents>
+            </output>
         </test>
     </tests>
 

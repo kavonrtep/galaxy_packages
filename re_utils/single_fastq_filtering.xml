@@ -1,4 +1,4 @@
-<tool id="single_fastq_filtering" name="Preprocessing of FASTQ reads" version="1.0.0.3">
+<tool id="single_fastq_filtering" name="Preprocessing of FASTQ reads" version="1.0.0.4">
     <stdio>
         <exit_code range="1:" level="fatal" description="Error"/>
     </stdio>
@@ -91,7 +91,6 @@
                        label="Custom options" help="Consult cutadapt for usage" value="">
                     <sanitizer sanitize="False"/>
                 </param>
-                >
             </when>
         </conditional>
 
@@ -116,17 +115,40 @@
         <data format="fasta" name="output"
               label="Filtered FASTA reads from datasets ${A.hid}"/>
         <data format="png" name="png_output"
-              label="Nucleotide composition after filtering of ${A.hid}"/>"
+              label="Nucleotide composition after filtering of ${A.hid}"/>
     </outputs>
 
     <tests>
-        <test>
-            <param name="A" value="ERR215189_1_part.fastq.gz"/>
-            <param name="max_n" value="0"/>
+        <!-- test-data/filtering_1.fastq.gz, the first 1000 reads of SRR089356
+             (see make_filtering_fixture.py). The previous test named
+             ERR215189_1_part.fastq.gz and expected outputs that were never
+             committed, so it could not run from a clone.
+
+             970 of the 1000 reads survive at the defaults below. Asserted by
+             content for the same reason as the paired tool: the surviving count
+             moves with the cutadapt and ShortRead versions, the read naming and
+             the fact that some reads are dropped do not.
+
+             The count is of header lines, not of lines. This tool wraps its FASTA
+             at 80 characters, so each 100 bp read takes three lines and a line
+             count measures the wrap width as much as the number of reads - which
+             is how the first version of this test failed, expecting 1000-1998
+             lines and finding 2910. -->
+        <test expect_num_outputs="2">
+            <param name="A" value="filtering_1.fastq.gz" ftype="fastq.gz"/>
             <param name="cut_off" value="10"/>
             <param name="percent_above" value="95"/>
-            <output name="output" value="single_output.fasta"/>
-            <output name="png_output" value="single_output.png"/>
+            <param name="max_n" value="0"/>
+            <output name="output">
+                <assert_contents>
+                    <has_line_matching expression="&gt;SRR089356\.\d+ .*/1" min="500" max="999"/>
+                </assert_contents>
+            </output>
+            <output name="png_output">
+                <assert_contents>
+                    <has_size min="10000"/>
+                </assert_contents>
+            </output>
         </test>
     </tests>
 
