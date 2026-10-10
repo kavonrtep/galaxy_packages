@@ -112,16 +112,61 @@
     </data>
   </outputs>
   <tests>
-    <test>
-      <param name="input_type" value="fasta"/>
-      <param name="input_sequences" value="GEPY_test_long_1.fa"/>
-      <param name="db_type" value="Viridiplantae_v3.0"/>
+    <!-- The previous test could not run: it set input_type and db_type, which are
+         not parameters of this tool (the conditional is input_type with
+         input_type_selector inside it, and the database parameter is called
+         database), and both of its fixtures were missing from the repository.
+
+         test-data/domains_slice.fasta is 30 kb of pea Chr1, cut from
+         dante_ltr/test-data/chr1_slice.fasta by make_test_fixture.py, so the
+         fixture is regenerable from this repository alone. It is the densest 30 kb
+         of that slice: DANTE 0.2.10 finds 18 domains in it in under 10 seconds -
+         GAG, PROT, RT, RH, INT and CHD, i.e. two complete Ty3/gypsy
+         chromovirus/Tekay domain sets, plus Ty1/copia SIRE and Ivana hits.
+
+         Asserted by content rather than against a stored GFF3: the coordinates and
+         the hit scores move with the LAST and REXdb versions, while the domain
+         names and the lineages do not. The REXdb version line is asserted because
+         it is the one place the database parameter shows up in the output, which is
+         what the broken test was trying to exercise. -->
+    <test expect_num_outputs="3">
+      <conditional name="input_type">
+        <param name="input_type_selector" value="fasta"/>
+        <param name="input_sequences" value="domains_slice.fasta"/>
+      </conditional>
+      <param name="database" value="Viridiplantae_v4.0"/>
       <param name="scoring_matrix" value="BL80"/>
       <param name="iterative" value="No"/>
-      <output name="DomGff" value="GEPY_test_long_1_output_unfiltered.gff3"/>
+      <output name="DomGff">
+        <assert_contents>
+          <has_text text="##gff-version 3"/>
+          <has_text text="##REXdb version Viridiplantae_v4.0"/>
+          <has_text text="protein_domain"/>
+          <has_text text="Name=RT"/>
+          <has_text text="Name=INT"/>
+          <has_text text="Class_I|LTR|Ty3/gypsy|chromovirus|Tekay"/>
+          <has_n_lines min="20"/>
+        </assert_contents>
+      </output>
+      <output name="DomGff_filtered">
+        <assert_contents>
+          <has_text text="protein_domain"/>
+          <has_text text="Name=GAG"/>
+          <has_text text="Class_I|LTR|Ty3/gypsy|chromovirus|Tekay"/>
+          <has_n_lines min="15"/>
+        </assert_contents>
+      </output>
+      <!-- One protein sequence per surviving domain, named after the region it
+           came from, so this also shows the filtering step read the fixture's own
+           sequence rather than anything left over. -->
+      <output name="Domains_filtered">
+        <assert_contents>
+          <has_text text="&gt;chr1_140001_170000:"/>
+          <has_text text="GAG Class_I|LTR|Ty3/gypsy|chromovirus|Tekay"/>
+          <has_size min="1000"/>
+        </assert_contents>
+      </output>
     </test>
-
-
   </tests>
 
 
