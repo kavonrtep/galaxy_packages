@@ -113,6 +113,20 @@ Pitfalls hit before:
   the resolved `__<tool>@<version>` env is cached and the rerun starts the job immediately.
 - **`planemo serve` leaves Galaxy running** after the wrapper is killed: the detached `gunicorn`
   master (bound to the port) survives. Kill it by the PID listening on the port, not by pattern.
+- **A pattern-based kill that matches everything kills the whole user.** On 2026-10-10 the
+  straggler sweep in `scripts/planemo.sh serve` was written as
+  `GXPAT="$GX_SERVE" ps … | awk 'index($0, ENVIRON["GXPAT"])'`. The variable reached `ps`,
+  not `awk`, so the pattern was empty, `index($0, "")` matched every line, and cleanup sent
+  SIGTERM to all 719 processes on the host. Every process of `petr` died: a 12-window tmux
+  session, all SSH logins, the desktop session, running containers and the agent itself.
+  `pkill -f` and `pgrep -f` were not involved, so the `guard_process_kill.py` hook could not
+  catch it. Rules for any code that turns a pattern into PIDs and kills them:
+  - put `VAR=value` on the command that reads it (the `awk`), or use `awk -v`;
+  - refuse an empty pattern explicitly, before the search;
+  - restrict the search to your own processes (`ps -u "$(id -u)"`) and match whole path
+    components (`gx` is a prefix of `gx_test`);
+  - print the PID list and its count before killing, and bail out if the count is implausible;
+  - dry-run the selector (print, do not kill) before the first live test, never after.
 - `planemo shed_lint` can hang for minutes — use a timeout or skip it.
 - **Run these conda tools with the environment activated, never by absolute path.**
   `/path/to/envs/__dante_tir@0.3.1/bin/dante_tir.py` leaves `cap3`, `mmseqs` and `blastn` off

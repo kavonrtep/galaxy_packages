@@ -92,17 +92,63 @@ serve)
         echo "Then rerun, or set PORT=<other> to leave it alone." >&2
         exit 1
     fi
-    # Reap the detached gunicorn planemo leaves behind when this script stops.
+    # Reap everything the serve leaves behind, not only the port listener.
+    # Killing the gunicorn master is not enough: gx-it-proxy (node), the two
+    # run.sh shells and Galaxy's celery forks do not hold $PORT and survive, so
+    # they accumulate across restarts - 34 processes holding ~15 GB were found
+    # after three sessions in one day. Three passes, widest first:
+    #   1. the process group. "set -m" below makes the serve a group leader, so
+    #      one signal reaches its whole tree.
+    #   2. stragglers that re-parented out of the group, found by $GX_SERVE in
+    #      their command line. The pattern goes through the environment so it is
+    #      not in the argv of the search itself, which would self-match.
+    #   3. whoever still holds the port, as a backstop.
     cleanup() {
-        local p
+        local p n stragglers
+        if [[ -n ${SERVE_PGID:-} ]]; then
+            kill -TERM -"$SERVE_PGID" 2>/dev/null || true
+            sleep 2
+            kill -KILL -"$SERVE_PGID" 2>/dev/null || true
+        fi
+        # GXPAT must be set on awk, not on ps: "VAR=x ps | awk" gives awk an
+        # empty pattern, index($0, "") matches every line, and this kill once
+        # sent SIGTERM to all 719 processes on the host - every session of the
+        # user died. Hence also the empty-pattern guards and "ps -u". Match a
+        # whole field or a path below it: gx is a string prefix of gx_test, so
+        # a bare substring match would also kill a concurrent test run.
+        [[ -n ${GX_SERVE:-} && $GX_SERVE == /*/* ]] || return 0
+        stragglers=$(ps -u "$(id -u)" -o pid=,args= \
+            | GXPAT="$GX_SERVE" awk '
+                BEGIN { p = ENVIRON["GXPAT"]; if (p == "") exit }
+                { for (i = 2; i <= NF; i++)
+                      if ($i == p || index($i, p "/") == 1) { print $1; next } }' \
+            | grep -vw "$$" || true)
+        if [[ -n ${stragglers:-} ]]; then
+            n=$(wc -w <<<"$stragglers")
+            # A serve tree is ~10 processes, 34 after leaks; far more means the
+            # selector is wrong, and killing would take down unrelated work.
+            if (( n > 100 )); then
+                echo "refusing to kill $n processes matched by $GX_SERVE - selector looks broken" >&2
+            else
+                echo "stopping $n leftover Galaxy process(es)" >&2
+                kill $stragglers 2>/dev/null || true
+            fi
+        fi
         p=$(port_pids || true)
         [[ -n ${p:-} ]] && { echo "stopping leftover Galaxy on port $PORT (PID $p)" >&2; kill $p 2>/dev/null || true; }
+        return 0
     }
     trap cleanup EXIT INT TERM
     echo "planemo serve $TARGET on http://127.0.0.1:$PORT" >&2
+    # Job control on, so the background job becomes a process group leader and
+    # its PGID is its PID; that is what cleanup signals.
+    set -m
     "$PLANEMO" serve "$TARGET" --host 127.0.0.1 --port "$PORT" \
         --galaxy_root "$GX_SERVE" --galaxy_branch "$BRANCH" \
-        "${CONDA_ARGS[@]}" "$@"
+        "${CONDA_ARGS[@]}" "$@" &
+    SERVE_PGID=$!
+    set +m
+    wait "$SERVE_PGID"
     ;;
 
 *)
