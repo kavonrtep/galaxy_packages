@@ -1,4 +1,4 @@
-<tool id="domains_extract" name="Extract Domains Nucleotide Sequences" version="2.10.1">
+<tool id="domains_extract" name="DANTE - Extract Domain Sequences" version="2.10.2">
   <description> Tool to extract nucleotide sequences of protein domains found by DANTE </description>
   <requirements>
     <requirement type="package" version="0.2.10">dante</requirement>

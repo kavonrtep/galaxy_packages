@@ -1,5 +1,5 @@
-<tool id="fasta_input" name="Fasta interactive input" version="1.0.0">
-  <description> Enter fasta file to text window </description>
+<tool id="fasta_input" name="FASTA interactive input" version="1.0.0.1">
+  <description>Enter a FASTA sequence in a text box</description>
   <command>
     echo "${fasta_text}" > ${fasta_file}  &amp;&amp;
     sed -i 's/__gt__/>/g' ${fasta_file}  &amp;&amp;

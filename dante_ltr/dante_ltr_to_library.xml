@@ -1,4 +1,4 @@
-<tool id="dante_ltr_to_library" name="Create representative library from DANTE_LTR output " version="@TOOL_VERSION@" python_template_version="3.5">
+<tool id="dante_ltr_to_library" name="DANTE_LTR - Build Representative Library" version="@TOOL_VERSION@" python_template_version="3.5">
     <macros>
         <import>macros.xml</import>
     </macros>

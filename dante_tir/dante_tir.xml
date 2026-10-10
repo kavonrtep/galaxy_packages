@@ -1,4 +1,4 @@
-<tool id="dante_tir" name="DANTE_TIR - TIR transposon identification" version="@TOOL_VERSION@" python_template_version="3.5">
+<tool id="dante_tir" name="DANTE_TIR - Identify TIR Transposons" version="@TOOL_VERSION@" python_template_version="3.5">
     <description>Identifies DNA transposons with Terminal Inverted Repeats (TIRs) based on DANTE domain annotations</description>
     <macros>
         <import>macros.xml</import>

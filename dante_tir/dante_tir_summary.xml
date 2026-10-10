@@ -1,4 +1,4 @@
-<tool id="dante_tir_summary" name="Summarize DANTE_TIR output" version="@TOOL_VERSION@" python_template_version="3.5">
+<tool id="dante_tir_summary" name="DANTE_TIR - Summarize Output" version="@TOOL_VERSION@" python_template_version="3.5">
     <macros>
         <import>macros.xml</import>
     </macros>

@@ -1,5 +1,5 @@
-<tool id="dante" name="Domain based ANnotation of Transposable Elements - DANTE" version="2.10.1">
-  <description> Tool for annotation of transposable elements based on the similarity to conserved protein domains database. </description>
+<tool id="dante" name="DANTE - Domain based ANnotation of Transposable Elements" version="2.10.2">
+  <description>Annotate transposable elements by similarity to conserved protein domains</description>
   <requirements>
     <requirement type="package" version="0.2.10">dante</requirement>
   </requirements>

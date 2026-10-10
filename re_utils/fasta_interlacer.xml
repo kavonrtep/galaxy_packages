@@ -1,5 +1,5 @@
-<tool id="fasta_interlacer" name="FASTA interlacer" version="1.0.0.4">
-    <description>Join pared reads into single file</description>
+<tool id="fasta_interlacer" name="FASTA interlacer" version="1.0.0.5">
+    <description>Join paired reads into a single file</description>
     <requirements>
         <requirement type="package" version="3">python</requirement>
     </requirements>

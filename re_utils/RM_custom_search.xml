@@ -1,4 +1,4 @@
-<tool id="RMsearch2" name="RepeatMasker custom search2" version="1.0.3.3">
+<tool id="RMsearch2" name="RepeatMasker custom search" version="1.0.3.4">
 
     <description>Scan clustering results using RepeatMasker against custom database of
         repeats

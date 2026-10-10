@@ -1,5 +1,5 @@
-<tool id="carp" name="CARP" version="@TOOL_VERSION@" profile="22.05">
-    <description>Comprehensive Annotation of Repeats Pipeline for plant genomes</description>
+<tool id="carp" name="CARP - Comprehensive Annotation of Repeats Pipeline" version="@TOOL_VERSION@" profile="22.05">
+    <description>Repeat annotation pipeline for plant genome assemblies</description>
     <macros>
         <import>macros.xml</import>
     </macros>

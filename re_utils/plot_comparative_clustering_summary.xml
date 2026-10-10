@@ -1,8 +1,6 @@
 <tool id="plot_comparative" name="Visualization of comparative clustering"
-      version="1.0.0.3">
-    <description>Simple utility to create visualization of RepeatExplorer conmparative
-        analysis
-    </description>
+      version="1.0.0.4">
+    <description>Simple utility to create visualization of RepeatExplorer comparative analysis</description>
     <requirements>
         <requirement type="package">r-optparse</requirement>
     </requirements>

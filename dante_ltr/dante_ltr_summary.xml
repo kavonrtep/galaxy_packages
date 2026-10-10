@@ -1,4 +1,4 @@
-<tool id="dante_ltr_summary" name="Summarize DANTE_LTR output" version="@TOOL_VERSION@" python_template_version="3.5">
+<tool id="dante_ltr_summary" name="DANTE_LTR - Summarize Output" version="@TOOL_VERSION@" python_template_version="3.5">
     <macros>
         <import>macros.xml</import>
     </macros>

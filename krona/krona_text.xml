@@ -1,6 +1,6 @@
-<tool id="krona-text" name="Visualize  with Krona" version="1.1">
+<tool id="krona-text" name="Krona - Visualize Hierarchical Data" version="1.1.1">
 
-  <description>Visualise any hierarchical data</description>
+  <description>Interactive multi-level pie chart from a count and hierarchy table</description>
 
   <requirements>
     <requirement type="package" version="2.6">krona</requirement>

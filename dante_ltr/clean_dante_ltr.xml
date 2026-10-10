@@ -1,4 +1,4 @@
-<tool id="clean_dante_ltr" name="DANTE_LTR retrotransposons filtering" version="@TOOL_VERSION@" python_template_version="3.5">
+<tool id="clean_dante_ltr" name="DANTE_LTR - Filter Elements" version="@TOOL_VERSION@" python_template_version="3.5">
     <macros>
         <import>macros.xml</import>
     </macros>
