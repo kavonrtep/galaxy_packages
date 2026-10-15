@@ -1,30 +1,39 @@
-<tool id="domains_extract" name="DANTE - Extract Domain Sequences" version="2.10.2">
+<tool id="domains_extract" name="DANTE - Extract Domain Sequences" version="2.10.3">
   <description> Tool to extract nucleotide sequences of protein domains found by DANTE </description>
   <requirements>
     <requirement type="package" version="0.2.10">dante</requirement>
   </requirements>
-  <command>
-    TEMP_DIR_LINEAGES=\$(mktemp -d) &amp;&amp;
-    dante_gff_to_dna.py --domains_gff ${domains_gff} --input_dna ${input_dna} --out_dir \$TEMP_DIR_LINEAGES
-
-    #if $extend_edges:
-	  --extended
-    #end if
-	  --database ${database}
-    &amp;&amp;
-
-    cat \$TEMP_DIR_LINEAGES/*fasta > $out_fasta &amp;&amp;
-    rm -rf \$TEMP_DIR_LINEAGES
-  </command>
+  <command><![CDATA[
+    ## DANTE writes '##' comment blocks in the middle of its GFF3 ('##No domains
+    ## found' for an input part without hits), and dante_gff_to_dna.py of dante
+    ## 0.2.10 skips comment lines only at the top of the file, so it failed with
+    ## KeyError: 'attributes' on the full DANTE output (issue #6). Drop every
+    ## comment line first. grep exits 1 when nothing is left, which must not end
+    ## the job: a GFF3 without features gives an empty FASTA instead of a crash.
+    grep -v '^#' '${domains_gff}' > domains_no_comments.gff3 || true ;
+    if [ -s domains_no_comments.gff3 ]; then
+        TEMP_DIR_LINEAGES=\$(mktemp -d) &&
+        dante_gff_to_dna.py --domains_gff domains_no_comments.gff3 --input_dna '${input_dna}' --out_dir \$TEMP_DIR_LINEAGES
+        #if $extend_edges:
+            --extended
+        #end if
+            --database '${database}'
+        &&
+        cat \$TEMP_DIR_LINEAGES/*fasta > '$out_fasta' &&
+        rm -rf \$TEMP_DIR_LINEAGES ;
+    else
+        touch '$out_fasta' ;
+    fi
+  ]]></command>
   <inputs>
 	  <param format="fasta" type="data" name="input_dna" label="Input DNA" help="Choose input DNA sequence(s) to extract the domains from" />
 	  <param format="gff" type="data" name="domains_gff" label="Protein domains GFF" help="Choose filtered protein domains GFF3 (DANTE's output)" />
 	  <param name="database" type="select" label="Select REXdb database">
         <option value="Viridiplantae_v4.0" selected="true">Viridiplantae_v4.0</option>
-        <option value="Viridiplantae_v3.0" selected="true">Viridiplantae_v3.0</option>
-        <option value="Metazoa_v3.1" selected="true">Metazoa_v3.1</option>
-        <option value="Viridiplantae_v2.2" selected="true">Viridiplantae_v2.2</option>
-        <option value="Metazoa_v3.0" selected="true">Metazoa_v3.0</option>
+        <option value="Viridiplantae_v3.0">Viridiplantae_v3.0</option>
+        <option value="Metazoa_v3.1">Metazoa_v3.1</option>
+        <option value="Viridiplantae_v2.2">Viridiplantae_v2.2</option>
+        <option value="Metazoa_v3.0">Metazoa_v3.0</option>
       </param>
 
 	  <param name="extend_edges" type="boolean" truevalue="True" falsevalue="False" checked="True" label="Extend sequence edges" help="Extend extracted sequence edges to the full length of database domains sequences"/>
@@ -32,6 +41,35 @@
   <outputs>
     <data format="fasta" name="out_fasta" label="Concatenated fasta domains NT sequences from ${input_dna.hid}" /> 
   </outputs>
+  <tests>
+    <!-- Full, unfiltered DANTE 0.2.10 output with a '##No domains found' block
+         between seqA_domains and seqC_domains (issue #6); built as described in
+         test-data/make_extract_fixture.py. Before the fix this failed with
+         KeyError: 'attributes' after writing seqA's 18 sequences. All 21
+         records must come through, including the 3 after the block. -->
+    <test expect_num_outputs="1">
+      <param name="input_dna" value="extract_input.fasta"/>
+      <param name="domains_gff" value="extract_dante_full.gff3" ftype="gff3"/>
+      <output name="out_fasta">
+        <assert_contents>
+          <has_text text=">" n="21"/>
+          <has_text text=">seqA_domains:"/>
+          <has_text text=">seqC_domains:"/>
+          <not_has_text text="seqB_nohits"/>
+        </assert_contents>
+      </output>
+    </test>
+    <!-- A GFF3 without features: an empty FASTA, not KeyError: ''. -->
+    <test expect_num_outputs="1">
+      <param name="input_dna" value="extract_input.fasta"/>
+      <param name="domains_gff" value="extract_header_only.gff3" ftype="gff3"/>
+      <output name="out_fasta">
+        <assert_contents>
+          <has_size value="0"/>
+        </assert_contents>
+      </output>
+    </test>
+  </tests>
 
   <help>
 
