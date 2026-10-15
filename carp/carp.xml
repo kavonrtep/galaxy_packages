@@ -13,6 +13,17 @@
         ## Symlink inputs to .fasta names in the (bind-mounted) job dir so the
         ## pipeline and RepeatMasker see a real FASTA extension.
         ln -s '$genome' input_genome.fasta &&
+
+        ## Reject unsuitable input before the pipeline starts, in seconds rather
+        ## than hours in: sequencing reads always, a very fragmented assembly
+        ## (N50 below 5 kb) unless the user overrides it. The script sits next to
+        ## this XML; Galaxy binds the tool directory into the container.
+        python3 '$__tool_directory__/carp_check_genome.py' input_genome.fasta
+        #if $advanced.allow_fragmented
+            --allow-fragmented
+        #end if
+        &&
+
         #if $custom_library
         ln -s '$custom_library' custom_library.fasta &&
         #end if
@@ -176,7 +187,7 @@
         <!-- RepeatMasker speed/sensitivity knobs. The defaults (rush + culling
              2/2) are much faster and affect only the similarity-based RepeatMasker
              masking, not the structure-based annotations. -->
-        <section name="advanced" title="Advanced settings: RepeatMasker speed vs. sensitivity" expanded="false">
+        <section name="advanced" title="Advanced settings" expanded="false">
             <param name="repeatmasker_sensitivity" type="select" label="RepeatMasker sensitivity"
                    help="Affects ONLY the similarity-based RepeatMasker masking — the structure-based annotations (DANTE, DANTE_LTR, DANTE_TIR, TideCluster) are not affected. The default 'rush', together with culling below, makes RepeatMasker about 7.5x faster at a small sensitivity cost (roughly 1.8% fewer masked bp). This is the recommended default and is especially suitable for large genomes, where RepeatMasker dominates run time. Choose 'default' or 'quick' for maximum sensitivity when run time is not a concern.">
                 <option value="rush" selected="true">rush (fastest, recommended default)</option>
@@ -195,6 +206,10 @@
                 <option value="lineage" selected="true">lineage (default) — domains must agree on a REXdb lineage</option>
                 <option value="core">core — seed on the RT/RH/INT core triplet, label afterwards</option>
             </param>
+
+            <param name="allow_fragmented" type="boolean" checked="false"
+                   label="Run on a very fragmented assembly (N50 below 5 kb)"
+                   help="WARNING: results on such an assembly are unreliable. By default the run stops at once when the assembly N50 is below 5 kb, because CARP identifies full-length transposable elements and long tandem repeat arrays, which do not fit in contigs that short; expect few complete elements, a poor repeat library, and possibly a failed run. Enable this only if a partial annotation is still of use. It does not let sequencing reads through: those are always rejected."/>
         </section>
     </inputs>
     <outputs>
@@ -284,6 +299,27 @@
                 </assert_contents>
             </output>
         </test>
+        <!-- The input check. Both fixtures come from genome_micro.fasta, built by
+             test-data/make_input_check_fixtures.py: 150 bp reads sampled from it,
+             and the same genome cut into 1.5-4.5 kb pieces (N50 3.7 kb). Each run
+             stops at the check, before the pipeline, so these are cheap. -->
+        <test expect_failure="true" expect_exit_code="1">
+            <param name="genome" value="input_check_reads.fasta"/>
+            <!-- The override must not let reads through. -->
+            <section name="advanced">
+                <param name="allow_fragmented" value="true"/>
+            </section>
+            <assert_stderr>
+                <has_text text="looks like sequencing reads"/>
+            </assert_stderr>
+        </test>
+        <test expect_failure="true" expect_exit_code="1">
+            <param name="genome" value="input_check_fragmented.fasta"/>
+            <assert_stderr>
+                <has_text text="too fragmented for CARP"/>
+                <has_text text="N50 is 3,664 bp"/>
+            </assert_stderr>
+        </test>
     </tests>
     <help><![CDATA[
 **What it does**
@@ -333,6 +369,22 @@ CARP was developed for plant genomes. Do not use it on animal genomes.
   (headers ``name#class/subclass``).
 - *Tandem repeat library* — optional reference library for naming tandem
   families in TideCluster.
+
+**Input check**
+
+Before the pipeline starts, the genome is checked in one pass (seconds to a
+minute even for multi-Gb genomes), and the job stops at once if the input is
+unsuitable. The job's standard error shows the number of sequences, total
+length, longest sequence, N50 and most common length.
+
+- **Sequencing reads are always rejected.** The input is treated as reads when
+  no sequence is longer than 1 kb, or when at least half the sequences share a
+  single length of 1 kb or less. Assemble the reads first.
+- **A very fragmented assembly (N50 below 5 kb) is rejected by default.** CARP
+  identifies full-length transposable elements and long tandem repeat arrays,
+  which do not fit in contigs that short. Enabling *Run on a very fragmented
+  assembly* under Advanced settings turns the rejection into a warning and the
+  run goes ahead; expect few complete elements and a poor repeat library.
 
 **Additional per-tool GFF3 outputs**
 

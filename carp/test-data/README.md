@@ -31,3 +31,13 @@ B=https://raw.githubusercontent.com/kavonrtep/CARP/1.9.3/tests/fixtures/validate
 curl -sL "$B/tandem_input.fasta" -o validate_tandem_input.fasta
 curl -sL "$B/custom_input.fasta" -o validate_custom_input.fasta
 ```
+
+## input_check_reads.fasta, input_check_fragmented.fasta
+
+Inputs for the two `carp` tests of the input check that runs before the pipeline,
+built from `genome_micro.fasta` by `make_input_check_fixtures.py` (fixed seed):
+
+| file | what it is | expected |
+|---|---|---|
+| `input_check_reads.fasta` | 600 reads of 150 bp sampled from the genome | rejected as reads, also with the fragmented-assembly override set |
+| `input_check_fragmented.fasta` | the genome cut into 65 pieces of 1.5-4.5 kb, N50 3,664 bp | rejected as too fragmented (N50 below 5 kb) |
