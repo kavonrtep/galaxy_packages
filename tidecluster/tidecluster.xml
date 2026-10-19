@@ -95,7 +95,7 @@
                help="Optional. Reference library for the annotation step; leave it empty to skip that step. The library has to be in RepeatMasker format: each FASTA header is a sequence name and a classification separated by '#', as in '&gt;CL38_sat#Satellite/centromeric'. The part after '#' is free text and is exactly what TideCluster reports as the annotation. A plain FASTA without it is not rejected - RepeatMasker then classifies every hit as 'Unspecified', so the run finishes and the annotation carries no information."
                optional="true"/>
         <param type="integer" name="min_length" value="5000"
-               label="Minimum length of tandem repeat"/>
+               label="Minimum length of tandem repeat array"/>
         <conditional name="tidehunter_mode">
             <param name="mode" type="select" label="Monomer size search mode"
                    help="Standard runs TideHunter once over the monomer size range you set below. Long runs it in three rounds with fixed, increasing monomer size ranges (40-3000, 3001-10000, 10001-25000 nt), masking the repeats found in each round before the next one. Long mode detects tandem repeats with long monomers that a single round misses, at the cost of roughly three times the TideHunter runtime.">
