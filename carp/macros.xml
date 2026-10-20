@@ -1,8 +1,8 @@
 <macros>
     <!-- Galaxy tool version = upstream CARP version + wrapper revision digit -->
-    <token name="@TOOL_VERSION@">1.9.3.2</token>
+    <token name="@TOOL_VERSION@">1.9.6.1</token>
     <!-- Container image tag published to GHCR for this release -->
-    <token name="@CONTAINER_TAG@">1.9.3</token>
+    <token name="@CONTAINER_TAG@">1.9.6</token>
     <xml name="requirements">
         <requirements>
             <container type="singularity">oras://ghcr.io/kavonrtep/carp/sif:@CONTAINER_TAG@</container>
@@ -26,7 +26,7 @@
          tag, which is the guard against the help outliving the vocabulary it
          describes. Do not edit the generated blocks by hand. -->
     <!-- BEGIN GENERATED VOCABULARY_SOURCE -->
-    <token name="@VOCABULARY_SOURCE@">CARP 1.9.3 (vocabulary version 1)</token>
+    <token name="@VOCABULARY_SOURCE@">CARP 1.9.6 (vocabulary version 1)</token>
     <!-- END GENERATED VOCABULARY_SOURCE -->
     <!-- BEGIN GENERATED CLASS_LIST -->
     <token name="@CLASS_LIST@">    Mobile_element
